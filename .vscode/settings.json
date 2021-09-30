@@ -1,0 +1,14 @@
+{
+  "files.associations": {
+    "methods.h": "c",
+    "stdlib.h": "c",
+    "utils.h": "c",
+    "gmp.h": "c",
+    "argparse.h": "c",
+    "array": "c",
+    "string_view": "c",
+    "initializer_list": "c",
+    "utility": "c",
+    "queue.h": "c"
+  }
+}
