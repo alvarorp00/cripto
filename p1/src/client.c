@@ -58,7 +58,7 @@ int main(int argc, char const *argv[])
       goto end_main;
     }
 
-    // argparse_print_args(p, stdout);
+    argparse_print_args(p, stdout);
     
   #endif
 

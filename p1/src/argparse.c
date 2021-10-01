@@ -272,4 +272,6 @@ void argparse_print_args(Parser *p, FILE *out)
     }
   }
 }
+#else
+void argparse_print_args(Parser *p, FILE *out){}
 #endif

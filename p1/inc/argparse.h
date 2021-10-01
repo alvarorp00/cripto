@@ -80,7 +80,6 @@ bool argparse_set_descr(Parser *parser,  char *descrp);
  */
 void argparse_clean(Parser *parser);
 
-#ifdef __DEBUG__
 /**
  * @brief Destructive function, as
  * it's purpose is for debugging and
@@ -90,6 +89,5 @@ void argparse_clean(Parser *parser);
  * @param out where to put output
  */
 void argparse_print_args(Parser *p, FILE *out);
-#endif
 
 #endif

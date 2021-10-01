@@ -11,5 +11,6 @@
     "utility": "c",
     "queue.h": "c",
     "common.h": "c"
-  }
+  },
+  "C_Cpp.errorSquiggles": "Disabled"
 }

@@ -8,6 +8,7 @@ OBJ=obj
 SRC=src
 
 VG_OPTIONS=--leak-check=full --show-leak-kinds=all --track-origins=yes
+DEBUG_MODE=__DEBUG__
 
 COMPILED=exe
 
@@ -25,6 +26,10 @@ all: default ## Produces agent compiled executable
 
 valgrind: all ## Compiles and executes using valgrind mode
 		@ valgrind $(VG_OPTIONS) ./exe
+
+debug: clean ## Compiles using -D __DEBUG__ option
+		@ echo "Compiling in debug mode..."
+		@ $(CC) -I $(INC) $(CFLAGS) -D $(DEBUG_MODE) -o $(COMPILED) $(SOURCEFILES) $(LDFLAGS)
 
 .PHONY: clean
 
