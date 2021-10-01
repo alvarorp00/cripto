@@ -14,8 +14,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "common.h"
 #include "argparse.h"
-#include "queue.h"
 
 #define P_ARGS(p) (p)->args
 #define P_ARGS_AT(p, i) (p)->args[i]
@@ -23,8 +23,15 @@
 #define P_CURRSZ(p) (p)->currsize
 #define P_DESCRP(p) (p)->description
 
+#define A_NAME(a) (a)->argname
+#define A_PATTERN(a) (a)->argpattern
+#define A_NARGS(a) (a)->nargs
+#define A_HELP(a) (a)->help
+#define A_TYPE(a) (a)->type
+#define A_QUEUE(a) (a)->arg_q
+
 #define _INIT_PRSR_SZ 64
-#define _BUFF 256
+#define _BUFF 256 + 1
 
 typedef struct _Argument Argument;
 
@@ -34,6 +41,7 @@ struct _Argument {
   uint8_t nargs;
   char *help;
   ArgType type;
+  queue_t *arg_q;
 };
 
 struct _Parser {
@@ -43,27 +51,30 @@ struct _Parser {
   char description[_BUFF*4];
 };
 
-void parser_init(Parser *parser)
+Parser* argparse_init()
 {
-  size_t i, j;
-  
-  if (!parser)
+  Parser *p;
+
+  p = (Parser*)malloc(sizeof(Parser));
+
+  if (!p)
   {
     #line __LINE__ __FILE__
-    return;
+    return NULL;
   }
 
-  parser = (Parser*)malloc(sizeof(Parser));
+  P_MXSZ(p) = _INIT_PRSR_SZ;
+  P_CURRSZ(p) = 0;
 
-  if (!parser)
+  P_ARGS(p) = (Argument**)calloc(_INIT_PRSR_SZ, sizeof(Argument*));
+
+  if (!P_ARGS(p))
   {
     #line __LINE__ __FILE__
-    return;
+    return NULL;
   }
 
-  P_MXSZ(parser) = _INIT_PRSR_SZ;
-  P_CURRSZ(parser) = 0;
-
+  return p;
 }
 
 bool argparse_set_descr(Parser *parser, char *descrp)
@@ -84,11 +95,13 @@ bool argparse_add_argument(
   char *argname,
   ArgType type,
   char *pattern,
-  uint8_t *nargs,
+  uint8_t nargs,
   char *help
 )
 {
-  if (!parser || !argname)
+  Argument *new;
+
+  if (!parser || !argname || !pattern)
   {
     #line __LINE__ __FILE__
     return false;
@@ -97,10 +110,25 @@ bool argparse_add_argument(
   if (P_CURRSZ(parser) == P_MXSZ(parser))
   {
     #line __LINE__ __FILE__
-    perror ("Not enough space inside argparser");
     return false;
   }
 
+  new = (Argument*)malloc(sizeof(Argument));
+
+  if (!new)
+  {
+    #line __LINE__ __FILE__
+    return false;
+  }
+
+  A_NAME(new) = argname;
+  A_PATTERN(new) = pattern;
+  A_TYPE(new) = type;
+  A_NARGS(new) = nargs;
+  A_HELP(new) = help;
+  A_QUEUE(new) = queue_init(NULL, NULL, (free_proto)free, NULL); // storing dynamic char buffers -> classic free function
+
+  P_ARGS_AT(parser, P_CURRSZ(parser)++) = new;
 
   // if ((P_CURRSZ(parser)++) == P_MXSZ(parser))
   // {
@@ -124,8 +152,10 @@ bool argparse_add_argument(
  * 
  * @return status
  */
-bool argparse_parse_args(Parser *parser, int argc, char *argv[])
+bool argparse_parse_args(Parser *parser, int argc, const char *argv[])
 {
+  Argument *arg;
+  char *buff;
   size_t i, j, k;
   
   if (!parser || !argv)
@@ -134,16 +164,112 @@ bool argparse_parse_args(Parser *parser, int argc, char *argv[])
     return false;
   }
 
+  if (P_ARGS(parser) == NULL)
+  {
+    #line __LINE__ __FILE__
+    return false;
+  }
+
+  for (i = 0; i < argc; i++)
+  {
+    for (j = 0; j < P_CURRSZ(parser); j++)
+    {
+      if ((arg = P_ARGS_AT(parser, j)) == NULL)
+        continue;
+      if (strncmp(argv[i], A_PATTERN(arg), _BUFF)) // != 0 -> NOT A MATCH -> Continue
+        continue;
+      // Pattern Match!
+      if (A_TYPE(arg) == EMPTY)
+        continue;
+      for (k = 1; k <= A_NARGS(arg); k++)
+      {
+        buff = (char*)calloc(_BUFF, sizeof(char));
+        if (!buff)
+        {
+          #line __LINE__ __FILE__
+          return false;
+        }
+        strncpy(buff, argv[i+k], _BUFF);
+        queue_insert(A_QUEUE(arg), buff); // trust this won't fail
+      }
+      i += k;
+      break; // argument with same pattern won't be read nor stored
+    }
+  }
+
   return true;
+}
+
+queue_t *argparse_get_args(Parser *p, char* argname)
+{
+  size_t i;
+  
+  if (!p || !argname)
+  {
+    #line __LINE__ __FILE__
+    return NULL;
+  }
+
+  for (i = 0; i < P_CURRSZ(p); i++)
+  {
+    if (strncmp(A_NAME(P_ARGS_AT(p, i)), argname, _BUFF) == 0) // match!
+    {
+      return A_QUEUE(P_ARGS_AT(p, i));
+    }
+  }
+
+  return NULL;
 }
 
 void argparse_clean(Parser *p)
 {
-  size_t i, j, k;
+  size_t i;
   
   if (!p)
     return;
 
-  // TODO
+  if (P_ARGS(p) != NULL)
+  {
+    for (i = 0; i < P_CURRSZ(p); i++)
+    {
+      if (P_ARGS_AT(p, i) != NULL)
+      {
+        queue_clean(A_QUEUE(P_ARGS_AT(p,i)));
+        free (P_ARGS_AT(p, i));
+      }
+    }
+    free(P_ARGS(p));
+  }
+
+  free(p);
 
 }
+
+#ifdef __DEBUG__
+void argparse_print_args(Parser *p, FILE *out)
+{
+  char *buff;
+  size_t i;
+  
+  if (!p)
+    return;
+
+  TO_FILE(out, "@@@ DEBUG @@@ -> Printing argparse info\n");
+
+  for (i = 0; i < P_CURRSZ(p); i++)
+  {
+    TO_FILE(out, "\t -> Argument %ld out of %ld || Name: %s \n", i + 1, P_CURRSZ(p), A_NAME(P_ARGS_AT(p,i)));
+    TO_FILE(out, "\t\t - Pattern: %s\n", A_PATTERN(P_ARGS_AT(p, i)));
+    TO_FILE(out, "\t\t - Args:\n");
+    while(!queue_isEmpty(A_QUEUE(P_ARGS_AT(p, i))))
+    {
+      buff = (char*)queue_extract(A_QUEUE(P_ARGS_AT(p,i)));
+      TO_FILE(out, "\t\t\t - %s\n", buff);
+    }
+    if (A_HELP(P_ARGS_AT(p, i)) != NULL)
+    {
+      TO_FILE(out, "\t\t - Help: %s\n", A_HELP(P_ARGS_AT(p, i)));
+    }
+  }
+}
+#endif

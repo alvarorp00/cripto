@@ -9,6 +9,7 @@
     "string_view": "c",
     "initializer_list": "c",
     "utility": "c",
-    "queue.h": "c"
+    "queue.h": "c",
+    "common.h": "c"
   }
 }

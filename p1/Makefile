@@ -1,11 +1,13 @@
 CC = gcc
 CFLAGS =  -Wall
-LDFLAGS = -pthread -lpthread -lm -lrt -lssl -lcrypto -lgmp
+LDFLAGS = -pthread -lpthread -lm -lcrypto -lgmp
 
 INC=inc
 OUT=out
 OBJ=obj
 SRC=src
+
+VG_OPTIONS=--leak-check=full --show-leak-kinds=all --track-origins=yes
 
 COMPILED=exe
 
@@ -20,6 +22,9 @@ help:	## This guide
 		@@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 all: default ## Produces agent compiled executable
+
+valgrind: all ## Compiles and executes using valgrind mode
+		@ valgrind $(VG_OPTIONS) ./exe
 
 .PHONY: clean
 

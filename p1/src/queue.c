@@ -129,8 +129,6 @@ queue_t *queue_init(
 )
 {
   queue_t *queue;
-  
-  size_t i;
 
   queue = (queue_t*)malloc(sizeof(queue_t));
   if (!queue)
@@ -164,7 +162,6 @@ bool flag = false;
 
 bool queue_insert(queue_t *queue, void* info)
 {
-  uint_fast64_t _prevsize;
   float factor;
   
   if (!queue || !info)

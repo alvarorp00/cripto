@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "common.h"
 #include "cipher.h"
 #include "argparse.h"
 
@@ -22,27 +23,43 @@ int main(int argc, char const *argv[])
 {
   Parser *p = NULL;
 
-  char argname[BUFSIZ + 1];
-  char argpattern[BUFSIZ + 1];
-  uint8_t *nargs = NULL;
+  printf("Starting...\n");
 
   #ifdef __AFFINE__
-    argparse_init(p);
+    char *ct_size = "-m";
+    char *mc = "-a";
+    char *ct = "-b";
+    char *ipf = "-i";
+    char *opf = "-o";
+  
+    p = argparse_init();
+    
+    if (p == NULL)
+    {
+      eprintf("Error at %s while calling argparse_init(1)", __func__);
+      goto end_main;
+    }
 
-    strcpy(argname, "input");
-    strcpy(argpattern, "-i");
-    *nargs = 1; 
+    // if (!argparse_add_argument(p, argname, MULTIPLE, argpattern, nargs, NULL))
+    // {
+    //   eprintf("Error at %s while calling argparse_add_argument(6)", __func__);
+    //   goto end_main;
+    // }
 
-    argparse_add_argument(
-      p,
-      argname,
-      SINGLE,
-      argpattern,
-      nargs,
-      NULL
-    );
+    argparse_add_argument(p, STR(ct_size), SINGLE, ct_size, 1, NULL);
+    argparse_add_argument(p, STR(mc), SINGLE, mc, 1, NULL);
+    argparse_add_argument(p, STR(ct), SINGLE, ct, 1, NULL);
+    argparse_add_argument(p, STR(ipf), SINGLE, ipf, 1, NULL);
+    argparse_add_argument(p, STR(opf), SINGLE, opf, 1, NULL);
 
-    argparse_parse_args(p, argc, (char**)argv);
+    if (!argparse_parse_args(p, argc, argv))
+    {
+      eprintf("Error at %s while calling argparse_parse_args(3)", __func__);
+      goto end_main;
+    }
+
+    // argparse_print_args(p, stdout);
+    
   #endif
 
   #ifdef __HILL__
@@ -57,7 +74,8 @@ int main(int argc, char const *argv[])
 
   #endif
   
-  argparse_clean(p);
+  end_main:
+    argparse_clean(p);
   
   return 0;
 }
