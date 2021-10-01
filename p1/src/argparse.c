@@ -192,7 +192,7 @@ bool argparse_parse_args(Parser *parser, int argc, const char *argv[])
         strncpy(buff, argv[i+k], _BUFF);
         queue_insert(A_QUEUE(arg), buff); // trust this won't fail
       }
-      i += k;
+      i += (k - 1);
       break; // argument with same pattern won't be read nor stored
     }
   }
