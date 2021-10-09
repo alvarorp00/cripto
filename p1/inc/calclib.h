@@ -6,9 +6,10 @@
 #include "common.h"
 #include "gmp.h"
 
-int_fast64_t euclides_gcd(int_fast64_t z, int_fast64_t a);
+void original_euclides_gcd(const mpz_t z, const mpz_t a, mpz_t gcd);
 
-int_fast64_t extendes_euclides_gcd(int_fast64_t z, int_fast64_t a);
+void traditional_euclides_gcd(const mpz_t z, const mpz_t a, mpz_t gcd);
 
+void extended_euclides_gcd(const mpz_t z, const mpz_t a, mpz_t gcd);
 
 #endif

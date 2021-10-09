@@ -27,11 +27,11 @@ Parser* argparse_init();
 
 bool argparse_add_argument(
   Parser *parser,
-  char *argname,
+  const char *argname,
   ArgType type,
-  char *pattern,
+  const char *pattern,
   uint8_t nargs,
-  char *help
+  const char *help
 );
 
 /**
@@ -55,11 +55,38 @@ bool argparse_parse_args(Parser *parser, int argc, const char *argv[]);
  * it'll return a NULL pointer as
  * well as if argument option can't be found.
  * 
+ * Also returns NULL when argument is of type SINGLE,
+ * as they do not use a queue.
+ * 
  * @param p 
  * @param argname 
  * @return queue_t* queue with all arguments given 
  */
-queue_t* argparse_get_args(Parser *p, char* argname);
+queue_t* argparse_get_args(Parser *p, const char* argname);
+
+/**
+ * @brief Returns argument associated
+ * with param. It just work's
+ * with single param arguments.
+ * If argument is not single type, it'll
+ * return NULL
+ * 
+ * @param p parser
+ * @param argname argument name
+ * @return char* param
+ */
+char *argparse_get_arg(Parser *p, const char *argname);
+
+/**
+ * @brief tells if argument is present,
+ * if it's been read
+ * 
+ * @param p parser
+ * @param argname argument to be checked
+ * @return true 
+ * @return false 
+ */
+bool argparse_is_present(Parser *p, const char *argname);
 
 /**
  * @brief Sets argparser description
@@ -69,7 +96,7 @@ queue_t* argparse_get_args(Parser *p, char* argname);
  * @return true 
  * @return false 
  */
-bool argparse_set_descr(Parser *parser,  char *descrp);
+bool argparse_set_descr(Parser *parser, const char *descrp);
 
 /**
  * @brief Cleans parser,

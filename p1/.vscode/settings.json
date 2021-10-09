@@ -10,7 +10,10 @@
     "initializer_list": "c",
     "utility": "c",
     "queue.h": "c",
-    "common.h": "c"
+    "common.h": "c",
+    "calclib.h": "c",
+    "cipher.h": "c",
+    "limits.h": "c"
   },
   "C_Cpp.errorSquiggles": "Disabled"
 }

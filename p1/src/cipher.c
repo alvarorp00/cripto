@@ -12,24 +12,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
 
 #include "gmp.h"
 #include "cipher.h"
 #include "calclib.h"
 
-enum OPTION {
-  CIPHER, DECIPHER
-};
+#define KB1 1024
+#define MB1 KB1 * KB1
+#define GB1 MB1 * MB1 // too big!
+#define BUFFER 256
 
 /**
  * @brief Helper function for affine
  * 
  */
 static void affine_cipher(
-  uint_fast64_t m,
-  uint_fast64_t a,
-  uint_fast64_t b,
-  const char *i_file
+  const char *m,
+  const char *a,
+  const char *b,
+  FILE *i_file,
+  FILE *o_file
 );
 
 /**
@@ -37,11 +43,15 @@ static void affine_cipher(
  * 
  */
 static void affine_decipher(
-  uint_fast64_t m,
-  uint_fast64_t a,
-  uint_fast64_t b,
-  const char *o_file
+  const char *m,
+  const char *a,
+  const char *b,
+  FILE *i_file,
+  FILE *o_file
 );
+
+char errbuff[ERRBUFF_LEN + 1];
+bool cipher_status;
 
 /* - - - - - - - - !! CODE !! - - - - - - - - */
 
@@ -64,32 +74,158 @@ static void affine_decipher(
  */
 void affine(
   enum OPTION opt,
-  uint_fast64_t m,
-  uint_fast64_t a,
-  uint_fast64_t b,
-  const char *i_file,
-  const char *o_file
+  const char *m,
+  const char *a,
+  const char *b,
+  FILE *i_file,
+  FILE *o_file
 )
 {
+  #ifdef __DEBUG__
+    printf("Affine Configuration: \n");
+    printf("--> Mode: %s\n", opt == CIPHER ? "cipher" : "decipher");
+    printf("--> m: %s\n", m);
+    printf("--> a: %s\n", a);
+    printf("--> b: %s\n", b);
+    // printf("--> i_file: %s\n", i_file);
+    // printf("--> o_file: %s\n", o_file);
+  #endif
   
+  if (opt == CIPHER)
+  {
+    affine_cipher(m, a, b, i_file, o_file);
+  }
+  else
+  {
+    affine_decipher(m, a, b, i_file, o_file);
+  }
 }
 
 static void affine_cipher(
-  uint_fast64_t m,
-  uint_fast64_t a,
-  uint_fast64_t b,
-  const char *i_file
+  const char *m,
+  const char *a,
+  const char *b,
+  FILE *i_file,
+  FILE *o_file
 )
 {
+  mpz_t mz, az, bz, gcd;
+  
+  char *input = NULL,
+       *output = NULL;
+  char c;
 
+  size_t i;
+  
+  ssize_t max = MB1, // maximum length
+          len = 0; // current offset
+  
+  if (!m || !a || !b)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    cipher_status = false;
+    goto end_affine_cipher;
+  }
+
+  mpz_inits(mz, az, bz, gcd, NULL);
+
+  mpz_set_str(mz, m, 10);
+  mpz_set_str(az, a, 10);
+  mpz_set_str(bz, b, 10);
+
+  // THEOREM 2.1 The congruence ax ≡ b (mod m) has a unique solution x ∈ Zm for
+  // every b ∈ Zm if and only if gcd(a, m) = 1.
+
+  extended_euclides_gcd(az, mz, gcd); // gcd (a, m) = 1 --> in m=26, gcd(a, 26) = 1!
+  
+  if (mpz_cmp_ui(gcd, 1) != 0)
+  {
+    #line __LINE__ __FILE__
+    gmp_snprintf(errbuff, ERRBUFF_LEN, "gcd(%Zd, %Zd) = %Zd != 1", az, mz, gcd);
+    cipher_status = false;
+    goto end_affine_cipher;
+  }
+
+  // Since b ∈ Zm, then we must assure this occurs:
+
+  mpz_mod(bz, bz, mz); // So now b ∈ Zm
+
+  input = (char*)calloc(MB1, sizeof(char));
+  if (!input)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    cipher_status = false;
+    goto end_affine_cipher;
+  }
+
+  // read plain text
+
+  if (i_file == stdin)
+  {
+    printf("-> Enter message (press CTRL + D in new line to finish): \n");
+  }
+
+  while((c = fgetc(i_file)) != EOF)
+  {
+
+    if(c == ' ' || c == '\t' || c =='\n')
+      continue; // skip spaces and line jumps from cipher text!!
+
+    input[len] = c;
+
+    if (++len == max)
+    {
+      // expand input size
+      input = realloc(input, (max <<= 1) * sizeof(char));
+    }
+  }
+
+  input = realloc(input, (len + 1) * sizeof(char));
+  input[len] = '\0';
+  
+  // input --> plain text
+
+  output = (char*)calloc(len + 1, sizeof(char)); // len(cipher_text) == len(plain_text)
+  
+  // fprintf(o_file, "%s\n", input);
+
+  /**
+   * Dictionary currently
+   * is not defined.
+   * 
+   * We're using ascii
+   * default conversion
+   * 
+   */
+
+  for (i = 0; i <= len; i++)
+  {
+    // output[i] = 
+  }
+
+  cipher_status = true;
+
+  end_affine_cipher:
+    mpz_clears(mz, az, bz, gcd, NULL);
+    if (input != NULL)
+      free(input);
+    // if (cipher_text != NULL)
+    //   free(cipher_text);
 }
 
 static void affine_decipher(
-  uint_fast64_t m,
-  uint_fast64_t a,
-  uint_fast64_t b,
-  const char *o_file
+  const char *m,
+  const char *a,
+  const char *b,
+  FILE *i_file,
+  FILE *o_file
 )
 {
-
+  if (!m || !a || !b || !o_file)
+  {
+    #line __LINE__ __FILE__
+    return;
+  }
 }
