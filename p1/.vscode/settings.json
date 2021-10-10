@@ -13,7 +13,8 @@
     "common.h": "c",
     "calclib.h": "c",
     "cipher.h": "c",
-    "limits.h": "c"
+    "limits.h": "c",
+    "alphabet.h": "c"
   },
   "C_Cpp.errorSquiggles": "Disabled"
 }

@@ -109,11 +109,15 @@ static void affine_cipher(
   FILE *o_file
 )
 {
-  mpz_t mz, az, bz, gcd;
+  mpz_t mz, az, bz;
+  mpz_t gcd;
+  mpz_t xz, cx;
   
   char *input = NULL,
        *output = NULL;
   char c;
+
+  char cbuff[2];
 
   size_t i;
   
@@ -170,7 +174,7 @@ static void affine_cipher(
   while((c = fgetc(i_file)) != EOF)
   {
 
-    if(c == ' ' || c == '\t' || c =='\n')
+    if(c == ' ' || c == '\t' || c == '\n')
       continue; // skip spaces and line jumps from cipher text!!
 
     input[len] = c;
@@ -182,7 +186,7 @@ static void affine_cipher(
     }
   }
 
-  input = realloc(input, (len + 1) * sizeof(char));
+  input = realloc(input, (len + 1) * sizeof(char)); // truncate
   input[len] = '\0';
   
   // input --> plain text
@@ -191,19 +195,28 @@ static void affine_cipher(
   
   // fprintf(o_file, "%s\n", input);
 
-  /**
-   * Dictionary currently
-   * is not defined.
-   * 
-   * We're using ascii
-   * default conversion
-   * 
-   */
+  mpz_inits(xz, cx, NULL);
 
-  for (i = 0; i <= len; i++)
+  for (i = 0; i < len; i++)
   {
-    // output[i] = 
+    // mpz_set_si(xz, input[i]);
+
+    // mpz_set_si(xz, alphabet_get_fromChar(input[i]));
+
+    mpz_add(cx, xz, az);
+    mpz_mod(cx, cx, mz);
+
+    // c = alphabet_get_fromNum(mpz_get_si(cx)); // c -> char
+    
   }
+
+  fflush(stdout);
+
+  output[len] = '\0';
+
+  fprintf(o_file, "%s\n", output);
+
+  mpz_clears(xz, cx, NULL);
 
   cipher_status = true;
 
@@ -211,8 +224,8 @@ static void affine_cipher(
     mpz_clears(mz, az, bz, gcd, NULL);
     if (input != NULL)
       free(input);
-    // if (cipher_text != NULL)
-    //   free(cipher_text);
+    if (output != NULL)
+      free(output);
 }
 
 static void affine_decipher(

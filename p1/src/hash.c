@@ -100,7 +100,7 @@ hash_t *hash_init( hashcode_t hashcode, equals_t equals, clean_t clean )
 {
   hash_t *hash;
 
-  if( !hashcode || !equals || !clean )
+  if( !hashcode || !equals )
     return NULL;
 
   hash = ( hash_t* )calloc( 1,sizeof( hash_t ) );
