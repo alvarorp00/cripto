@@ -168,14 +168,13 @@ void alphabet_clean(alphabet_t *alphabet)
   }
 }
 
-bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename, const char *pattern)
+bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename)
 {
   FILE *file;
   
-  char *buffer;
-  const uint8_t max = 64; // Enough if empty spaces appear, but just 3 characters are needed (c sep n)
+  char *buffer; // using 1MB as max length
+  int_fast64_t fsize;
 
-  char sep[max];
   char chr;
   int_fast8_t num;
   
@@ -192,17 +191,22 @@ bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename, const cha
     goto file_load_error;
   }
 
-  // buffer = (char*)calloc(max + 1, sizeof(char));
-  // if (!buffer)
-  // {
-  //   #line __LINE__ __FILE__
-  //   goto file_load_error;
-  // }
+  fseek(file, 0L, SEEK_END);
+  fsize = ftell(file);
 
-  // while (fgets(buffer, max - 1, file))
-  // {
-    
-  // }
+  buffer = (char*)calloc(fsize + 1, sizeof(char)); // trailing '\0'
+  if (!buffer)
+  {
+    #line __LINE__ __FILE__
+    goto file_load_error;
+  }
+  
+  rewind(file);
+  fread(buffer, 1, fsize, file);
+  buffer[fsize] = '\0';
+
+  fclose(file); // all inside buffer!!
+
 
 
   return true;

@@ -15,7 +15,7 @@ const char *alphabet_get_fromNum(alphabet_t *alphabet, int_fast8_t n);
 
 int_fast8_t alphabet_get_fromChar(alphabet_t *alphabet, char c);
 
-bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename, const char *pattern);
+bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename);
 
 void alphabet_clean(alphabet_t *alphabet);
 
