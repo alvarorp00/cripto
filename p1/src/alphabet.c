@@ -10,13 +10,16 @@
  */
 
 #include <stdlib.h>
+#include <errno.h>
 
 #include "alphabet.h"
-#include "hash.h"
 
-#define A_C_NUM(a) (a)->c_to_num
-#define A_NUM_C(a) (a)->num_to_c
-#define A_FILENAME(a) (a)->filename
+#define A_NODES(a) (a)->nodes
+#define A_NODES_AT(a, i) (a)->nodes[i]
+#define A_MAX_SIZE(a) (a)->a_max_size
+#define A_CURR_SIZE(a) (a)->curr_size
+
+#define cmp_proto (uint_fast8_t)(void*, void*)
 
 typedef struct
 {
@@ -28,11 +31,19 @@ typedef struct
   char c;
 }char_t;
 
+typedef struct
+{
+  num_t num;
+  char_t chr;
+}alphabet_node;
+
 struct _alphabet_t{
-  hash *c_to_num;
-  hash *num_to_c;
-  const char *filename;
+  alphabet_node *nodes;
+  uint8_t a_max_size;
+  uint8_t curr_size;
 };
+
+static void quickSort(void *info, cmp_proto cmp)
 
 /* ! -- STATIC DECLARATIONS -- ! */
 
@@ -46,15 +57,9 @@ bool num_cmp(const num_t *n1, const num_t *n2);
 
 /* ! -- END -- ! */
 
-alphabet_t *alphabet_init(const char *filename)
+alphabet_t *alphabet_init(size_t a_size)
 {
   alphabet_t alphabet;
-  
-  if (!filename)
-  {
-    #line __LINE__ __FILE__
-    return NULL;
-  }
 
   alphabet = (alphabet_t*)malloc(sizeof(alphabet_t));
 
@@ -63,45 +68,151 @@ alphabet_t *alphabet_init(const char *filename)
     #line __LINE__ __FILE__
     goto alphabet_init_error;
   }
-
-  A_C_NUM(alphabet) = hash_init((hashcode_t)c_hashcode, (equals_t)char_cmp, free);
-  A_NUM_C(alphabet) = hash_init((hashcode_t)n_hashcode, (equals_t)num_cmp, free);
   
-  if (! A_C_NUM(alphabet) || ! A_NUM_C(alphabet))
+  A_NODES(alphabet) = (alphabet_node*)calloc(a_size, sizeof(alphabet_node));
+  if (!A_NODES(alphabet))
   {
     #line __LINE__ __FILE__
     goto alphabet_init_error;
   }
 
-  A_FILENAME(alphabet) = filename; // not dynamically alloc'd
-
-  // load from file...
+  A_CURR_SIZE(alphabet) = 0;
+  A_MAX_SIZE(alphabet) = a_size;
   
   return alphabet;
 
   alphabet_init_error:
     if (alphabet)
+    {
+      if (A_NODES(alphabet))
+        free(A_NODES(alphabet))
       free(alphabet);
-    if (A_C_NUM(alphabet))
-      hash_clean(A_C_NUM(alphabet))
-    if (A_NUM_C(alphabet))
-      hash_clean(A_NUM_C(alphabet))
+    }
     return NULL;
+}
+
+bool alphabet_map(alphabet_t *alphabet, char c, int_fast8_t n)
+{
+  alphabet_node node;
+  size_t i;
+  
+  if (!alphabet || !c || !n)
+  {
+    #line __LINE__ __FILE__
+    return false;
+  }
+
+  if (A_CURR_SIZE(alphabet) == A_MAX_SIZE(alphabet))
+  {
+    #line __LINE__ __FILE__
+    return false;
+  }
+
+  node.chr.c = c;
+  node.num.n = n;
+
+  A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)++) = node;
+
+  return true;
 }
 
 const char *alphabet_get_fromNum(alphabet_t *alphabet, int_fast8_t n)
 {
-  
+  size_t i;
+
+  if (!alphabet)
+  {
+    #line __LINE__ __FILE__
+    return NULL;
+  }
+
+  for (i = 0, i < A_CURR_SIZE(alphabet); i++)
+  {
+    if (A_NODES_AT(alphabet, i).num == n)
+    {
+      return A_NODES_AT(alphabet, i).chr;
+    }
+  }
+
+  return NULL;
 }
 
 int_fast8_t alphabet_get_fromChar(alphabet_t *alphabet, const char c)
 {
+  size_t i;
 
+  if (!alphabet)
+  {
+    #line __LINE__ __FILE__
+    return NULL;
+  }
+
+  for (i = 0, i < A_CURR_SIZE(alphabet); i++)
+  {
+    if (A_NODES_AT(alphabet, i).chr == c)
+    {
+      return A_NODES_AT(alphabet, i).num;
+    }
+  }
+
+  return NULL;
 }
 
 void alphabet_clean(alphabet_t *alphabet)
 {
+  if (alphabet)
+  {
+    if (A_NODES(alphabet))
+      free(A_NODES(alphabet));
+    free (alphabet);
+  }
+}
 
+bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename, const char *pattern)
+{
+  FILE *file;
+  
+  char *buffer;
+  const uint8_t max = 64; // Enough if empty spaces appear, but just 3 characters are needed (c sep n)
+
+  char sep[max];
+  char chr;
+  int_fast8_t num;
+  
+  if (!alphabet || !filename)
+  {
+    #line __LINE__ __FILE__
+    return;
+  }
+
+  file = fopen(filename, "r");
+  if (!file)
+  {
+    #line __LINE__ __FILE__
+    goto file_load_error;
+  }
+
+  // buffer = (char*)calloc(max + 1, sizeof(char));
+  // if (!buffer)
+  // {
+  //   #line __LINE__ __FILE__
+  //   goto file_load_error;
+  // }
+
+  // while (fgets(buffer, max - 1, file))
+  // {
+    
+  // }
+
+
+  return true;
+
+  file_load_error:
+    if (file)
+      fclose(file)
+    if (buffer)
+      free(buffer);
+    return false;
 }
 
 /* ! -- STATIC IMPLEMENTATIONS -- ! */
@@ -135,4 +246,3 @@ bool num_cmp(const num_t *n1, const num_t *n2)
     return false;
   return (n1->n == n2->n);
 }
-
