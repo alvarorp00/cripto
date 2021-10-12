@@ -69,12 +69,13 @@ void affine(
 
   mpz_t mz, az, bz;
   mpz_t gcd;
-  mpz_t xz, cx, dx;
+  mpz_t xz, cx, yz, dx;
   
   char *input = NULL,
        *output = NULL;
 
   alphabet_t *alphabet;
+  int_fast8_t offset;
 
   ssize_t len = 0; // current offset
   size_t i;
@@ -148,36 +149,31 @@ void affine(
 
   // alphabet_print(alphabet, stdout);
 
-  mpz_inits(xz, cx, dx, NULL);
+  mpz_inits(xz, cx, yz, dx, NULL);
+  
+  // offset = alphabet_get_offset(alphabet);
 
   for (i = 0; i < len; i++)
   {
-    mpz_set_si(xz, alphabet_get_fromChar(alphabet, input[i]));
 
     if (opt == CIPHER)
     {
+      mpz_set_si(xz, alphabet_get_fromChar(alphabet, input[i]));
       mpz_mul(cx, az, xz);
       mpz_add(cx, cx, bz);
       mpz_mod(cx, cx, mz);
     }
     else // TODO!
     {
+      mpz_set_si(yz, alphabet_get_fromChar(alphabet, input[i]));
       // mpz_set_ui(cx, 1L);
-      // mpz_invert(cx, az, cx);
-
-      // if (mpz_sgn(cx) == 0)
-      // {
-      //   #line __LINE__ __FILE__
-      //   gmp_snprintf(errbuff, ERRBUFF_LEN, "%Zd doesn't have multiplicative inverse... Stopping!", az);
-      //   goto end_affine_cipher;
-      // }
-
-      // mpz_set_ui(dx, alphabet_get_fromChar(alphabet, input[i]));
-      // mpz_sub(dx, dx, bz);
-      // mpz_mul(cx, cx, dx);
-      // mpz_mod(cx, cx, mz);
+      mpz_invert(cx, az, mz);
+      mpz_sub(dx, yz, bz);
+      mpz_mul(cx, cx, dx);
+      mpz_mod(cx, cx, mz);
     }
 
+    // output[i] = alphabet_get_fromNum(alphabet, mpz_get_ui(cx) + offset);
     output[i] = alphabet_get_fromNum(alphabet, mpz_get_ui(cx)); // c -> char  
   }
 
@@ -185,7 +181,7 @@ void affine(
 
   fprintf(o_file, "%s\n", output);
 
-  mpz_clears(xz, cx, dx, NULL);
+  mpz_clears(xz, cx, yz, dx, NULL);
 
   cipher_status = true;
 

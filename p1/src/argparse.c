@@ -9,9 +9,7 @@
  * 
  */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 
 #include "common.h"
@@ -30,13 +28,14 @@
 #define A_TYPE(a) (a)->type
 #define A_QUEUE(a) (a)->arg_q
 #define A_PARAM(a) (a)->param
+#define A_PRESENT(a) (a)->present
 
 #define _INIT_PRSR_SZ 64
 #define _BUFF 256 + 1
 
 typedef struct _Argument Argument;
 
-struct _Argument {
+struct _Argument { // should be using Union...
   char *argname;
   char *argpattern;
   uint8_t nargs;
@@ -44,6 +43,7 @@ struct _Argument {
   ArgType type;
   queue_t *arg_q;
   char *param; // Just for single type arguments
+  bool present; // Just for empty type arguments
 };
 
 struct _Parser {
@@ -163,6 +163,7 @@ bool argparse_add_argument(
   A_TYPE(new) = type;
   A_NARGS(new) = nargs;
   A_PARAM(new) = NULL;
+  A_PRESENT(new) = false;
   
   if (type == MULTIPLE)
   {
@@ -241,6 +242,7 @@ bool argparse_parse_args(Parser *parser, int argc, const char *argv[])
       // Pattern Match!
       if (A_TYPE(arg) == EMPTY)
       {
+        A_PRESENT(arg) = true;
         continue;
       }
       for (k = 1; k <= A_NARGS(arg); k++)
@@ -330,7 +332,7 @@ bool argparse_is_present(Parser *p, const char *argname)
     if (!strncmp(A_NAME(P_ARGS_AT(p, i)), argname, _BUFF))
     {
       if (A_TYPE(P_ARGS_AT(p, i)) == EMPTY)
-        return true;
+        return A_PRESENT(P_ARGS_AT(p, i));
       else if (A_TYPE(P_ARGS_AT(p, i)) == SINGLE)
         return A_PARAM(P_ARGS_AT(p, i)) != NULL;
       else

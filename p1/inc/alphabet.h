@@ -21,9 +21,15 @@ bool alphabet_contains_num(alphabet_t *alphabet, uint8_t num);
 
 bool alphabet_contains_chr(alphabet_t *alphabet, char c);
 
-uint8_t alphabet_get_first_num(alphabet_t *alphabet);
-
-char alphabet_get_first_chr(alphabet_t *alphabet);
+/**
+ * @brief Offset to first character if
+ * we're considering values starting in 0 and
+ * alphabet does not
+ * 
+ * @param alphabet 
+ * @return uint8_t 
+ */
+int_fast8_t alphabet_get_offset(alphabet_t *alphabet);
 
 void alphabet_clean(alphabet_t *alphabet);
 
