@@ -26,36 +26,15 @@
 #define GB1 MB1 * MB1 // too big!
 #define BUFFER 256
 
-/**
- * @brief Helper function for affine
- * 
- */
-static void affine_cipher(
-  const char *m,
-  const char *a,
-  const char *b,
-  FILE *i_file,
-  FILE *o_file
-);
-
-/**
- * @brief Helper function for affine
- * 
- */
-static void affine_decipher(
-  const char *m,
-  const char *a,
-  const char *b,
-  FILE *i_file,
-  FILE *o_file
-);
-
 char errbuff[ERRBUFF_LEN + 1];
 bool cipher_status;
 
-/* - - - - - - - - !! CODE !! - - - - - - - - */
+ssize_t max = MB1, // maximum length
+          len = 0; // current offset
 
+/* - - - - - - - - !! STATIC !! - - - - - - - - */
 
+static char *load_from_file(FILE *i_file);
 
 /**
  * @brief Affine cipher using
@@ -90,39 +69,17 @@ void affine(
     // printf("--> i_file: %s\n", i_file);
     // printf("--> o_file: %s\n", o_file);
   #endif
-  
-  if (opt == CIPHER)
-  {
-    affine_cipher(m, a, b, i_file, o_file);
-  }
-  else
-  {
-    affine_decipher(m, a, b, i_file, o_file);
-  }
-}
 
-static void affine_cipher(
-  const char *m,
-  const char *a,
-  const char *b,
-  FILE *i_file,
-  FILE *o_file
-)
-{
   mpz_t mz, az, bz;
   mpz_t gcd;
-  mpz_t xz, cx;
+  mpz_t xz, cx, dx;
   
   char *input = NULL,
        *output = NULL;
-  char c;
 
   alphabet_t *alphabet;
 
   size_t i;
-  
-  ssize_t max = MB1, // maximum length
-          len = 0; // current offset
   
   if (!m || !a || !b)
   {
@@ -154,14 +111,108 @@ static void affine_cipher(
   // Since b ∈ Zm, then we must assure this occurs:
 
   mpz_mod(bz, bz, mz); // So now b ∈ Zm
+  
+  // input --> plain text
 
+  input = load_from_file(i_file);
+
+  if (!input)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "can't read from input file...");
+    cipher_status = false;
+    goto end_affine_cipher;
+  }
+
+  output = (char*)calloc(len + 1, sizeof(char)); // len(cipher_text) == len(plain_text)
+  
+  // fprintf(o_file, "%s\n", input);
+
+  alphabet = alphabet_init(mpz_get_ui(mz));
+
+  if (!alphabet)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "can't start alphabet...");
+    cipher_status = false;
+    goto end_affine_cipher;
+  }
+
+  if (alphabet_loadFromFile(alphabet, _DICT_FNAME) == false)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "can't load alphabet from file...");
+    cipher_status = false;
+    goto end_affine_cipher;
+  }
+
+  mpz_inits(xz, cx, dx, NULL);
+
+  for (i = 0; i < len; i++)
+  {
+    mpz_set_si(xz, alphabet_get_fromChar(alphabet, input[i]));
+
+    if (opt == CIPHER)
+    {
+      mpz_mul(cx, az, xz);
+      mpz_add(cx, cx, bz);
+      mpz_mod(cx, cx, mz);
+    }
+    else // TODO!
+    {
+      // mpz_set_ui(cx, 1L);
+      // mpz_invert(cx, az, cx);
+
+      // if (mpz_sgn(cx) == 0)
+      // {
+      //   #line __LINE__ __FILE__
+      //   gmp_snprintf(errbuff, ERRBUFF_LEN, "%Zd doesn't have multiplicative inverse... Stopping!", az);
+      //   goto end_affine_cipher;
+      // }
+
+      // mpz_set_ui(dx, alphabet_get_fromChar(alphabet, input[i]));
+      // mpz_sub(dx, dx, bz);
+      // mpz_mul(cx, cx, dx);
+      // mpz_mod(cx, cx, mz);
+    }
+
+    output[i] = alphabet_get_fromNum(alphabet, mpz_get_ui(cx)); // c -> char    
+  }
+
+  fflush(stdout);
+
+  output[len] = '\0';
+
+  fprintf(o_file, "%s\n", output);
+
+  mpz_clears(xz, cx, dx, NULL);
+
+  cipher_status = true;
+
+  end_affine_cipher:
+    mpz_clears(mz, az, bz, gcd, NULL);
+    if (input != NULL)
+      free(input);
+    if (output != NULL)
+      free(output);
+    if (alphabet)
+      alphabet_clean(alphabet);
+}
+
+static char *load_from_file(FILE *i_file)
+{
+  char *input;
+  char c;
+  
+  if (!i_file)
+    return NULL;
+  
   input = (char*)calloc(MB1, sizeof(char));
   if (!input)
   {
     #line __LINE__ __FILE__
     snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
-    cipher_status = false;
-    goto end_affine_cipher;
+    return NULL;
   }
 
   // read plain text
@@ -188,71 +239,6 @@ static void affine_cipher(
 
   input = realloc(input, (len + 1) * sizeof(char)); // truncate
   input[len] = '\0';
-  
-  // input --> plain text
 
-  output = (char*)calloc(len + 1, sizeof(char)); // len(cipher_text) == len(plain_text)
-  
-  // fprintf(o_file, "%s\n", input);
-
-  alphabet = alphabet_init(mpz_get_ui(mz));
-
-  if (!alphabet)
-  {
-    #line __LINE__ __FILE__
-    goto end_affine_cipher;
-  }
-
-  alphabet_loadFromFile(alphabet, _DICT_FNAME);
-
-  alphabet_print(alphabet, stdout);
-
-  mpz_inits(xz, cx, NULL);
-
-  for (i = 0; i < len; i++)
-  {
-    // mpz_set_si(xz, input[i]);
-
-    // mpz_set_si(xz, alphabet_get_fromChar(input[i]));
-
-    mpz_add(cx, xz, az);
-    mpz_mod(cx, cx, mz);
-
-    // c = alphabet_get_fromNum(mpz_get_si(cx)); // c -> char
-    
-  }
-
-  fflush(stdout);
-
-  output[len] = '\0';
-
-  fprintf(o_file, "%s\n", output);
-
-  mpz_clears(xz, cx, NULL);
-
-  cipher_status = true;
-
-  end_affine_cipher:
-    mpz_clears(mz, az, bz, gcd, NULL);
-    if (input != NULL)
-      free(input);
-    if (output != NULL)
-      free(output);
-    if (alphabet)
-      alphabet_clean(alphabet);
-}
-
-static void affine_decipher(
-  const char *m,
-  const char *a,
-  const char *b,
-  FILE *i_file,
-  FILE *o_file
-)
-{
-  if (!m || !a || !b || !o_file)
-  {
-    #line __LINE__ __FILE__
-    return;
-  }
+  return input;
 }
