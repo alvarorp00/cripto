@@ -214,8 +214,6 @@ bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename)
     if (A_CURR_SIZE(alphabet) >= A_MAX_SIZE(alphabet))
       break; // stop parsing...
 
-    // printf("--> %c = %ld\n", nx_json_item(item, 0)->text_value[0], nx_json_item(item, 1)->num.s_value);
-
     chr = nx_json_item(item, 0)->text_value[0];
     num = nx_json_item(item, 1)->num.s_value;
 
@@ -250,6 +248,38 @@ void alphabet_clean(alphabet_t *alphabet)
       free(A_NODES(alphabet));
     free (alphabet);
   }
+}
+
+bool alphabet_contains_num(alphabet_t *alphabet, uint8_t num)
+{
+  size_t i;
+  
+  if (!alphabet)
+    return false;
+  
+  for (i = 0; i < A_CURR_SIZE(alphabet); i++)
+  {
+    if (A_NODES_AT(alphabet, i).num.n == num)
+      return true;
+  }
+  
+  return false;
+}
+
+bool alphabet_contains_chr(alphabet_t *alphabet, char c)
+{
+  size_t i;
+  
+  if (!alphabet)
+    return false;
+  
+  for (i = 0; i < A_CURR_SIZE(alphabet); i++)
+  {
+    if (A_NODES_AT(alphabet, i).chr.c == c)
+      return true;
+  }
+  
+  return false;
 }
 
 size_t alphabet_print(alphabet_t *alphabet, FILE *dest)
