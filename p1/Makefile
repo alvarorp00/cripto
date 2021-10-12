@@ -11,6 +11,8 @@ TEST=test
 
 MODEL=FOO
 
+COMPILED=__AFFINE__ __HILL__ __VIGENERE__ __FLOW__
+
 VG_OPTIONS=--leak-check=full --show-leak-kinds=all --track-origins=yes
 DEBUG_MODE=__DEBUG__
 
@@ -18,7 +20,7 @@ SOURCEFILES := $(shell find $(SRC) -name '*.c')
 
 default: clean ## Equivalent to 'make all'
 				@ echo "Compiling all..."
-				@ $(CC) -I $(INC) $(CFLAGS) -D $(MODEL) -o $(OUT)/$(subst __%__,%,$(MODEL)) $(SOURCEFILES) $(LDFLAGS)
+				@ $(CC) -I $(INC) $(CFLAGS) -D $(MODEL) -o $(MODEL) $(SOURCEFILES) $(LDFLAGS)
 				@ echo "Executable generated successfully!"
 
 help:	## This guide

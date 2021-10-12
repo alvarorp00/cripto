@@ -117,7 +117,7 @@ static void affine_cipher(
        *output = NULL;
   char c;
 
-  char cbuff[2];
+  alphabet_t *alphabet;
 
   size_t i;
   
@@ -195,6 +195,18 @@ static void affine_cipher(
   
   // fprintf(o_file, "%s\n", input);
 
+  alphabet = alphabet_init(mpz_get_ui(mz));
+
+  if (!alphabet)
+  {
+    #line __LINE__ __FILE__
+    goto end_affine_cipher;
+  }
+
+  alphabet_loadFromFile(alphabet, _DICT_FNAME);
+
+  alphabet_print(alphabet, stdout);
+
   mpz_inits(xz, cx, NULL);
 
   for (i = 0; i < len; i++)
@@ -226,6 +238,8 @@ static void affine_cipher(
       free(input);
     if (output != NULL)
       free(output);
+    if (alphabet)
+      alphabet_clean(alphabet);
 }
 
 static void affine_decipher(

@@ -7,6 +7,9 @@
 #include <stdbool.h>
 
 #include "gmp.h"
+#include "alphabet.h"
+
+#define _DICT_FNAME "config/dictionary.json"
 
 enum OPTION {
   CIPHER, DECIPHER

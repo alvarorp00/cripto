@@ -24,7 +24,15 @@ int main(int argc, char const *argv[])
 {
   Parser *p = NULL;
 
-  printf("Starting...\n");
+  p = argparse_init();
+    
+  if (p == NULL)
+  {
+    eprintf("Error at %s while calling argparse_init(1)", __func__);
+    goto end_main;
+  }
+
+  
 
   #ifdef __AFFINE__
 
@@ -37,14 +45,6 @@ int main(int argc, char const *argv[])
     char *ct = "-b";
     char *ipf = "-i";
     char *opf = "-o";
-  
-    p = argparse_init();
-    
-    if (p == NULL)
-    {
-      eprintf("Error at %s while calling argparse_init(1)", __func__);
-      goto end_main;
-    }
 
     argparse_add_argument(p, STR(encrypt), EMPTY, encrypt, 0, NULL);
     // argparse_add_argument(p, STR(decrypt), EMPTY, decrypt, 0, NULL);

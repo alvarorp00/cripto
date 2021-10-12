@@ -329,7 +329,12 @@ bool argparse_is_present(Parser *p, const char *argname)
   {
     if (!strncmp(A_NAME(P_ARGS_AT(p, i)), argname, _BUFF))
     {
-      return true;
+      if (A_TYPE(P_ARGS_AT(p, i)) == EMPTY)
+        return true;
+      else if (A_TYPE(P_ARGS_AT(p, i)) == SINGLE)
+        return A_PARAM(P_ARGS_AT(p, i)) != NULL;
+      else
+        return A_QUEUE(P_ARGS_AT(p, i)) != NULL;
     }
   }
 

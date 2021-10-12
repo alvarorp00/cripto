@@ -14,7 +14,9 @@
     "calclib.h": "c",
     "cipher.h": "c",
     "limits.h": "c",
-    "alphabet.h": "c"
+    "alphabet.h": "c",
+    "hash.h": "c",
+    "stdbool.h": "c"
   },
   "C_Cpp.errorSquiggles": "Disabled"
 }

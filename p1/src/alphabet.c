@@ -13,13 +13,12 @@
 #include <errno.h>
 
 #include "alphabet.h"
+#include "nxjson.h"
 
 #define A_NODES(a) (a)->nodes
 #define A_NODES_AT(a, i) (a)->nodes[i]
 #define A_MAX_SIZE(a) (a)->a_max_size
 #define A_CURR_SIZE(a) (a)->curr_size
-
-#define cmp_proto (uint_fast8_t)(void*, void*)
 
 typedef struct
 {
@@ -43,23 +42,11 @@ struct _alphabet_t{
   uint8_t curr_size;
 };
 
-static void quickSort(void *info, cmp_proto cmp)
-
-/* ! -- STATIC DECLARATIONS -- ! */
-
-uint_fast64_t c_hashcode(const char_t *c);
-
-uint_fast64_t n_hashcode(const num_t *n);
-
-bool char_cmp(const char_t *c1, const char_t *c2);
-
-bool num_cmp(const num_t *n1, const num_t *n2);
-
 /* ! -- END -- ! */
 
 alphabet_t *alphabet_init(size_t a_size)
 {
-  alphabet_t alphabet;
+  alphabet_t *alphabet;
 
   alphabet = (alphabet_t*)malloc(sizeof(alphabet_t));
 
@@ -85,7 +72,7 @@ alphabet_t *alphabet_init(size_t a_size)
     if (alphabet)
     {
       if (A_NODES(alphabet))
-        free(A_NODES(alphabet))
+        free(A_NODES(alphabet));
       free(alphabet);
     }
     return NULL;
@@ -94,7 +81,6 @@ alphabet_t *alphabet_init(size_t a_size)
 bool alphabet_map(alphabet_t *alphabet, char c, int_fast8_t n)
 {
   alphabet_node node;
-  size_t i;
   
   if (!alphabet || !c || !n)
   {
@@ -116,25 +102,25 @@ bool alphabet_map(alphabet_t *alphabet, char c, int_fast8_t n)
   return true;
 }
 
-const char *alphabet_get_fromNum(alphabet_t *alphabet, int_fast8_t n)
+char alphabet_get_fromNum(alphabet_t *alphabet, int_fast8_t n)
 {
   size_t i;
 
   if (!alphabet)
   {
     #line __LINE__ __FILE__
-    return NULL;
+    return 0;
   }
 
-  for (i = 0, i < A_CURR_SIZE(alphabet); i++)
+  for (i = 0; i < A_CURR_SIZE(alphabet); i++)
   {
-    if (A_NODES_AT(alphabet, i).num == n)
+    if (A_NODES_AT(alphabet, i).num.n == n)
     {
-      return A_NODES_AT(alphabet, i).chr;
+      return A_NODES_AT(alphabet, i).chr.c;
     }
   }
 
-  return NULL;
+  return 0;
 }
 
 int_fast8_t alphabet_get_fromChar(alphabet_t *alphabet, const char c)
@@ -144,28 +130,18 @@ int_fast8_t alphabet_get_fromChar(alphabet_t *alphabet, const char c)
   if (!alphabet)
   {
     #line __LINE__ __FILE__
-    return NULL;
+    return -1;
   }
 
-  for (i = 0, i < A_CURR_SIZE(alphabet); i++)
+  for (i = 0; i < A_CURR_SIZE(alphabet); i++)
   {
-    if (A_NODES_AT(alphabet, i).chr == c)
+    if (A_NODES_AT(alphabet, i).chr.c == c)
     {
-      return A_NODES_AT(alphabet, i).num;
+      return A_NODES_AT(alphabet, i).num.n;
     }
   }
 
-  return NULL;
-}
-
-void alphabet_clean(alphabet_t *alphabet)
-{
-  if (alphabet)
-  {
-    if (A_NODES(alphabet))
-      free(A_NODES(alphabet));
-    free (alphabet);
-  }
+  return -1;
 }
 
 bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename)
@@ -177,11 +153,16 @@ bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename)
 
   char chr;
   int_fast8_t num;
+
+  const nx_json *nxjson;
+  const nx_json *arr, *item;
+
+  size_t i;
   
   if (!alphabet || !filename)
   {
     #line __LINE__ __FILE__
-    return;
+    goto file_load_error;
   }
 
   file = fopen(filename, "r");
@@ -207,46 +188,90 @@ bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename)
 
   fclose(file); // all inside buffer!!
 
+  nxjson = nx_json_parse(buffer, 0);
 
+  if (!nxjson)
+  {
+    #line __LINE__ __FILE__
+    goto file_load_error;
+  }
+
+  arr = nx_json_get(nxjson, "dictionary");
+
+  if (!arr)
+  {
+    #line __LINE__ __FILE__
+    goto file_load_error;
+  }
+
+  for (i = 0; i < arr->children.length; i++)
+  {
+    item = nx_json_item(arr, i);
+
+    if (!item)
+      break; // stop parsing...
+
+    if (A_CURR_SIZE(alphabet) >= A_MAX_SIZE(alphabet))
+      break; // stop parsing...
+
+    // printf("--> %c = %ld\n", nx_json_item(item, 0)->text_value[0], nx_json_item(item, 1)->num.s_value);
+
+    chr = nx_json_item(item, 0)->text_value[0];
+    num = nx_json_item(item, 1)->num.s_value;
+
+    A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).chr.c = chr;
+    A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).num.n = num;
+
+    A_CURR_SIZE(alphabet)++;
+  }
+
+  if (buffer)
+    free(buffer);
+  if (nxjson)
+    nx_json_free(nxjson);
 
   return true;
 
   file_load_error:
     if (file)
-      fclose(file)
+      fclose(file);
     if (buffer)
       free(buffer);
+    if (nxjson)
+      nx_json_free(nxjson);
     return false;
 }
 
-/* ! -- STATIC IMPLEMENTATIONS -- ! */
-
-uint_fast64_t c_hashcode(const char_t *c)
+void alphabet_clean(alphabet_t *alphabet)
 {
-  if (!c)
-    return UINT64_MAX;
-
-  return (uint_fast64_t)(c->c);
+  if (alphabet)
+  {
+    if (A_NODES(alphabet))
+      free(A_NODES(alphabet));
+    free (alphabet);
+  }
 }
 
-uint_fast64_t n_hashcode(const num_t *n)
+size_t alphabet_print(alphabet_t *alphabet, FILE *dest)
 {
-  if (!n)
-    return UINT64_MAX;
-  
-  return (uint_fast64_t)(n->n);
-}
+  size_t bytes, i;
 
-bool char_cmp(const char_t *c1, const char_t *c2)
-{
-  if (!c1 || !c2)
-    return false;
-  return (c1->c == c2->c);
-}
+  if (!alphabet || !dest)
+    return 0L;
 
-bool num_cmp(const num_t *n1, const num_t *n2)
-{
-  if (!n1 || !n2)
-    return false;
-  return (n1->n == n2->n);
+  bytes = 0L;
+
+  bytes += fprintf(dest, "[ \n");
+
+  for (i = 0; i < A_CURR_SIZE(alphabet); i++)
+  {
+    bytes += fprintf(dest, "\t[%c | %d], \n",
+      A_NODES_AT(alphabet, i).chr.c,
+      A_NODES_AT(alphabet, i).num.n
+    );
+  }
+
+  bytes += fprintf(dest, "]\n");
+
+  return bytes;
 }
