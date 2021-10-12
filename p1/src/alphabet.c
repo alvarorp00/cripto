@@ -240,6 +240,20 @@ bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename)
     return false;
 }
 
+uint8_t alphabet_get_first_num(alphabet_t *alphabet)
+{
+  if (!alphabet)
+    return 0;
+  return A_NODES_AT(alphabet, 0).num.n;
+}
+
+char alphabet_get_first_chr(alphabet_t *alphabet)
+{
+  if (!alphabet)
+    return -1;
+  return A_NODES_AT(alphabet, 0).chr.c;
+}
+
 void alphabet_clean(alphabet_t *alphabet)
 {
   if (alphabet)

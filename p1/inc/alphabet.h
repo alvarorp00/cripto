@@ -21,6 +21,10 @@ bool alphabet_contains_num(alphabet_t *alphabet, uint8_t num);
 
 bool alphabet_contains_chr(alphabet_t *alphabet, char c);
 
+uint8_t alphabet_get_first_num(alphabet_t *alphabet);
+
+char alphabet_get_first_chr(alphabet_t *alphabet);
+
 void alphabet_clean(alphabet_t *alphabet);
 
 size_t alphabet_print(alphabet_t *alphabet, FILE *dest);

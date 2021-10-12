@@ -126,7 +126,7 @@ int main(int argc, char const *argv[])
 
   #endif
 
-  #ifdef __FLOW__
+  #ifdef __STREAM__
 
   #endif
   

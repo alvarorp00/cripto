@@ -29,9 +29,6 @@
 char errbuff[ERRBUFF_LEN + 1];
 bool cipher_status;
 
-ssize_t max = MB1, // maximum length
-          len = 0; // current offset
-
 /* - - - - - - - - !! STATIC !! - - - - - - - - */
 
 static char *load_from_file(FILE *i_file);
@@ -79,6 +76,7 @@ void affine(
 
   alphabet_t *alphabet;
 
+  ssize_t len = 0; // current offset
   size_t i;
   
   if (!m || !a || !b)
@@ -124,6 +122,8 @@ void affine(
     goto end_affine_cipher;
   }
 
+  len = strlen(input);
+
   output = (char*)calloc(len + 1, sizeof(char)); // len(cipher_text) == len(plain_text)
   
   // fprintf(o_file, "%s\n", input);
@@ -145,6 +145,8 @@ void affine(
     cipher_status = false;
     goto end_affine_cipher;
   }
+
+  // alphabet_print(alphabet, stdout);
 
   mpz_inits(xz, cx, dx, NULL);
 
@@ -176,10 +178,8 @@ void affine(
       // mpz_mod(cx, cx, mz);
     }
 
-    output[i] = alphabet_get_fromNum(alphabet, mpz_get_ui(cx)); // c -> char    
+    output[i] = alphabet_get_fromNum(alphabet, mpz_get_ui(cx)); // c -> char  
   }
-
-  fflush(stdout);
 
   output[len] = '\0';
 
@@ -201,13 +201,16 @@ void affine(
 
 static char *load_from_file(FILE *i_file)
 {
+  ssize_t max = MB1, // maximum length
+          len = 0; // current offset
+  
   char *input;
   char c;
   
   if (!i_file)
     return NULL;
   
-  input = (char*)calloc(MB1, sizeof(char));
+  input = (char*)calloc(KB1, sizeof(char));
   if (!input)
   {
     #line __LINE__ __FILE__
@@ -225,8 +228,8 @@ static char *load_from_file(FILE *i_file)
   while((c = fgetc(i_file)) != EOF)
   {
 
-    if(c == ' ' || c == '\t' || c == '\n')
-      continue; // skip spaces and line jumps from cipher text!!
+    if(c == ' ' || c == '\t' || c == '\n') // can be fixed adding these to alphabet...
+      continue; // skip spaces and line jumps from input text!!
 
     input[len] = c;
 

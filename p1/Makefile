@@ -47,8 +47,8 @@ hill: default
 vigenere: MODEL=__VIGENERE__ ## Compiles with Vigenere cipher
 vigenere: default
 
-flow: MODEL=__FLOW__ ## Compiles with Flow cipher
-flow: default
+stream: MODEL=__STREAM__ ## Compiles with Flow cipher
+stream: default
 
 .PHONY: clean
 
