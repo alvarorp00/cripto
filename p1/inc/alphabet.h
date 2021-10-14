@@ -17,9 +17,11 @@ int_fast8_t alphabet_get_fromChar(alphabet_t *alphabet, char c);
 
 bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename);
 
-bool alphabet_contains_num(alphabet_t *alphabet, uint8_t num);
+bool alphabet_contains_num(alphabet_t *alphabet, int_fast8_t num);
 
 bool alphabet_contains_chr(alphabet_t *alphabet, char c);
+
+int_fast8_t alphabet_getCurrentSize(alphabet_t *alphabet);
 
 /**
  * @brief Offset to first character if
@@ -27,7 +29,7 @@ bool alphabet_contains_chr(alphabet_t *alphabet, char c);
  * alphabet does not
  * 
  * @param alphabet 
- * @return uint8_t 
+ * @return int_fast8_t 
  */
 int_fast8_t alphabet_get_offset(alphabet_t *alphabet);
 

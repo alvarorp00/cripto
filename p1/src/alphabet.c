@@ -22,24 +22,16 @@
 
 typedef struct
 {
-  int_fast8_t n;
-}num_t;
-
-typedef struct
-{
-  char c;
-}char_t;
-
-typedef struct
-{
-  num_t num;
-  char_t chr;
+  int_fast8_t num;
+  char chr;
+  double c_freq; //castillian frequency
+  double e_freq; //english frequency
 }alphabet_node;
 
 struct _alphabet_t{
   alphabet_node *nodes;
-  uint8_t a_max_size;
-  uint8_t curr_size;
+  int_fast8_t a_max_size;
+  int_fast8_t curr_size;
 };
 
 /* ! -- END -- ! */
@@ -94,8 +86,8 @@ bool alphabet_map(alphabet_t *alphabet, char c, int_fast8_t n)
     return false;
   }
 
-  node.chr.c = c;
-  node.num.n = n;
+  node.chr = c;
+  node.num = n;
 
   A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)++) = node;
 
@@ -114,9 +106,9 @@ char alphabet_get_fromNum(alphabet_t *alphabet, int_fast8_t n)
 
   for (i = 0; i < A_CURR_SIZE(alphabet); i++)
   {
-    if (A_NODES_AT(alphabet, i).num.n == n)
+    if (A_NODES_AT(alphabet, i).num == n)
     {
-      return A_NODES_AT(alphabet, i).chr.c;
+      return A_NODES_AT(alphabet, i).chr;
     }
   }
 
@@ -135,9 +127,9 @@ int_fast8_t alphabet_get_fromChar(alphabet_t *alphabet, const char c)
 
   for (i = 0; i < A_CURR_SIZE(alphabet); i++)
   {
-    if (A_NODES_AT(alphabet, i).chr.c == c)
+    if (A_NODES_AT(alphabet, i).chr == c)
     {
-      return A_NODES_AT(alphabet, i).num.n;
+      return A_NODES_AT(alphabet, i).num;
     }
   }
 
@@ -150,9 +142,6 @@ bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename)
   
   char *buffer; // using 1MB as max length
   int_fast64_t fsize;
-
-  char chr;
-  int_fast8_t num;
 
   const nx_json *nxjson;
   const nx_json *arr, *item;
@@ -214,11 +203,10 @@ bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename)
     if (A_CURR_SIZE(alphabet) >= A_MAX_SIZE(alphabet))
       break; // stop parsing...
 
-    chr = nx_json_item(item, 0)->text_value[0];
-    num = nx_json_item(item, 1)->num.s_value;
-
-    A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).chr.c = chr;
-    A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).num.n = num;
+    A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).chr = nx_json_item(item, 0)->text_value[0];
+    A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).num = nx_json_item(item, 1)->num.s_value;
+    A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).c_freq = nx_json_item(item, 2)->num.dbl_value;
+    A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).e_freq = nx_json_item(item, 3)->num.dbl_value;
 
     A_CURR_SIZE(alphabet)++;
   }
@@ -242,9 +230,12 @@ bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename)
 
 int_fast8_t alphabet_get_offset(alphabet_t *alphabet)
 {
-  if (!alphabet)
-    return 0;
-  return A_NODES_AT(alphabet, 0).num.n;
+  return alphabet == NULL ? 0 : A_NODES_AT(alphabet, 0).num;
+}
+
+int_fast8_t alphabet_getCurrentSize(alphabet_t *alphabet)
+{
+  return alphabet == NULL ? 0 : A_CURR_SIZE(alphabet);
 }
 
 void alphabet_clean(alphabet_t *alphabet)
@@ -257,7 +248,7 @@ void alphabet_clean(alphabet_t *alphabet)
   }
 }
 
-bool alphabet_contains_num(alphabet_t *alphabet, uint8_t num)
+bool alphabet_contains_num(alphabet_t *alphabet, int_fast8_t num)
 {
   size_t i;
   
@@ -266,7 +257,7 @@ bool alphabet_contains_num(alphabet_t *alphabet, uint8_t num)
   
   for (i = 0; i < A_CURR_SIZE(alphabet); i++)
   {
-    if (A_NODES_AT(alphabet, i).num.n == num)
+    if (A_NODES_AT(alphabet, i).num == num)
       return true;
   }
   
@@ -282,7 +273,7 @@ bool alphabet_contains_chr(alphabet_t *alphabet, char c)
   
   for (i = 0; i < A_CURR_SIZE(alphabet); i++)
   {
-    if (A_NODES_AT(alphabet, i).chr.c == c)
+    if (A_NODES_AT(alphabet, i).chr == c)
       return true;
   }
   
@@ -293,22 +284,25 @@ size_t alphabet_print(alphabet_t *alphabet, FILE *dest)
 {
   size_t bytes, i;
 
-  if (!alphabet || !dest)
-    return 0L;
-
   bytes = 0L;
+
+  if (!alphabet || !dest)
+    goto end_print;
 
   bytes += fprintf(dest, "[ \n");
 
   for (i = 0; i < A_CURR_SIZE(alphabet); i++)
   {
-    bytes += fprintf(dest, "\t[%c | %d], \n",
-      A_NODES_AT(alphabet, i).chr.c,
-      A_NODES_AT(alphabet, i).num.n
+    bytes += fprintf(dest, "\t[%c | %d] $ C: %lf, E: %lf, \n",
+      A_NODES_AT(alphabet, i).chr,
+      A_NODES_AT(alphabet, i).num,
+      A_NODES_AT(alphabet, i).c_freq,
+      A_NODES_AT(alphabet, i).e_freq
     );
   }
 
   bytes += fprintf(dest, "]\n");
 
-  return bytes;
+  end_print:
+    return bytes;
 }

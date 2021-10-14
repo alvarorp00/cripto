@@ -16,7 +16,8 @@
     "limits.h": "c",
     "alphabet.h": "c",
     "hash.h": "c",
-    "stdbool.h": "c"
+    "stdbool.h": "c",
+    "nxjson.h": "c"
   },
   "C_Cpp.errorSquiggles": "Disabled"
 }

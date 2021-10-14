@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "common.h"
 #include "cipher.h"
@@ -32,14 +33,12 @@ int main(int argc, char const *argv[])
     goto end_main;
   }
 
-  
-
   #ifdef __AFFINE__
 
     printf(" ! @@@ AFFINE CIPHER @@@ ! \n");
   
     char *encrypt = "-C";
-    // char *decrypt = "-D";
+    char *decrypt = "-D";
     char *ct_size = "-m";
     char *mc = "-a";
     char *ct = "-b";
@@ -47,7 +46,7 @@ int main(int argc, char const *argv[])
     char *opf = "-o";
 
     argparse_add_argument(p, STR(encrypt), EMPTY, encrypt, 0, NULL);
-    // argparse_add_argument(p, STR(decrypt), EMPTY, decrypt, 0, NULL);
+    argparse_add_argument(p, STR(decrypt), EMPTY, decrypt, 0, NULL);
     argparse_add_argument(p, STR(ct_size), SINGLE, ct_size, 1, NULL);
     argparse_add_argument(p, STR(mc), SINGLE, mc, 1, NULL);
     argparse_add_argument(p, STR(ct), SINGLE, ct, 1, NULL);
@@ -66,7 +65,8 @@ int main(int argc, char const *argv[])
     FILE *i_file = NULL,
          *o_file = NULL;
 
-    opt = argparse_is_present(p, STR(encrypt)) ? CIPHER : DECIPHER;
+    opt = argparse_is_present(p, STR(encrypt)) ? CIPHER :
+      argparse_is_present(p, STR(decrypt)) ? DECIPHER : CIPHER;
 
     m = argparse_get_arg(p, STR(ct_size));
     a = argparse_get_arg(p, STR(mc));
@@ -97,11 +97,6 @@ int main(int argc, char const *argv[])
 
     affine(opt, m, a, b, i_file, o_file);
 
-    if (!cipher_status)
-    {
-      eprintf("Cipher didn't worked as expected: %s", errbuff);
-    }
-
     if (i_file != stdin && i_file)
     {
       fclose(i_file);
@@ -118,6 +113,205 @@ int main(int argc, char const *argv[])
     
   #endif
 
+  // #define __AFFINE_MOD__
+  #ifdef __AFFINE_MOD__
+    #define KLENGTH 3
+
+    printf(" ! @@@ AFFINE CIPHER MOD @@@ ! \n");
+  
+    char *encrypt = "-C";
+    char *decrypt = "-D";
+    char *ct_size = "-m";
+    char *mc = "-a";
+    char *ct = "-b";
+    char *ipf = "-i";
+    char *opf = "-o";
+
+    argparse_add_argument(p, STR(encrypt), EMPTY, encrypt, 0, NULL);
+    argparse_add_argument(p, STR(decrypt), EMPTY, decrypt, 0, NULL);
+    argparse_add_argument(p, STR(ct_size), SINGLE, ct_size, 1, NULL);
+    argparse_add_argument(p, STR(mc), MULTIPLE, mc, KLENGTH, NULL);
+    argparse_add_argument(p, STR(ct), MULTIPLE, ct, KLENGTH, NULL);
+    argparse_add_argument(p, STR(ipf), SINGLE, ipf, 1, NULL);
+    argparse_add_argument(p, STR(opf), SINGLE, opf, 1, NULL);
+
+    if (!argparse_parse_args(p, argc, argv))
+    {
+      eprintf("Error at %s while calling argparse_parse_args(3)", __func__);
+      goto end_main;
+    }
+
+    enum OPTION opt;
+    char *m, *a, *b;
+
+    FILE *i_file = NULL,
+         *o_file = NULL;
+    
+    char **a_ = NULL,
+         **b_ = NULL;
+    queue_t *q;
+    size_t i;
+
+    opt = argparse_is_present(p, STR(encrypt)) ? CIPHER :
+      argparse_is_present(p, STR(decrypt)) ? DECIPHER : CIPHER;
+
+    m = argparse_get_arg(p, STR(ct_size));
+
+    // a = argparse_get_args(p, STR(mc));
+    // b = argparse_get_args(p, STR(ct));
+
+    a_ = (char**)calloc(KLENGTH, sizeof(char*));
+    b_ = (char**)calloc(KLENGTH, sizeof(char*));
+
+    if (!a_ || !b_)
+    {
+      #line __LINE__ __FILE__
+      eprintf("%s", strerror(errno));
+      goto end_affine_mod;
+    }
+
+    q = argparse_get_args(p, STR(mc));
+    i = 0;
+    
+    if (!q)
+    {
+      #line __LINE__ __FILE__
+      goto end_affine_mod;
+    }
+    
+    while(!queue_isEmpty(q))
+    {
+      a_[i++] = queue_extract(q);
+    }
+
+    q = argparse_get_args(p, STR(ct));
+    i = 0;
+    
+    if (!q)
+    {
+      #line __LINE__ __FILE__
+      goto end_affine_mod;
+    }
+
+    while(!queue_isEmpty(q))
+    {
+      b_[i++] = queue_extract(q);
+    }
+
+    // i_file = argparse_is_present(p, STR(ipf)) ? READ(argparse_get_arg(p, STR(ipf))) : stdin; 
+    // o_file = argparse_is_present(p, STR(opf)) ? READ(argparse_get_arg(p, STR(opf))) : stdout;
+
+    if (argparse_is_present(p, STR(ipf)))
+    {
+      // i_file = READ(argparse_get_arg(p, STR(ipf)));
+      i_file = fopen(argparse_get_arg(p, STR(ipf)), "r");
+
+      if (!i_file)
+        eprintf("Could not open input file. Using stdin...");
+    }
+    i_file = (i_file == NULL) ? stdin : i_file;
+
+    if (argparse_is_present(p, STR(opf)))
+    {
+      // o_file = WRITE(argparse_get_arg(p, STR(opf)));
+      o_file = fopen(argparse_get_arg(p, STR(opf)), "w");
+
+      if (!o_file)
+        eprintf("Could not open output file. Using stdout...");
+    }
+    o_file = (o_file == NULL) ? stdout : o_file;
+
+    affine_modified(opt, m, a_, b_, KLENGTH, i_file, o_file);
+
+    if (i_file != stdin && i_file)
+    {
+      fclose(i_file);
+    }
+
+    if (o_file != stdout && o_file)
+    {
+      fclose(o_file);
+    }
+
+    end_affine_mod:
+      for (i = 0; i < KLENGTH; i++)
+      {
+        if (a_[i])
+          free(a_[i]);
+        if (b_[i])
+          free(b_[i]);
+      }
+      if (a_)
+        free(a_);
+      if (b_)
+        free(b_);
+      goto end_main;
+
+  #endif
+
+  #ifdef __CRYPTOANALYZE_AFF_MOD__
+
+    printf(" ! @@@ AFFINE CIPHER @@@ ! \n");
+  
+    char *ct_size = "-m";
+    char *ipf = "-i";
+    char *opf = "-o";
+
+    argparse_add_argument(p, STR(ct_size), SINGLE, ct_size, 1, NULL);
+    argparse_add_argument(p, STR(ipf), SINGLE, ipf, 1, NULL);
+    argparse_add_argument(p, STR(opf), SINGLE, opf, 1, NULL);
+
+    if (!argparse_parse_args(p, argc, argv))
+    {
+      eprintf("Error at %s while calling argparse_parse_args(3)", __func__);
+      goto end_main;
+    }
+
+    char *m;
+
+    FILE *i_file = NULL,
+         *o_file = NULL;
+
+    m = argparse_get_arg(p, STR(ct_size));
+
+    if (argparse_is_present(p, STR(ipf)))
+    {
+      // i_file = READ(argparse_get_arg(p, STR(ipf)));
+      i_file = fopen(argparse_get_arg(p, STR(ipf)), "r");
+
+      if (!i_file)
+        eprintf("Could not open input file. Using stdin...");
+    }
+    i_file = (i_file == NULL) ? stdin : i_file;
+
+    if (argparse_is_present(p, STR(opf)))
+    {
+      // o_file = WRITE(argparse_get_arg(p, STR(opf)));
+      o_file = fopen(argparse_get_arg(p, STR(opf)), "w");
+
+      if (!o_file)
+        eprintf("Could not open output file. Using stdout...");
+    }
+    o_file = (o_file == NULL) ? stdout : o_file;
+
+    affine_mod_criptoanalyze(m, i_file, o_file);
+
+    if (i_file != stdin && i_file)
+    {
+      fclose(i_file);
+    }
+
+    if (o_file != stdout && o_file)
+    {
+      fclose(o_file);
+    }
+
+    cipher_status = true; // we don't want program to blame us bcs of this...
+
+    goto end_main;
+
+  #endif
+
   #ifdef __HILL__
 
   #endif
@@ -131,6 +325,10 @@ int main(int argc, char const *argv[])
   #endif
   
   end_main:
+    if (!cipher_status)
+    {
+      eprintf("Cipher didn't worked as expected: %s", errbuff);
+    }
     argparse_clean(p);
   
   return 0;

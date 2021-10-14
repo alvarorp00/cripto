@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS =  -Wall -g
-LDFLAGS = -pthread -lpthread -lm -lcrypto -lgmp
+LDFLAGS = -pthread -lpthread -lm -lcrypto -lgmp ./$(LIB)/nxjson.a
 
 INC=inc
 OUT=out
@@ -8,19 +8,21 @@ OBJ=obj
 SRC=src
 SRCTEST=srctest
 TEST=test
+LIB=lib
 
 MODEL=FOO
+NAME=FOO
 
-COMPILED=__AFFINE__ __HILL__ __VIGENERE__ __FLOW__
+COMPILED=affine affine_mod hill vigenere stream cryptoanalyze_aff_mod
 
 VG_OPTIONS=--leak-check=full --show-leak-kinds=all --track-origins=yes
 DEBUG_MODE=__DEBUG__
 
 SOURCEFILES := $(shell find $(SRC) -name '*.c')
 
-default: clean ## Equivalent to 'make all'
+default: ## Equivalent to 'make all'
 				@ echo "Compiling all..."
-				@ $(CC) -I $(INC) $(CFLAGS) -D $(MODEL) -o $(MODEL) $(SOURCEFILES) $(LDFLAGS)
+				@ $(CC) -I $(INC) $(CFLAGS) -D $(MODEL) -o $(NAME) $(SOURCEFILES) $(LDFLAGS)
 				@ echo "Executable generated successfully!"
 
 help:	## This guide
@@ -39,15 +41,27 @@ calclib_test: clean
 		@ $(CC) -I $(INC) $(CFLAGS) -o $(TEST)/calclib_test $(SRCTEST)/calcLibTest.c $(SRC)/calclib.c $(LDFLAGS)
 
 affine: MODEL=__AFFINE__ ## Compiles with Affine cipher
+affine: NAME=affine
 affine: default
 
+affine_mod: MODEL=__AFFINE_MOD__ ## Compiles with Affine mod cipher
+affine_mod: NAME=affine_mod 
+affine_mod: default
+
+cryptoanalyze_aff_mod: MODEL=__CRYPTOANALYZE_AFF_MOD__ ## Compiles with Affine mod analyzer
+cryptoanalyze_aff_mod: NAME=cryptoanalyze_aff_mod 
+cryptoanalyze_aff_mod: default
+
 hill: MODEL=__HILL__ ## Compiles with Hill cipher
+hill: NAME=hill
 hill: default
 
 vigenere: MODEL=__VIGENERE__ ## Compiles with Vigenere cipher
+vigenere: NAME=vigenere
 vigenere: default
 
-stream: MODEL=__STREAM__ ## Compiles with Flow cipher
+stream: MODEL=__STREAM__ ## Compiles with stream cipher
+stream: NAME=stream
 stream: default
 
 .PHONY: clean
