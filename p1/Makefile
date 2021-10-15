@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS =  -Wall -g
+CFLAGS =  -Wall -g -Wno-unused
 LDFLAGS = -pthread -lpthread -lm -lcrypto -lgmp ./$(LIB)/nxjson.a
 
 INC=inc

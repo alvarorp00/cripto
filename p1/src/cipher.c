@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <math.h>
 
 #include "gmp.h"
 #include "cipher.h"
@@ -43,7 +44,7 @@ struct FrequencyParam{
 
 /* - - - - - - - - !! STATIC !! - - - - - - - - */
 
-static char *load_from_file(FILE *i_file);
+static char *_load_from_file(FILE *i_file, alphabet_t *alphabet);
 
 /**
  * @brief Calculates frequency
@@ -51,7 +52,23 @@ static char *load_from_file(FILE *i_file);
  * and stores info inside
  * 
  */
-void computeFrequency(struct Frequency *freq, char *textstring, ssize_t len);
+static void _computeFrequency(struct Frequency *freq, char *textstring, ssize_t len);
+
+static float _computeIC(struct Frequency freq);
+
+/**
+ * @brief Returns a dynamic array
+ * containing divisors of number
+ * n and stores in divs number
+ * of total divisors
+ * 
+ * @param n number whose divisors want to be calculated
+ * @param divs size_t pointer where amount of divisors will be stored
+ * @return size_t* 
+ */
+static size_t *_get_divisors(ssize_t n, size_t *divs);
+
+/* ! IMPLEMENTATIONS ! */
 
 void affine(
   enum OPTION opt,
@@ -112,24 +129,6 @@ void affine(
     goto end_affine_cipher;
   }
 
-  // input --> plain text
-
-  input = load_from_file(i_file);
-
-  if (!input)
-  {
-    #line __LINE__ __FILE__
-    snprintf(errbuff, ERRBUFF_LEN, "can't read from input file...");
-    cipher_status = false;
-    goto end_affine_cipher;
-  }
-
-  len = strlen(input);
-
-  output = (char*)calloc(len + 1, sizeof(char)); // len(cipher_text) == len(plain_text)
-  
-  // fprintf(o_file, "%s\n", input);
-
   alphabet = alphabet_init(mpz_get_ui(mz));
 
   if (!alphabet)
@@ -148,7 +147,19 @@ void affine(
     goto end_affine_cipher;
   }
 
-  // alphabet_print(alphabet, stdout);
+  // input --> plain text
+
+  input = _load_from_file(i_file, alphabet);
+  if (!input)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "can't read from input file...");
+    cipher_status = false;
+    goto end_affine_cipher;
+  }
+  len = strlen(input);
+
+  output = (char*)calloc(len + 1, sizeof(char)); // len(cipher_text) == len(plain_text)
 
   mpz_inits(xz, cx, yz, dx, NULL);
   
@@ -259,24 +270,6 @@ void affine_modified(
       goto end_affine_mod_cipher;
     }
   }
-  
-  // input --> plain text
-
-  input = load_from_file(i_file);
-
-  if (!input)
-  {
-    #line __LINE__ __FILE__
-    snprintf(errbuff, ERRBUFF_LEN, "can't read from input file...");
-    cipher_status = false;
-    goto end_affine_mod_cipher;
-  }
-
-  len = strlen(input);
-
-  output = (char*)calloc(len + 1, sizeof(char)); // len(cipher_text) == len(plain_text)
-  
-  // fprintf(o_file, "%s\n", input);
 
   alphabet = alphabet_init(mpz_get_ui(mz));
 
@@ -295,6 +288,20 @@ void affine_modified(
     cipher_status = false;
     goto end_affine_mod_cipher;
   }
+  
+  // input --> plain text
+
+  input = _load_from_file(i_file, alphabet);
+  if (!input)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "can't read from input file...");
+    cipher_status = false;
+    goto end_affine_mod_cipher;
+  }
+  len = strlen(input);
+
+  output = (char*)calloc(len + 1, sizeof(char)); // len(cipher_text) == len(plain_text)
 
   mpz_inits(xz, cx, yz, dx, NULL);
 
@@ -368,25 +375,17 @@ void affine_mod_criptoanalyze(const char *m, FILE *i_file, FILE *o_file)
   size_t i, j, k, c;
 
   #define ENG_IC 0.065
-  #define IC_THRESHOLD 0.02
+  // #define IC_THRESHOLD 0.02
 
   ssize_t *acceptable_mk;
   size_t *k_divisors;
-  size_t divs, nsubstr;
+  size_t divs, nsubstr, _M, __M;
   char **substr;
 
   struct Frequency freq;
-  float IC;
+  float IC, _IC;
   
   if (!m || !i_file || !o_file)
-  {
-    #line __LINE__ __FILE__
-    goto end_aff_mod_anlz;
-  }
-
-  input = load_from_file(i_file);
-
-  if (!input)
   {
     #line __LINE__ __FILE__
     goto end_aff_mod_anlz;
@@ -410,23 +409,26 @@ void affine_mod_criptoanalyze(const char *m, FILE *i_file, FILE *o_file)
     goto end_aff_mod_anlz;
   }
 
-  len = strlen(input);
-
-  for (c = 0, i = 1; i < len / 2; i++)
-    if (!(len % i))
-      c++;
-
-  divs = c;
-  k_divisors = (size_t*)calloc(divs, sizeof(size_t));
-  if (!k_divisors)
+  input = _load_from_file(i_file, alphabet);
+  if (!input)
   {
     #line __LINE__ __FILE__
     goto end_aff_mod_anlz;
   }
+  len = strlen(input);
+  k_divisors = _get_divisors(len, &divs);
 
-  for (c = 0, i = 1; i < len >> 1; i++)
-    if (!(len % i))
-        k_divisors[c++] = i;
+  if (!k_divisors)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "can't load k_divisors...");
+    cipher_status = false;
+    goto end_aff_mod_anlz;
+  }
+
+  // printf("divs: %ld\n", divs);
+  // for (i = 0; i < divs; i++)
+  //   printf("-> %ld\n", k_divisors[i]);
 
   // now we have in k_divisors a set of all elements that divide len
   // although we should've performed previous computations in a more
@@ -445,6 +447,20 @@ void affine_mod_criptoanalyze(const char *m, FILE *i_file, FILE *o_file)
   //   | | | | | | | |
   //   v v v v v v v v
 
+  freq.alphabet = alphabet;
+  freq.params = (struct FrequencyParam*)calloc(alphabet_getCurrentSize(alphabet), sizeof(struct FrequencyParam));
+
+  if (!freq.params)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
+    goto end_aff_mod_anlz;
+  }
+
+  freq.a_sz = alphabet_getCurrentSize(alphabet);
+  _IC = 0;
+  __M = 0;
+
   for (i = 0; i < divs; i++)
   {
     nsubstr = len / k_divisors[i];
@@ -457,6 +473,7 @@ void affine_mod_criptoanalyze(const char *m, FILE *i_file, FILE *o_file)
       goto end_aff_mod_anlz;
     }
 
+    IC = 0.0;
     for (j = 0; j < nsubstr; j++)
     {
       substr[j] = (char*)calloc(k_divisors[i] + 1, sizeof(char)); // +1 for '\0' at the end...
@@ -467,24 +484,30 @@ void affine_mod_criptoanalyze(const char *m, FILE *i_file, FILE *o_file)
         goto end_aff_mod_anlz;
       }
       for (c = 0, k = j; k < len; k += nsubstr, c++)
+      {
         substr[j][c] = input[k];
+      }
+      substr[j][c] = '\0';
+      // printf("Substr: %s\n\n", substr[j]);
+      _computeFrequency(&freq, substr[j], c); // strlen(sbstr[j]) == c...
+      IC += _computeIC(freq);
     }
-
-    freq.alphabet = alphabet;
-    freq.params = (struct FrequencyParam*)calloc(alphabet_getCurrentSize(alphabet), sizeof(struct FrequencyParam));
-
-    if (!freq.params)
+    // printf("IC: %f @@ nsubstr: %ld\n", IC, nsubstr);
+    IC = (float)((float) IC / (float)nsubstr);
+    // printf("IC : %.4f @ M: %ld\n", IC, k_divisors[i]);
+    // printf("\tIC: %f\n", IC);
+    if (fabs(IC - ENG_IC) < fabs(_IC - ENG_IC))
     {
-      #line __LINE__ __FILE__
-      snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
-      goto end_aff_mod_anlz;
+      _IC = IC;
+      _M = k_divisors[i];  //__M has number of substrings
+      __M = nsubstr ; // __M has number of substrings
     }
 
-    freq.a_sz = alphabet_getCurrentSize(alphabet);
-
-    computeFrequency(&freq, input, len);
-    IC = computeIC(freq);
+    
   }
+
+  printf("Index of coincidence: %.4f\nM found: %ld\n", _IC, _M);
+
   // todo: calculate characters occurrence probability in given input text
   // so IC can then be calculated...
 
@@ -502,20 +525,22 @@ void affine_mod_criptoanalyze(const char *m, FILE *i_file, FILE *o_file)
           free(substr[i]);
       free(substr);
     }
+    if (freq.params)
+      free (freq.params);
     // exit properly
 }
 
 /* ! Static Helper Functions ! */
 
-static char *load_from_file(FILE *i_file)
+static char *_load_from_file(FILE *i_file, alphabet_t *alphabet)
 {
-  ssize_t max = KB1, // maximum length
+  ssize_t max = KB1, // initial maximum length
           len = 0; // current offset
   
   char *input;
   char c;
   
-  if (!i_file)
+  if (!i_file || !alphabet)
     return NULL;
   
   input = (char*)calloc(KB1, sizeof(char));
@@ -535,9 +560,11 @@ static char *load_from_file(FILE *i_file)
 
   while((c = fgetc(i_file)) != EOF)
   {
+    if (alphabet_contains_chr(alphabet, c) == false)
+      continue;
+    // if(c == ' ' || c == '\t' || c == '\n') // can be fixed adding these to alphabet...
+    //   continue; // skip spaces and line jumps from input text!!
 
-    if(c == ' ' || c == '\t' || c == '\n') // can be fixed adding these to alphabet...
-      continue; // skip spaces and line jumps from input text!!
 
     input[len] = c;
 
@@ -554,13 +581,15 @@ static char *load_from_file(FILE *i_file)
   return input;
 }
 
-void computeFrequency(struct Frequency *freq, char *textstring, ssize_t len)
+static void _computeFrequency(struct Frequency *freq, char *textstring, ssize_t len)
 {
   size_t i;
   char c;
   
   if (!freq || !textstring)
     return;
+
+  // printf("Textstring: %s\n", textstring);
 
   for (i = 0; i < freq->a_sz; i++)
   {
@@ -585,21 +614,46 @@ void computeFrequency(struct Frequency *freq, char *textstring, ssize_t len)
   // do it in anoother loop, which seems to be
   // quite fast as alphabets are not usually large
   for (i = 0; i < freq->a_sz; i++)
-  {
-    freq->params[i].prob = freq->params[i].ocurrences / len;
-  }
+    freq->params[i].prob = (float)((float)(freq->params[i].ocurrences) / len);
 }
 
-float computeIC(struct Frequency freq)
+static float _computeIC(struct Frequency freq)
 {
-  #include <math.h>
   size_t i;
   float ic;
 
   for (ic = 0.0, i = 0; i < freq.a_sz; i++)
-  {
-    ic += pow(freq.params[i].prob, 2);
-  }
+    ic += pow(freq.params[i].prob, 2.0);
 
   return ic;
+}
+
+static size_t *_get_divisors(ssize_t n, size_t *divs)
+{
+  size_t i, c, *k_divisors;
+  size_t _divs;
+  
+  for (_divs = 0, i = 1; i <= (n >> 1); i++)
+    if (!(n % i))
+      _divs++;
+  _divs++; // can be divided by itself too!
+
+  k_divisors = (size_t*)calloc(_divs, sizeof(size_t));
+  if (!k_divisors)
+  {
+    #line __LINE__ __FILE__
+    return NULL;
+  }
+
+  for (c = 0, i = 1; i <= (n >> 1); i++)
+    if (!(n % i))
+    {
+      k_divisors[c] = i;
+      c++;
+    }
+  
+  k_divisors[c] = n; // can be divided by itself too!
+  *divs = _divs;
+  
+  return k_divisors;
 }
