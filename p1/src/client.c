@@ -249,9 +249,9 @@ int main(int argc, char const *argv[])
 
   #endif
 
-  #ifdef __CRYPTOANALYZE_AFF_MOD__
+  #ifdef __CRYPTANALYZE_AFF_MOD__
 
-    printf(" ! @@@ AFFINE CIPHER @@@ ! \n");
+    printf(" ! @@@ AFFINE_MOD_CIPHER CRYPTANALYSIS @@@ ! \n");
   
     char *ct_size = "-m";
     char *ipf = "-i";
@@ -294,7 +294,7 @@ int main(int argc, char const *argv[])
     }
     o_file = (o_file == NULL) ? stdout : o_file;
 
-    affine_mod_criptoanalyze(m, i_file, o_file);
+    affine_mod_cryptanalyze(m, i_file, o_file);
 
     if (i_file != stdin && i_file)
     {

@@ -13,7 +13,7 @@ LIB=lib
 MODEL=FOO
 NAME=FOO
 
-COMPILED=affine affine_mod hill vigenere stream cryptoanalyze_aff_mod
+COMPILED=affine affine_mod hill vigenere stream cryptanalyze_aff_mod
 
 VG_OPTIONS=--leak-check=full --show-leak-kinds=all --track-origins=yes
 DEBUG_MODE=__DEBUG__
@@ -48,9 +48,9 @@ affine_mod: MODEL=__AFFINE_MOD__ ## Compiles with Affine mod cipher
 affine_mod: NAME=affine_mod 
 affine_mod: default
 
-cryptoanalyze_aff_mod: MODEL=__CRYPTOANALYZE_AFF_MOD__ ## Compiles with Affine mod analyzer
-cryptoanalyze_aff_mod: NAME=cryptoanalyze_aff_mod 
-cryptoanalyze_aff_mod: default
+cryptanalyze_aff_mod: MODEL=__CRYPTANALYZE_AFF_MOD__ ## Compiles with Affine mod analyzer
+cryptanalyze_aff_mod: NAME=cryptanalyze_aff_mod 
+cryptanalyze_aff_mod: default
 
 hill: MODEL=__HILL__ ## Compiles with Hill cipher
 hill: NAME=hill

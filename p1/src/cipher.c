@@ -30,6 +30,8 @@
 char errbuff[ERRBUFF_LEN + 1];
 bool cipher_status;
 
+// TODO struct ClassicCipher{...}
+
 struct Frequency{
   alphabet_t *alphabet;
   struct FrequencyParam *params;
@@ -42,16 +44,27 @@ struct FrequencyParam{
   uint_fast64_t ocurrences;
 };
 
+/**
+ * @brief Struct
+ * used to compute
+ * kasiski to determine
+ * key total length from a given
+ * input text and supposing
+ * padding has been done before
+ * encrypting source text
+ * 
+ */
 struct Kasiski{
-  char *input;
-  size_t *k_divisors;
-  ssize_t len;
-  size_t divs;
-  size_t nsubstr;
-  size_t _M;
-  size_t __M;
-  float IC;
-  struct Frequency freq; 
+  char *input; // input text, needs to be set up first
+  size_t *k_divisors; // array with available divsors
+  ssize_t len; // length of input text
+  size_t divs; // amount of len divisors (== length(k_divisors))
+  size_t nsubstr; // number of substrings
+  char **strs; // store final substrings
+  size_t _M; // key length 
+  float IC; // index of coincidence
+  struct Frequency freq; // frequency structure param, needs to be set up first
+  bool ok;
 };
 
 /* - - - - - - - - !! STATIC !! - - - - - - - - */
@@ -104,6 +117,18 @@ static size_t *_get_divisors(ssize_t n, size_t *divs);
  * @return Data calculated is stored inside given structure 
  */
 static void _kasiski(struct Kasiski *ksk);
+
+/**
+ * @brief Cleans
+ * data associated to
+ * kasiski's structure
+ * 
+ * IMPORTANT: param is not alloc'd, JUST
+ * PASSED BY REFERENCE NOT BY VALUE!
+ * 
+ * @param kasiski param to struct
+ */
+static void _kasiski_free(struct Kasiski *kasiski);
 
 /* ! IMPLEMENTATIONS ! */
 
@@ -395,7 +420,7 @@ void affine_modified(
 
 // criptoanalyze vectorized affine cipher
 // not very efficient at all...
-void affine_mod_criptoanalyze(const char *m, FILE *i_file, FILE *o_file)
+void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
 {
   mpz_t mz, *az, *bz; // keyspace is a vector!
   mpz_t gcd;
@@ -449,28 +474,42 @@ void affine_mod_criptoanalyze(const char *m, FILE *i_file, FILE *o_file)
 
   _kasiski(&ksk);
 
+  if (!ksk.ok)
+    goto end_aff_mod_anlz;
+  
+  for (i = 0; i < ksk.nsubstr; i++)
+    printf("--> %s\n", ksk.strs[i]);
+
+  // guess (a,b) for each string...
+
   // printf("Index of coincidence: %.4f\nM found: %ld\n", ksk.IC, ksk._M);
+
+
 
   // todo: calculate characters occurrence probability in given input text
   // so IC can then be calculated...
 
   end_aff_mod_anlz:
-    if (input)
-      free(input);
+    _kasiski_free(&ksk);
     if (output)
       free(output);
-    if (alphabet)
-      alphabet_clean(alphabet);
-    // if (substr)
-    // {
-    //   for (i = 0; i < nsubstr; i++)
-    //     if (substr[i])
-    //       free(substr[i]);
-    //   free(substr);
-    // }
-    // if (freq.params)
-    //   free (freq.params);
-    // exit properly
+}
+
+void vigenere(enum OPTION opt, const char *m, char *k, FILE *i_file, FILE *o_file)
+{
+  char *input;
+  
+  if (!m || !k || !i_file || !o_file)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "bad arguments");
+    goto end_vigenere;
+  }
+
+  // TODO
+
+  end_vigenere:
+    return;
 }
 
 /* ! Static Helper Functions ! */
@@ -607,9 +646,12 @@ static void _kasiski (struct Kasiski *ksk)
   // #define IC_THRESHOLD 0.02
 
   size_t i, j, k, c;
+  size_t __M;
 
   char **substr;
   float IC;
+
+  ksk->ok = false;
   
   ksk->len = strlen(ksk->input);
   ksk->k_divisors = _get_divisors(ksk->len, &(ksk->divs));
@@ -618,7 +660,6 @@ static void _kasiski (struct Kasiski *ksk)
   {
     #line __LINE__ __FILE__
     snprintf(errbuff, ERRBUFF_LEN, "can't load k_divisors...");
-    cipher_status = false;
     goto end_kasiski;
   }
 
@@ -655,7 +696,6 @@ static void _kasiski (struct Kasiski *ksk)
   ksk->freq.a_sz = alphabet_getCurrentSize(ksk->freq.alphabet);
   ksk->IC = 0;
   ksk->_M = 0;
-  ksk->__M = 0;
 
   for (i = 0; i < ksk->divs; i++)
   {
@@ -680,9 +720,7 @@ static void _kasiski (struct Kasiski *ksk)
         goto end_kasiski;
       }
       for (c = 0, k = j; k < ksk->len; k += ksk->nsubstr, c++)
-      {
         substr[j][c] = ksk->input[k];
-      }
       substr[j][c] = '\0';
       // printf("Substr: %s\n\n", substr[j]);
       _computeFrequency(&(ksk->freq), substr[j], c); // strlen(sbstr[j]) == c...
@@ -698,14 +736,63 @@ static void _kasiski (struct Kasiski *ksk)
     if (fabs(IC - ENG_IC) < fabs(ksk->IC - ENG_IC))
     {
       ksk->IC = IC;
-      ksk->_M = ksk->k_divisors[i];  //__M has number of substrings
-      ksk->__M = ksk->nsubstr; // __M has number of substrings
+      ksk->_M = ksk->k_divisors[i];  // _M has key length (e.g. k=3 -> _M = k)
+      __M = ksk->nsubstr;
     }
 
     if (substr)
       free(substr);
   }
 
+  ksk->nsubstr = __M;
+  ksk->strs = (char**)calloc(ksk->nsubstr, sizeof(char*));
+
+  if (!ksk->strs)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_kasiski;
+  }
+
+  for (j = 0; j < ksk->nsubstr; j++)
+  {
+    ksk->strs[j] = (char*)calloc(ksk->_M, sizeof(char));
+    if (!ksk->strs[j])
+    {
+      #line __LINE__ __FILE__
+      snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+      goto end_kasiski;
+    }
+    for (c = 0, k = j; k < ksk->len; k += ksk->nsubstr, c++)
+      ksk->strs[j][c] = ksk->input[k];
+    ksk->strs[j][c] = '\0';
+  }
+
+  ksk->ok = true;
+
   end_kasiski:
     return;
+}
+
+static void _kasiski_free(struct Kasiski *kasiski)
+{
+  size_t i;
+  
+  if (!kasiski)
+    return;
+  if (kasiski->freq.params)
+    free(kasiski->freq.params);
+  if (kasiski->freq.alphabet)
+    alphabet_clean(kasiski->freq.alphabet);
+  if (kasiski->input)
+    free(kasiski->input);
+  if (kasiski->k_divisors)
+    free(kasiski->k_divisors);
+  if (kasiski->strs)
+  {
+    for (i = 0; i < kasiski->nsubstr; i++)
+      if (kasiski->strs[i])
+        free(kasiski->strs[i]);
+    free (kasiski->strs);
+  }
 }
