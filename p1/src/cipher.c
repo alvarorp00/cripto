@@ -42,8 +42,27 @@ struct FrequencyParam{
   uint_fast64_t ocurrences;
 };
 
+struct Kasiski{
+  char *input;
+  size_t *k_divisors;
+  ssize_t len;
+  size_t divs;
+  size_t nsubstr;
+  size_t _M;
+  size_t __M;
+  float IC;
+  struct Frequency freq; 
+};
+
 /* - - - - - - - - !! STATIC !! - - - - - - - - */
 
+/**
+ * @brief 
+ * 
+ * @param i_file 
+ * @param alphabet 
+ * @return char* 
+ */
 static char *_load_from_file(FILE *i_file, alphabet_t *alphabet);
 
 /**
@@ -54,6 +73,13 @@ static char *_load_from_file(FILE *i_file, alphabet_t *alphabet);
  */
 static void _computeFrequency(struct Frequency *freq, char *textstring, ssize_t len);
 
+/**
+ * @brief Calculates index of coincidence from
+ * given frequencies
+ * 
+ * @param freq structure used to calculate frequencies from alphabet
+ * @return float IC
+ */
 static float _computeIC(struct Frequency freq);
 
 /**
@@ -67,6 +93,17 @@ static float _computeIC(struct Frequency freq);
  * @return size_t* 
  */
 static size_t *_get_divisors(ssize_t n, size_t *divs);
+
+/**
+ * @brief Performs kasiski over given
+ * input text
+ * 
+ * @param ksk needs alphabet and input
+ * values to be set before calling _kasiski
+ * 
+ * @return Data calculated is stored inside given structure 
+ */
+static void _kasiski(struct Kasiski *ksk);
 
 /* ! IMPLEMENTATIONS ! */
 
@@ -374,16 +411,7 @@ void affine_mod_criptoanalyze(const char *m, FILE *i_file, FILE *o_file)
           mk = 0; // current offset
   size_t i, j, k, c;
 
-  #define ENG_IC 0.065
-  // #define IC_THRESHOLD 0.02
-
-  ssize_t *acceptable_mk;
-  size_t *k_divisors;
-  size_t divs, nsubstr, _M, __M;
-  char **substr;
-
-  struct Frequency freq;
-  float IC, _IC;
+  struct Kasiski ksk;
   
   if (!m || !i_file || !o_file)
   {
@@ -415,98 +443,13 @@ void affine_mod_criptoanalyze(const char *m, FILE *i_file, FILE *o_file)
     #line __LINE__ __FILE__
     goto end_aff_mod_anlz;
   }
-  len = strlen(input);
-  k_divisors = _get_divisors(len, &divs);
+  
+  ksk.freq.alphabet = alphabet;
+  ksk.input = input;
 
-  if (!k_divisors)
-  {
-    #line __LINE__ __FILE__
-    snprintf(errbuff, ERRBUFF_LEN, "can't load k_divisors...");
-    cipher_status = false;
-    goto end_aff_mod_anlz;
-  }
+  _kasiski(&ksk);
 
-  // printf("divs: %ld\n", divs);
-  // for (i = 0; i < divs; i++)
-  //   printf("-> %ld\n", k_divisors[i]);
-
-  // now we have in k_divisors a set of all elements that divide len
-  // although we should've performed previous computations in a more
-  // efficient way, we're not taking care of that now
-
-  // We're performing now following operation:
-  //   y = y1y2...yn
-  //   | | | | | | |
-  //   | | | | | | |
-  //   v v v v v v v
-  //   y1 = y1 ym+1 y2m+1...
-  //   y1 = y2 ym+2 y2m+2...
-  //   y1 = y3 ym+3 y2m+3...
-  //   ... ... ... ... ...
-  //   y1 = ym y2m y3m...
-  //   | | | | | | | |
-  //   v v v v v v v v
-
-  freq.alphabet = alphabet;
-  freq.params = (struct FrequencyParam*)calloc(alphabet_getCurrentSize(alphabet), sizeof(struct FrequencyParam));
-
-  if (!freq.params)
-  {
-    #line __LINE__ __FILE__
-    snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
-    goto end_aff_mod_anlz;
-  }
-
-  freq.a_sz = alphabet_getCurrentSize(alphabet);
-  _IC = 0;
-  __M = 0;
-
-  for (i = 0; i < divs; i++)
-  {
-    nsubstr = len / k_divisors[i];
-    
-    substr = (char**)calloc(nsubstr, sizeof(char*));
-    if (!substr)
-    {
-      #line __LINE__ __FILE__
-      snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
-      goto end_aff_mod_anlz;
-    }
-
-    IC = 0.0;
-    for (j = 0; j < nsubstr; j++)
-    {
-      substr[j] = (char*)calloc(k_divisors[i] + 1, sizeof(char)); // +1 for '\0' at the end...
-      if (!substr[j])
-      {
-        #line __LINE__ __FILE__
-        snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
-        goto end_aff_mod_anlz;
-      }
-      for (c = 0, k = j; k < len; k += nsubstr, c++)
-      {
-        substr[j][c] = input[k];
-      }
-      substr[j][c] = '\0';
-      // printf("Substr: %s\n\n", substr[j]);
-      _computeFrequency(&freq, substr[j], c); // strlen(sbstr[j]) == c...
-      IC += _computeIC(freq);
-    }
-    // printf("IC: %f @@ nsubstr: %ld\n", IC, nsubstr);
-    IC = (float)((float) IC / (float)nsubstr);
-    // printf("IC : %.4f @ M: %ld\n", IC, k_divisors[i]);
-    // printf("\tIC: %f\n", IC);
-    if (fabs(IC - ENG_IC) < fabs(_IC - ENG_IC))
-    {
-      _IC = IC;
-      _M = k_divisors[i];  //__M has number of substrings
-      __M = nsubstr ; // __M has number of substrings
-    }
-
-    
-  }
-
-  printf("Index of coincidence: %.4f\nM found: %ld\n", _IC, _M);
+  // printf("Index of coincidence: %.4f\nM found: %ld\n", ksk.IC, ksk._M);
 
   // todo: calculate characters occurrence probability in given input text
   // so IC can then be calculated...
@@ -518,15 +461,15 @@ void affine_mod_criptoanalyze(const char *m, FILE *i_file, FILE *o_file)
       free(output);
     if (alphabet)
       alphabet_clean(alphabet);
-    if (substr)
-    {
-      for (i = 0; i < nsubstr; i++)
-        if (substr[i])
-          free(substr[i]);
-      free(substr);
-    }
-    if (freq.params)
-      free (freq.params);
+    // if (substr)
+    // {
+    //   for (i = 0; i < nsubstr; i++)
+    //     if (substr[i])
+    //       free(substr[i]);
+    //   free(substr);
+    // }
+    // if (freq.params)
+    //   free (freq.params);
     // exit properly
 }
 
@@ -656,4 +599,113 @@ static size_t *_get_divisors(ssize_t n, size_t *divs)
   *divs = _divs;
   
   return k_divisors;
+}
+
+static void _kasiski (struct Kasiski *ksk)
+{
+  #define ENG_IC 0.065
+  // #define IC_THRESHOLD 0.02
+
+  size_t i, j, k, c;
+
+  char **substr;
+  float IC;
+  
+  ksk->len = strlen(ksk->input);
+  ksk->k_divisors = _get_divisors(ksk->len, &(ksk->divs));
+
+  if (!ksk->k_divisors)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "can't load k_divisors...");
+    cipher_status = false;
+    goto end_kasiski;
+  }
+
+  // printf("divs: %ld\n", divs);
+  // for (i = 0; i < divs; i++)
+  //   printf("-> %ld\n", k_divisors[i]);
+
+  // now we have in k_divisors a set of all elements that divide len
+  // although we should've performed previous computations in a more
+  // efficient way, we're not taking care of that now
+
+  // We're performing now following operation:
+  //   y = y1y2...yn
+  //   | | | | | | |
+  //   | | | | | | |
+  //   v v v v v v v
+  //   y1 = y1 ym+1 y2m+1...
+  //   y1 = y2 ym+2 y2m+2...
+  //   y1 = y3 ym+3 y2m+3...
+  //   ... ... ... ... ...
+  //   y1 = ym y2m y3m...
+  //   | | | | | | | |
+  //   v v v v v v v v
+
+  ksk->freq.params = (struct FrequencyParam*)calloc(alphabet_getCurrentSize(ksk->freq.alphabet), sizeof(struct FrequencyParam));
+
+  if (!ksk->freq.params)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
+    goto end_kasiski;
+  }
+
+  ksk->freq.a_sz = alphabet_getCurrentSize(ksk->freq.alphabet);
+  ksk->IC = 0;
+  ksk->_M = 0;
+  ksk->__M = 0;
+
+  for (i = 0; i < ksk->divs; i++)
+  {
+    ksk->nsubstr = ksk->len / ksk->k_divisors[i];
+    
+    substr = (char**)calloc(ksk->nsubstr, sizeof(char*));
+    if (!substr)
+    {
+      #line __LINE__ __FILE__
+      snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
+      goto end_kasiski;
+    }
+
+    IC = 0.0;
+    for (j = 0; j < ksk->nsubstr; j++)
+    {
+      substr[j] = (char*)calloc(ksk->k_divisors[i] + 1, sizeof(char)); // +1 for '\0' at the end...
+      if (!substr[j])
+      {
+        #line __LINE__ __FILE__
+        snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
+        goto end_kasiski;
+      }
+      for (c = 0, k = j; k < ksk->len; k += ksk->nsubstr, c++)
+      {
+        substr[j][c] = ksk->input[k];
+      }
+      substr[j][c] = '\0';
+      // printf("Substr: %s\n\n", substr[j]);
+      _computeFrequency(&(ksk->freq), substr[j], c); // strlen(sbstr[j]) == c...
+      IC += _computeIC(ksk->freq);
+
+      if (substr[j])
+        free(substr[j]);
+    }
+    // printf("IC: %f @@ nsubstr: %ld\n", IC, nsubstr);
+    IC = (float)((float) IC / (float)ksk->nsubstr);
+    // printf("IC : %.4f @ M: %ld\n", IC, k_divisors[i]);
+    // printf("\tIC: %f\n", IC);
+    if (fabs(IC - ENG_IC) < fabs(ksk->IC - ENG_IC))
+    {
+      ksk->IC = IC;
+      ksk->_M = ksk->k_divisors[i];  //__M has number of substrings
+      ksk->__M = ksk->nsubstr; // __M has number of substrings
+    }
+
+    if (substr)
+      free(substr);
+  }
+
+  end_kasiski:
+    return;
 }
