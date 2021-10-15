@@ -7,6 +7,24 @@
 
 typedef struct _alphabet_t alphabet_t;
 
+#define NEXT(n) (n)->next
+
+struct AlphabetIterator
+{
+  enum LangMode {CASTILLIAN = 0, ENGLISH} langmode;
+  struct ApIteratorNode {
+    struct ApIteratorNode *next; // points next or NULL if it's last one
+    struct ApIteratorNode *last; // points last or NULL if it0s first one
+    char chr; // correspondant character
+    union Prob
+    {
+      float cast; // probability of occurrence in castillian
+      float eng; // probability of ocurrence in english
+    } prob; 
+  } *node;
+  bool ok;
+};
+
 alphabet_t *alphabet_init(size_t a_size);
 
 bool alphabet_map(alphabet_t *alphabet, char c, int_fast8_t n);
@@ -35,6 +53,33 @@ int_fast8_t alphabet_get_offset(alphabet_t *alphabet);
 
 void alphabet_clean(alphabet_t *alphabet);
 
+/**
+ * @brief Returns structure
+ * containing nodes sorted by frequency
+ * by desired mode
+ * 
+ * @param alphabet needed 
+ * @param mode CASTILLIAN or ENGLISH
+ * @return struct AlphabetIterator  with sorted list node
+ */
+struct AlphabetIterator *alphabet_sortByFreq(alphabet_t *alphabet, enum LangMode mode);
+
+/**
+ * @brief Cleans memory alloc'd
+ * by structure provided
+ * 
+ * @param afsort struct param to dealloc
+ */
+void alphabet_cleanAfSort(struct AlphabetIterator *afsort);
+
+/**
+ * @brief Prints alphabet
+ * at current status
+ * 
+ * @param alphabet to print
+ * @param dest destination file
+ * @return size_t total bytes printed
+ */
 size_t alphabet_print(alphabet_t *alphabet, FILE *dest);
 
 #endif

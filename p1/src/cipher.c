@@ -34,14 +34,12 @@ bool cipher_status;
 
 struct Frequency{
   alphabet_t *alphabet;
-  struct FrequencyParam *params;
+  struct Param{
+    char chr;
+    double prob;
+    uint_fast64_t ocurrences;
+  } *params;
   size_t a_sz;
-};
-
-struct FrequencyParam{
-  char chr;
-  double prob;
-  uint_fast64_t ocurrences;
 };
 
 /**
@@ -477,12 +475,11 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
   if (!ksk.ok)
     goto end_aff_mod_anlz;
   
-  for (i = 0; i < ksk.nsubstr; i++)
-    printf("--> %s\n", ksk.strs[i]);
+  // printf("Index of coincidence: %.4f\nM found: %ld\n", ksk.IC, ksk._M);
+  // for (i = 0; i < ksk.nsubstr; i++)
+  //   printf("--> %s\n", ksk.strs[i]);
 
   // guess (a,b) for each string...
-
-  // printf("Index of coincidence: %.4f\nM found: %ld\n", ksk.IC, ksk._M);
 
 
 

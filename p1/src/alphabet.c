@@ -20,16 +20,15 @@
 #define A_MAX_SIZE(a) (a)->a_max_size
 #define A_CURR_SIZE(a) (a)->curr_size
 
-typedef struct
-{
-  int_fast8_t num;
-  char chr;
-  double c_freq; //castillian frequency
-  double e_freq; //english frequency
-}alphabet_node;
+
 
 struct _alphabet_t{
-  alphabet_node *nodes;
+  struct alphabet_node {
+    int_fast8_t num;
+    char chr;
+    double c_freq; //castillian frequency
+    double e_freq; //english frequency
+  } *nodes;
   int_fast8_t a_max_size;
   int_fast8_t curr_size;
 };
@@ -278,6 +277,68 @@ bool alphabet_contains_chr(alphabet_t *alphabet, char c)
   }
   
   return false;
+}
+
+struct AlphabetIterator *alphabet_sortByFreq(alphabet_t *alphabet, enum LangMode mode)
+{
+  struct AlphabetIterator *afsort = NULL;
+  struct ApIteratorNode *node = NULL,
+                       *_prev = NULL;
+  
+  size_t i;
+
+  if (!alphabet)
+  {
+    #line __LINE__ __FILE__
+    goto end_afsort;
+  }
+
+  afsort = (struct AlphabetIterator*)malloc(sizeof(struct AlphabetIterator));
+  
+  if (!afsort)
+  {
+    #line __LINE__ __FILE__
+    goto end_afsort;
+  };
+
+  afsort->ok = false;
+  afsort->langmode = mode;
+  afsort->node = NULL;
+
+  for (i = 0; i < A_CURR_SIZE(alphabet); i++)
+  {
+
+    node = (struct ApIteratorNode)malloc(sizeof(struct ApIteratorNode));
+    if (!node)
+    {
+      #line __LINE__ __FILE__
+      goto end_afsort;
+    }
+    node->next = NULL;
+    node->last = NULL;
+
+    node.chr = A_NODES_AT(alphabet, i).chr;
+    if (mode == CASTILLIAN)
+      node->prob = A_NODES_AT(alphabet, i).c_freq;
+    else
+      node->prob = A_NODES_AT(alphabet, i).e_freq;
+
+    if (afsort->node == NULL)
+    {
+      afsort->node = node;
+      node = NULL;
+      continue;
+    }
+
+    _prev =afsort->node;
+
+    // iterate as hash_iterator but sort during process...
+    
+    node = NULL;
+  }
+
+  end_afsort:
+    return afsort;
 }
 
 size_t alphabet_print(alphabet_t *alphabet, FILE *dest)
