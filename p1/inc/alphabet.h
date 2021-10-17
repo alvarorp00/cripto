@@ -64,13 +64,15 @@ void alphabet_clean(alphabet_t *alphabet);
  */
 struct AlphabetIterator *alphabet_sortByFreq(alphabet_t *alphabet, enum LangMode mode);
 
+struct ApIteratorNode *alphabet_iteratorFreqAt(struct AlphabetIterator *iterator, size_t idx);
+
 /**
  * @brief Cleans memory alloc'd
  * by structure provided
  * 
  * @param afsort struct param to dealloc
  */
-void alphabet_cleanAfSort(struct AlphabetIterator *afsort);
+void alphabet_iteratorFree(struct AlphabetIterator *afsort);
 
 /**
  * @brief Prints alphabet

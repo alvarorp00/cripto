@@ -481,13 +481,26 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
 
   // guess (a,b) for each string...
 
+  struct AlphabetIterator *iterator;
 
+  iterator = alphabet_sortByFreq(alphabet, ENGLISH);
+  if (!iterator || !iterator->ok)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_aff_mod_anlz;
+  }
+
+  // fix anonymous structure access...
+
+  // printf("Value at 4: %c\n", alphabet_iteratorFreqAt(iterator, 3)->chr);
 
   // todo: calculate characters occurrence probability in given input text
   // so IC can then be calculated...
 
   end_aff_mod_anlz:
     _kasiski_free(&ksk);
+    alphabet_iteratorFree(iterator);
     if (output)
       free(output);
 }
@@ -681,7 +694,7 @@ static void _kasiski (struct Kasiski *ksk)
   //   | | | | | | | |
   //   v v v v v v v v
 
-  ksk->freq.params = (struct FrequencyParam*)calloc(alphabet_getCurrentSize(ksk->freq.alphabet), sizeof(struct FrequencyParam));
+  ksk->freq.params = (struct Param*)calloc(alphabet_getCurrentSize(ksk->freq.alphabet), sizeof(struct Param));
 
   if (!ksk->freq.params)
   {
@@ -753,7 +766,7 @@ static void _kasiski (struct Kasiski *ksk)
 
   for (j = 0; j < ksk->nsubstr; j++)
   {
-    ksk->strs[j] = (char*)calloc(ksk->_M, sizeof(char));
+    ksk->strs[j] = (char*)calloc(ksk->_M + 1, sizeof(char)); // +1 for trailing '\0'
     if (!ksk->strs[j])
     {
       #line __LINE__ __FILE__
@@ -762,7 +775,7 @@ static void _kasiski (struct Kasiski *ksk)
     }
     for (c = 0, k = j; k < ksk->len; k += ksk->nsubstr, c++)
       ksk->strs[j][c] = ksk->input[k];
-    ksk->strs[j][c] = '\0';
+    ksk->strs[j][c] = 0;
   }
 
   ksk->ok = true;

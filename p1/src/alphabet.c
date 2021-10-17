@@ -20,10 +20,8 @@
 #define A_MAX_SIZE(a) (a)->a_max_size
 #define A_CURR_SIZE(a) (a)->curr_size
 
-
-
 struct _alphabet_t{
-  struct alphabet_node {
+  struct alphabet_node{
     int_fast8_t num;
     char chr;
     double c_freq; //castillian frequency
@@ -47,7 +45,7 @@ alphabet_t *alphabet_init(size_t a_size)
     goto alphabet_init_error;
   }
   
-  A_NODES(alphabet) = (alphabet_node*)calloc(a_size, sizeof(alphabet_node));
+  A_NODES(alphabet) = (struct alphabet_node*)calloc(a_size, sizeof(struct alphabet_node));
   if (!A_NODES(alphabet))
   {
     #line __LINE__ __FILE__
@@ -71,7 +69,7 @@ alphabet_t *alphabet_init(size_t a_size)
 
 bool alphabet_map(alphabet_t *alphabet, char c, int_fast8_t n)
 {
-  alphabet_node node;
+  struct alphabet_node node;
   
   if (!alphabet || !c || !n)
   {
@@ -282,10 +280,12 @@ bool alphabet_contains_chr(alphabet_t *alphabet, char c)
 struct AlphabetIterator *alphabet_sortByFreq(alphabet_t *alphabet, enum LangMode mode)
 {
   struct AlphabetIterator *afsort = NULL;
-  struct ApIteratorNode *node = NULL,
-                       *_prev = NULL;
+  struct ApIteratorNode *new = NULL,
+                        *node = NULL,
+                        *_prev;
   
   size_t i;
+  bool flg;
 
   if (!alphabet)
   {
@@ -308,37 +308,117 @@ struct AlphabetIterator *alphabet_sortByFreq(alphabet_t *alphabet, enum LangMode
   for (i = 0; i < A_CURR_SIZE(alphabet); i++)
   {
 
-    node = (struct ApIteratorNode)malloc(sizeof(struct ApIteratorNode));
-    if (!node)
+    new = (struct ApIteratorNode*)malloc(sizeof(struct ApIteratorNode));
+    if (!new)
     {
       #line __LINE__ __FILE__
       goto end_afsort;
     }
-    node->next = NULL;
-    node->last = NULL;
+    new->next = NULL;
+    new->last = NULL;
 
-    node.chr = A_NODES_AT(alphabet, i).chr;
+    new->chr = A_NODES_AT(alphabet, i).chr;
     if (mode == CASTILLIAN)
-      node->prob = A_NODES_AT(alphabet, i).c_freq;
+    {
+      new->prob.cast = A_NODES_AT(alphabet, i).c_freq;
+    }
     else
-      node->prob = A_NODES_AT(alphabet, i).e_freq;
+    {
+      new->prob.eng = A_NODES_AT(alphabet, i).e_freq;
+    }
 
     if (afsort->node == NULL)
     {
-      afsort->node = node;
-      node = NULL;
+      afsort->node = new;
       continue;
     }
 
-    _prev =afsort->node;
-
     // iterate as hash_iterator but sort during process...
-    
-    node = NULL;
+
+    for (node = afsort->node;;node = node->next)
+    {
+      // if (node->prob <= _node->prob && _node->next)
+      //   continue;
+      if (mode == CASTILLIAN && new->prob.cast <= node->prob.cast)
+      {
+        if (node->next == NULL)
+        {
+          node->next = new;
+          new->last = node;
+          break;
+        }
+        continue;
+      }
+      else if (mode == ENGLISH && new->prob.eng <= node->prob.eng)
+      {
+        if (node->next == NULL)
+        {
+          node->next = new;
+          new->last = node;
+          break;
+        }
+        continue;
+      }
+      if (node->last != NULL)
+      {
+        node->last->next = new;
+        new->last = node->last;
+        node->last = new;
+        new->next = node;
+        // printf("@ %c -> %c -> %c @\n", new->last->chr, new->chr, new->next->chr);
+      }
+      else {
+        afsort->node = new;
+        new->last = NULL;
+        new->next = node;
+        node->last = new;
+        // printf("@ %c -> %c -> %c @\n", '0', new->chr, new->next->chr);
+      }
+      break;
+    }
   }
+
+  afsort->ok = true;
 
   end_afsort:
     return afsort;
+}
+
+struct ApIteratorNode *alphabet_iteratorFreqAt(struct AlphabetIterator *iterator, size_t idx)
+{
+  struct ApIteratorNode *n;
+  size_t i;
+  
+  if (!iterator)
+    return NULL;
+
+  for (i = 0, n = iterator->node; i < idx; i++, n = n->next)
+  {
+    if (!n)
+      return NULL;
+  }
+
+  return n;
+}
+
+void alphabet_iteratorFree(struct AlphabetIterator *afsort)
+{
+  struct ApIteratorNode *__inode, *__next_inode;
+  
+  if (!afsort)
+    return;
+  
+  __inode = afsort->node;
+
+  while(__inode->next != NULL)
+  {
+    __next_inode = __inode->next;
+    free(__inode);
+    __inode = __next_inode;
+  }
+  free(__inode);
+
+  free(afsort);
 }
 
 size_t alphabet_print(alphabet_t *alphabet, FILE *dest)
