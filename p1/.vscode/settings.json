@@ -17,7 +17,8 @@
     "alphabet.h": "c",
     "hash.h": "c",
     "stdbool.h": "c",
-    "nxjson.h": "c"
+    "nxjson.h": "c",
+    "typeinfo": "c"
   },
   "C_Cpp.errorSquiggles": "Disabled"
 }

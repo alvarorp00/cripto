@@ -30,16 +30,18 @@
 char errbuff[ERRBUFF_LEN + 1];
 bool cipher_status;
 
+#define LANGMODE ENGLISH // CASTILLIAN
+
 // TODO struct ClassicCipher{...}
 
 struct Frequency{
-  alphabet_t *alphabet;
+  alphabet_t *alphabet; // must be provided
   struct Param{
     char chr;
     double prob;
     uint_fast64_t ocurrences;
   } *params;
-  size_t a_sz;
+  size_t a_sz; // alphabet_size, must be provided
 };
 
 /**
@@ -62,6 +64,22 @@ struct Kasiski{
   size_t _M; // key length 
   float IC; // index of coincidence
   struct Frequency freq; // frequency structure param, needs to be set up first
+  bool ok;
+};
+
+/**
+ * @brief 
+ * 
+ */
+struct TextFrequencyIterator{
+  alphabet_t *alphabet;
+  char *textstring;
+  struct TFNode {
+    char chr;
+    float prob;
+    struct TFNode *next;
+    struct TFNode *last;
+  } *first;
   bool ok;
 };
 
@@ -127,6 +145,37 @@ static void _kasiski(struct Kasiski *ksk);
  * @param kasiski param to struct
  */
 static void _kasiski_free(struct Kasiski *kasiski);
+
+/**
+ * @brief Initialize iterator
+ * for given alphabet and textstring
+ * (both supplied inside struct given as argument)
+ * 
+ * @param iterator
+ */
+static void _text_frequency_iterator_new(struct TextFrequencyIterator *iterator);
+
+/**
+ * @brief Returns text frequency node
+ * at given posicion, starting at 0 (first => idx := 0)
+ * 
+ * @param iterator to check
+ * @return struct TFNode* or NULL if it's out of bounds
+ */
+static struct TFNode* _text_frequency_iterator_at(struct TextFrequencyIterator *iterator, size_t idx);
+
+/**
+ * @brief Cleans data associated with given iterator, but
+ * if argument was alloc'd dynamically, it won't free those
+ * memory reference, just the ones that are inside given
+ * structure.
+ * 
+ * So, if it's the case, call free(iterator) immediatly after calliing
+ * this function
+ * 
+ * @param iterator 
+ */
+static void _text_frequency_iterator_clean(struct TextFrequencyIterator *iterator);
 
 /* ! IMPLEMENTATIONS ! */
 
@@ -481,26 +530,47 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
 
   // guess (a,b) for each string...
 
-  struct AlphabetIterator *iterator;
+  struct AlphabetIterator *apiterator;
 
-  iterator = alphabet_sortByFreq(alphabet, ENGLISH);
-  if (!iterator || !iterator->ok)
+  apiterator = alphabet_sortByFreq(alphabet, LANGMODE);
+  if (!apiterator || !apiterator->ok)
   {
     #line __LINE__ __FILE__
     snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
     goto end_aff_mod_anlz;
   }
 
-  // fix anonymous structure access...
+  struct TextFrequencyIterator tfiterator;
+  struct TFNode *node;
+  
+  tfiterator.alphabet = alphabet;
+  tfiterator.textstring = input;
 
-  // printf("Value at 4: %c\n", alphabet_iteratorFreqAt(iterator, 3)->chr);
+  _text_frequency_iterator_new(&tfiterator);
 
-  // todo: calculate characters occurrence probability in given input text
-  // so IC can then be calculated...
+  // az = (mpz_t*)calloc(ksk._M, sizeof(mpz_t));
+  // bz = (mpz_t*)calloc(ksk._M, sizeof(mpz_t));
+
+  // if (!az || !bz)
+  // {
+  //   #line __LINE__ __FILE__
+  //   snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+  //   goto end_aff_mod_anlz;
+  // }
+
+  // mpz_init(mz);
+
+  // for (i = 0; i < ksk.nsubstr; i++)
+  // {
+  //   mpz_inits(az[i], bz[i], NULL);
+
+    
+  // }
 
   end_aff_mod_anlz:
     _kasiski_free(&ksk);
-    alphabet_iteratorFree(iterator);
+    alphabet_iteratorFree(apiterator);
+    _text_frequency_iterator_clean(&tfiterator);
     if (output)
       free(output);
 }
@@ -649,6 +719,8 @@ static size_t *_get_divisors(ssize_t n, size_t *divs)
   
   return k_divisors;
 }
+
+// !!! KASISKI !!! ///
 
 static void _kasiski (struct Kasiski *ksk)
 {
@@ -805,4 +877,121 @@ static void _kasiski_free(struct Kasiski *kasiski)
         free(kasiski->strs[i]);
     free (kasiski->strs);
   }
+}
+
+// !!! TEXT FREQUENCY ITERATOR !!! ///
+
+static void _text_frequency_iterator_new(struct TextFrequencyIterator *iterator)
+{
+  struct TFNode *new, *node, *_prev;
+  struct Frequency freq;
+
+  size_t i, j; char chr;
+
+  iterator->first = NULL;
+  iterator->ok = false;
+  
+  if (!iterator->alphabet || !iterator->textstring)
+    return;
+
+  freq.alphabet = iterator->alphabet;
+  freq.a_sz = alphabet_getCurrentSize(iterator->alphabet);
+  freq.params = (struct Param*)calloc(freq.a_sz, sizeof(struct Param));
+
+  if (!freq.params)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto text_freq_new_end;
+  }
+  
+  _computeFrequency(&freq, iterator->textstring, strlen(iterator->textstring));
+
+  for (i = 0; i < freq.a_sz; i++)
+  {
+    new = (struct TFNode*)malloc(sizeof(struct TFNode));
+    if (!new)
+    {
+      #line __LINE__ __FILE__
+      snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+      goto text_freq_new_end;
+    }
+    new->chr = freq.params[i].chr;
+    new->prob = freq.params[i].prob;
+    new->last = NULL;
+    new->next = NULL;
+
+    if (iterator->first == NULL)
+    {
+      iterator->first = new;
+      continue;
+    }
+
+    for (node = iterator->first;;node = node->next)
+    {
+      if (new->prob <= node->prob)
+      {
+        if (node->next == NULL)
+        {
+          node->next = new;
+          new->last = node;
+          break;
+        }
+        continue;
+      }
+      if (node->last != NULL)
+      {
+        node->last->next = new;
+        new->last = node->last;
+        node->last = new;
+        new->next = node;
+      }
+      else
+      {
+        iterator->first = new;
+        new->last = NULL;
+        new->next = node;
+        node->last = new;
+      }
+      break;
+    }
+  }
+
+  iterator->ok = true;
+
+  text_freq_new_end:
+    if (freq.params)
+      free(freq.params);
+}
+
+static struct TFNode* _text_frequency_iterator_at(struct TextFrequencyIterator *iterator, size_t idx)
+{
+  struct TFNode *node;
+  size_t i;
+  
+  for (i = 0, node = iterator->first; i < idx; i++, node = node->next)
+  {
+    if (!node)
+      return NULL;
+  }
+
+  return node;
+}
+
+static void _text_frequency_iterator_clean(struct TextFrequencyIterator *iterator)
+{
+  struct TFNode *__inode, *__next_inode;
+
+  __inode = iterator->first;
+
+  if (!__inode)
+    return;
+
+  while(__inode->next != NULL)
+  {
+    __next_inode = __inode->next;
+    free(__inode);
+    __inode = __next_inode;
+  }
+  free(__inode);
 }

@@ -410,6 +410,9 @@ void alphabet_iteratorFree(struct AlphabetIterator *afsort)
   
   __inode = afsort->node;
 
+  if (!__inode)
+    return;
+
   while(__inode->next != NULL)
   {
     __next_inode = __inode->next;
@@ -420,6 +423,8 @@ void alphabet_iteratorFree(struct AlphabetIterator *afsort)
 
   free(afsort);
 }
+
+/* DEBUG METHODS */
 
 size_t alphabet_print(alphabet_t *alphabet, FILE *dest)
 {

@@ -21,7 +21,7 @@ struct AlphabetIterator
       float cast; // probability of occurrence in castillian
       float eng; // probability of ocurrence in english
     } prob; 
-  } *node;
+  } *node; // first node of the iterator
   bool ok;
 };
 
