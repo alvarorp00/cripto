@@ -56,12 +56,10 @@ struct Frequency{
  */
 struct Kasiski{
   char *input; // input text, needs to be set up first
-  size_t *k_divisors; // array with available divsors
   ssize_t len; // length of input text
-  size_t divs; // amount of len divisors (== length(k_divisors))
-  size_t nsubstr; // number of substrings
   char **strs; // store final substrings
-  size_t _M; // key length 
+  size_t substrlen; // number of substrings 
+  size_t keylength; // length of the key
   float IC; // index of coincidence
   struct Frequency freq; // frequency structure param, needs to be set up first
   bool ok;
@@ -80,6 +78,7 @@ struct TextFrequencyIterator{
     struct TFNode *next;
     struct TFNode *last;
   } *first;
+  size_t sz;
   bool ok;
 };
 
@@ -109,7 +108,7 @@ static void _computeFrequency(struct Frequency *freq, char *textstring, ssize_t 
  * @param freq structure used to calculate frequencies from alphabet
  * @return float IC
  */
-static float _computeIC(struct Frequency freq);
+static float _computeIC(struct Frequency freq, size_t len);
 
 /**
  * @brief Returns a dynamic array
@@ -471,7 +470,8 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
 {
   mpz_t mz, *az, *bz; // keyspace is a vector!
   mpz_t gcd;
-  mpz_t xz, cx, yz, dx;
+  mpz_t xz1, cx1, yz1, dx1;
+  mpz_t xz2, cx2, yz2, dx2;
   
   char *input = NULL,
        *output = NULL;
@@ -481,7 +481,7 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
 
   ssize_t len = 0,
           mk = 0; // current offset
-  size_t i, j, k, c;
+  size_t i, j, k, l, n, c;
 
   struct Kasiski ksk;
   
@@ -524,7 +524,7 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
   if (!ksk.ok)
     goto end_aff_mod_anlz;
   
-  // printf("Index of coincidence: %.4f\nM found: %ld\n", ksk.IC, ksk._M);
+  printf("Index of coincidence: %.4f\nKey length found: %ld\n", ksk.IC, ksk.keylength);
   // for (i = 0; i < ksk.nsubstr; i++)
   //   printf("--> %s\n", ksk.strs[i]);
 
@@ -544,33 +544,83 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
   struct TFNode *node;
   
   tfiterator.alphabet = alphabet;
-  tfiterator.textstring = input;
 
-  _text_frequency_iterator_new(&tfiterator);
+  az = (mpz_t*)calloc(ksk.substrlen, sizeof(mpz_t));
+  bz = (mpz_t*)calloc(ksk.substrlen, sizeof(mpz_t));
 
-  // az = (mpz_t*)calloc(ksk._M, sizeof(mpz_t));
-  // bz = (mpz_t*)calloc(ksk._M, sizeof(mpz_t));
+  if (!az || !bz)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_aff_mod_anlz;
+  }
 
-  // if (!az || !bz)
-  // {
-  //   #line __LINE__ __FILE__
-  //   snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
-  //   goto end_aff_mod_anlz;
-  // }
+  mpz_init(mz);
+  
+  // two bcs we're on a linear ecuation system!
+  mpz_inits(xz1, cx1, yz1, dx1, NULL); // first pair of the congruence
+  mpz_inits(xz2, cx2, yz2, dx2, NULL); // second pair of the congruence
 
-  // mpz_init(mz);
+  output = (char*)calloc(ksk.keylength * ksk.substrlen, sizeof(char));
 
+  if (!output)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_aff_mod_anlz;
+  }
+
+/**
+ * Not efficient, better ways
+ * should be explored...
+ * 
+ */
   // for (i = 0; i < ksk.nsubstr; i++)
   // {
   //   mpz_inits(az[i], bz[i], NULL);
 
-    
+  //   tfiterator.textstring = ksk.strs[i];
+  //   _text_frequency_iterator_new(&tfiterator);
+
+  //   for (j = 0; j < alphabet_getCurrentSize(alphabet); j++)
+  //   {
+  //     mpz_set_ui(xz1, alphabet_get_fromChar(alphabet, alphabet_iteratorFreqAt(apiterator, j)->chr));
+  //     for (k = 0; k < tfiterator.sz; k++)
+  //     {
+  //       mpz_set_ui(yz1, alphabet_get_fromChar(alphabet, _text_frequency_iterator_at(&tfiterator, k)->chr));
+  //       for (l = j + 1; l < alphabet_getCurrentSize(alphabet); l++)
+  //       {
+  //         mpz_set_ui(xz2, alphabet_get_fromChar(alphabet, alphabet_iteratorFreqAt(apiterator, l)->chr));
+  //         for (n = k + 1; n < tfiterator.sz; n++)
+  //         {
+  //           mpz_set_ui(yz2, alphabet_get_fromChar(alphabet, _text_frequency_iterator_at(&tfiterator, n)->chr));
+  //           gmp_printf("Pairs: %Zd*a + b = %Zd\n", xz1, yz1);
+  //           gmp_printf("Pairs: %Zd*a + b = %Zd\n\n", xz2, yz2);
+  //         }
+  //         return;
+  //       }
+  //     }
+  //   }
+
+  //   key_found:
+  //     // TODO
+
+  //   _text_frequency_iterator_clean(&tfiterator);
   // }
 
   end_aff_mod_anlz:
     _kasiski_free(&ksk);
     alphabet_iteratorFree(apiterator);
-    _text_frequency_iterator_clean(&tfiterator);
+    // _text_frequency_iterator_clean(&tfiterator);
+    mpz_clear(mz);
+    mpz_clears(xz1, cx1, yz1, dx1, NULL);
+    mpz_clears(xz2, cx2, yz2, dx2, NULL);
+    if (az)
+      for (i = 0; i < ksk.substrlen; i++)
+        mpz_clear(az[i]);
+    if (bz)
+      for (i = 0; i < ksk.substrlen; i++)
+        mpz_clear(bz[i]);
     if (output)
       free(output);
 }
@@ -675,17 +725,25 @@ static void _computeFrequency(struct Frequency *freq, char *textstring, ssize_t 
   // each time a character is read, so better
   // do it in anoother loop, which seems to be
   // quite fast as alphabets are not usually large
+  
   for (i = 0; i < freq->a_sz; i++)
     freq->params[i].prob = (float)((float)(freq->params[i].ocurrences) / len);
 }
 
-static float _computeIC(struct Frequency freq)
+static float _computeIC(struct Frequency freq, size_t len)
 {
   size_t i;
   float ic;
 
+  if (len == 1)
+    return 0;
+
   for (ic = 0.0, i = 0; i < freq.a_sz; i++)
-    ic += pow(freq.params[i].prob, 2.0);
+  {
+    // ic += pow(freq.params[i].prob, 2.0);
+    ic += freq.params[i].ocurrences * (freq.params[i].ocurrences - 1);
+  }
+  ic /= (len * (len - 1));
 
   return ic;
 }
@@ -725,10 +783,10 @@ static size_t *_get_divisors(ssize_t n, size_t *divs)
 static void _kasiski (struct Kasiski *ksk)
 {
   #define ENG_IC 0.065
-  // #define IC_THRESHOLD 0.02
+  #define IC_THRESHOLD 0.005
 
-  size_t i, j, k, c;
-  size_t __M;
+  size_t m, j, k, c;
+  size_t substrlen;
 
   char **substr;
   float IC;
@@ -736,14 +794,6 @@ static void _kasiski (struct Kasiski *ksk)
   ksk->ok = false;
   
   ksk->len = strlen(ksk->input);
-  ksk->k_divisors = _get_divisors(ksk->len, &(ksk->divs));
-
-  if (!ksk->k_divisors)
-  {
-    #line __LINE__ __FILE__
-    snprintf(errbuff, ERRBUFF_LEN, "can't load k_divisors...");
-    goto end_kasiski;
-  }
 
   // printf("divs: %ld\n", divs);
   // for (i = 0; i < divs; i++)
@@ -777,58 +827,60 @@ static void _kasiski (struct Kasiski *ksk)
 
   ksk->freq.a_sz = alphabet_getCurrentSize(ksk->freq.alphabet);
   ksk->IC = 0;
-  ksk->_M = 0;
+  ksk->substrlen = 0;
+  ksk->keylength = 0;
 
-  for (i = 0; i < ksk->divs; i++)
-  {
-    ksk->nsubstr = ksk->len / ksk->k_divisors[i];
-    
-    substr = (char**)calloc(ksk->nsubstr, sizeof(char*));
+  // m stands for key length...
+
+  for (m = 1; m <= ksk->len; m++)
+  { 
+    substr = (char**)calloc(m, sizeof(char*));
     if (!substr)
     {
       #line __LINE__ __FILE__
-      snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
+      snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
       goto end_kasiski;
     }
 
     IC = 0.0;
-    for (j = 0; j < ksk->nsubstr; j++)
+    for (j = 0; j < m; j++)
     {
-      substr[j] = (char*)calloc(ksk->k_divisors[i] + 1, sizeof(char)); // +1 for '\0' at the end...
+      substrlen = (size_t)ceil((float)(ksk->len) / (float)(m)); 
+      substr[j] = (char*)calloc(substrlen + 1, sizeof(char)); // +1 for trailing '\0'
       if (!substr[j])
       {
         #line __LINE__ __FILE__
-        snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
+        snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
         goto end_kasiski;
       }
-      for (c = 0, k = j; k < ksk->len; k += ksk->nsubstr, c++)
+
+      for (c = 0, k = j; k < ksk->len; k += m, c++)
         substr[j][c] = ksk->input[k];
       substr[j][c] = '\0';
-      // printf("Substr: %s\n\n", substr[j]);
-      _computeFrequency(&(ksk->freq), substr[j], c); // strlen(sbstr[j]) == c...
-      IC += _computeIC(ksk->freq);
+      _computeFrequency(&(ksk->freq), substr[j], c);
+      IC += _computeIC(ksk->freq, c);
 
       if (substr[j])
         free(substr[j]);
     }
-    // printf("IC: %f @@ nsubstr: %ld\n", IC, nsubstr);
-    IC = (float)((float) IC / (float)ksk->nsubstr);
-    // printf("IC : %.4f @ M: %ld\n", IC, k_divisors[i]);
-    // printf("\tIC: %f\n", IC);
-    if (fabs(IC - ENG_IC) < fabs(ksk->IC - ENG_IC))
+    IC /= m;
+
+    if (fabs(IC - ENG_IC) < IC_THRESHOLD)
     {
+      printf("IC: %f\n", IC);
       ksk->IC = IC;
-      ksk->_M = ksk->k_divisors[i];  // _M has key length (e.g. k=3 -> _M = k)
-      __M = ksk->nsubstr;
+      ksk->substrlen = substrlen;
+      ksk->keylength = m;
+      if (substr)
+        free(substr);
+      break;
     }
 
     if (substr)
       free(substr);
   }
 
-  ksk->nsubstr = __M;
-  ksk->strs = (char**)calloc(ksk->nsubstr, sizeof(char*));
-
+  ksk->strs = (char**)calloc(ksk->substrlen, sizeof(char*));
   if (!ksk->strs)
   {
     #line __LINE__ __FILE__
@@ -836,20 +888,19 @@ static void _kasiski (struct Kasiski *ksk)
     goto end_kasiski;
   }
 
-  for (j = 0; j < ksk->nsubstr; j++)
+  for (j = 0; j < ksk->substrlen; j++)
   {
-    ksk->strs[j] = (char*)calloc(ksk->_M + 1, sizeof(char)); // +1 for trailing '\0'
+    ksk->strs[j] = (char*)calloc(ksk->keylength + 1, sizeof(char)); // +1 for trailing '\0'
     if (!ksk->strs[j])
     {
       #line __LINE__ __FILE__
       snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
       goto end_kasiski;
     }
-    for (c = 0, k = j; k < ksk->len; k += ksk->nsubstr, c++)
+    for (c = 0, k = j; k < ksk->len; k += ksk->substrlen, c++)
       ksk->strs[j][c] = ksk->input[k];
-    ksk->strs[j][c] = 0;
+    ksk->strs[j][c] = '\0';
   }
-
   ksk->ok = true;
 
   end_kasiski:
@@ -868,11 +919,9 @@ static void _kasiski_free(struct Kasiski *kasiski)
     alphabet_clean(kasiski->freq.alphabet);
   if (kasiski->input)
     free(kasiski->input);
-  if (kasiski->k_divisors)
-    free(kasiski->k_divisors);
   if (kasiski->strs)
   {
-    for (i = 0; i < kasiski->nsubstr; i++)
+    for (i = 0; i < kasiski->substrlen; i++)
       if (kasiski->strs[i])
         free(kasiski->strs[i]);
     free (kasiski->strs);
@@ -890,6 +939,7 @@ static void _text_frequency_iterator_new(struct TextFrequencyIterator *iterator)
 
   iterator->first = NULL;
   iterator->ok = false;
+  iterator->sz = 0;
   
   if (!iterator->alphabet || !iterator->textstring)
     return;
@@ -935,6 +985,7 @@ static void _text_frequency_iterator_new(struct TextFrequencyIterator *iterator)
         {
           node->next = new;
           new->last = node;
+          (iterator->sz)++;
           break;
         }
         continue;
@@ -953,6 +1004,7 @@ static void _text_frequency_iterator_new(struct TextFrequencyIterator *iterator)
         new->next = node;
         node->last = new;
       }
+      (iterator->sz)++;
       break;
     }
   }
