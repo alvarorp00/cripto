@@ -245,6 +245,35 @@ void alphabet_clean(alphabet_t *alphabet)
   }
 }
 
+double alphabet_getChrProb(alphabet_t *alphabet, char chr, enum LangMode MODE)
+{
+  size_t i;
+  
+  if (!alphabet)
+  {
+    #line __LINE__ __FILE__
+    return 0.0;
+  }
+
+  for (i = 0; i < alphabet_getCurrentSize(alphabet); i++)
+  {
+    if (A_NODES_AT(alphabet, i).chr == chr)
+    {
+      if (MODE == CASTILLIAN)
+        A_NODES_AT(alphabet, i).c_freq;
+      else
+        A_NODES_AT(alphabet, i).e_freq;
+    }
+  }
+
+  return 0.0;
+}
+
+double alphabet_getNumProb(alphabet_t *alphabet, uint_fast8_t num, enum LangMode MODE)
+{
+  return alphabet_getChrProb(alphabet, alphabet_get_fromNum(alphabet, num), MODE);
+}
+
 bool alphabet_contains_num(alphabet_t *alphabet, int_fast8_t num)
 {
   size_t i;

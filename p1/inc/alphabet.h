@@ -33,6 +33,10 @@ char alphabet_get_fromNum(alphabet_t *alphabet, int_fast8_t n);
 
 int_fast8_t alphabet_get_fromChar(alphabet_t *alphabet, char c);
 
+double alphabet_getChrProb(alphabet_t *alphabet, char chr, enum LangMode MODE);
+
+double alphabet_getNumProb(alphabet_t *alphabet, uint_fast8_t num, enum LangMode MODE);
+
 bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename);
 
 bool alphabet_contains_num(alphabet_t *alphabet, int_fast8_t num);
@@ -51,6 +55,11 @@ int_fast8_t alphabet_getCurrentSize(alphabet_t *alphabet);
  */
 int_fast8_t alphabet_get_offset(alphabet_t *alphabet);
 
+/**
+ * @brief Cleans alphabet
+ * 
+ * @param alphabet to be removed
+ */
 void alphabet_clean(alphabet_t *alphabet);
 
 /**
@@ -64,6 +73,14 @@ void alphabet_clean(alphabet_t *alphabet);
  */
 struct AlphabetIterator *alphabet_sortByFreq(alphabet_t *alphabet, enum LangMode mode);
 
+/**
+ * @brief Returns alphabet
+ * iterator node at desired position
+ * 
+ * @param iterator alphabet iterator
+ * @param idx index
+ * @return struct ApIteratorNode* 
+ */
 struct ApIteratorNode *alphabet_iteratorFreqAt(struct AlphabetIterator *iterator, size_t idx);
 
 /**
