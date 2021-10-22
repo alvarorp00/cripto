@@ -322,7 +322,8 @@ void affine_modified(
   char **b,
   uint8_t klength,
   FILE *i_file,
-  FILE *o_file)
+  FILE *o_file
+)
 {
   mpz_t mz, *az, *bz; // keyspace is a vector!
   mpz_t gcd;
@@ -409,6 +410,8 @@ void affine_modified(
   }
   len = strlen(input);
 
+  printf("INPUT: %s\n", input);
+
   output = (char*)calloc(len + 1, sizeof(char)); // len(cipher_text) == len(plain_text)
 
   mpz_inits(xz, cx, yz, dx, NULL);
@@ -469,6 +472,7 @@ void affine_modified(
 void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
 {
   mpz_t mz, *az, *bz; // keyspace is a vector!
+  mpz_t *az_exclude, *bz_exclude; // for next rounds...
   mpz_t gcd;
   mpz_t xz1, cx1, yz1, dx1;
   mpz_t xz2, cx2, yz2, dx2;
@@ -668,20 +672,20 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
   #define MG_IDEAL 0.065
   #define MG_THRESHOLD 0.01
 
-  printf("Guessed key length: %ld\n", ic.keylength);
-
   for (kpos = 0; kpos < ic.keylength; kpos++) // each part of the key...
   {
     mpz_inits(az[kpos], bz[kpos], NULL);
-    // buffer[0] = '\0'; // clear buffer
-    // for (idx = 0; idx < ic._M; idx++) // we're traversing it's read mode!
-    // {
-    //   buffer[idx] = ic.strs[idx][kpos]; // we don't care about shorter matches as it's just copied to a buffer
-    // }
-    // buffer[idx] = '\0';
 
-    printf("Buffer: %s\n", buffer);
-    continue;
+    mpz_set_ui(az[kpos], 0L);
+    mpz_set_ui(bz[kpos], 0L);
+    mpf_set_ui(M_g, 0L);
+
+    buffer[0] = '\0'; // clear buffer
+    
+    strncpy(buffer, ic.strs[kpos], ic._M + 1);
+
+    // printf("Buffer: %s\n", buffer);
+    // continue;
 
     tfiterator.textstring = buffer;
     _text_frequency_iterator_new(&tfiterator);
@@ -722,11 +726,19 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
              * 
              * And with the pair (az[kpos], bz[kpos]) => (a,b) we
              * could continue our algorithm...
+             * 
+             * - - - - - - - - - - - - - - - - - - - -
+             * 
+             * xz1 * az[kpos] + 1*bz[kpos] - yz1 = 0
+             * xz2 * az[kpos] + 1*bz[kpos] - yz2 = 0
+             * 
+             * az[kpos] = ((1)*(-yz2) - (1)*(-yz1)) / ((xz1)*(1) - (xz2)*(1))
+             * bz[kpos] = ((-yz1)*(xz2) - (-yz2)*(xz1)) / ((xz1)*(1) - (xz2)*(1))
              */
             
             mpz_div(az[kpos], cx1, dx1); // az[kpos] = (yz2 - yz1) / (xz2 - xz1)
-
-            printf("ok: %ld\n", kpos);
+            // mpz_invert(dx1, dx1, mz);
+            // mpz_mul(az[kpos], cx1, dx1);
 
             extended_euclides_gcd(az[kpos], mz, gcd);
 
@@ -735,7 +747,6 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
 
             mpz_mul(cx1, xz1, az[kpos]);
             mpz_sub(bz[kpos], yz1, cx1); // bz[kpos] = yz1 - xz1 * az[pos]
-
             
             // We've found a valid (a, b) pair...
 
@@ -750,19 +761,29 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
               mpz_mod(ix, ix, mz);
 
               mpf_set_d(fx, _text_frequency_iterator_at(&tfiterator, mpz_get_ui(ix))->prob);
+              mpf_mul_ui(fx, fx, 10L);
+              // gmp_printf("\t --> (%Ff * %Ff) / (%ld)\n", px, fx, strlen(buffer));
               mpf_mul(px, px, fx);
 
               mpf_div_ui(px, px, strlen(buffer));
-
-              mpf_sub_ui(fx, px, MG_IDEAL);
-              mpf_abs(fx, fx);
-
-              if (mpf_cmp_ui(fx, MG_THRESHOLD) <= 0) // We've found it!
-              {
-                gmp_printf("Valid pair: (%Zd, %Zd) \n", az[kpos], bz[kpos]);
-                goto next_round;
-              }
+              mpf_add(M_g, M_g, px);
             }
+
+            mpf_set_d(px, MG_IDEAL);
+            mpf_sub(fx, M_g, px);
+            mpf_abs(fx, fx);
+
+            // goto next_round;
+
+            if (mpf_cmp_d(fx, MG_THRESHOLD) <= 0) // We've found it!
+            {
+              // gmp_printf("Valid pair: (%Zd, %Zd) \n", az[kpos], bz[kpos]);
+              // gmp_printf("--> M_g [%ld / %ld] = %Ff\n", kpos + 1, ic.keylength, M_g);
+              // cmp if nexts az possible values are better
+              goto next_round;
+            }
+
+            continue;
           }
         }
       }
@@ -771,8 +792,42 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
       _text_frequency_iterator_clean(&tfiterator);
   }
 
+  // printf("--> ");
+  // for (i = 0; i < ic.keylength; i++)
+  // {
+  //   gmp_printf("(%Zd, %Zd) ", az[i], bz[i]);
+  // }
+  // printf("\n");
+
   if (buffer)
     free(buffer);
+
+  // cipher_status = true;
+
+  output = (char*)calloc((ic._M * ic.keylength) + 1, sizeof(char));
+  if (!output)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+  }
+
+  for (i = 0; i < strlen(input); i++)
+  {
+      mpz_set_si(yz1, alphabet_get_fromChar(alphabet, input[i]));
+      // mpz_set_ui(cx, 1L);
+      mpz_invert(cx1, az[(i%ic.keylength)], mz);
+      mpz_sub(dx1, yz1, bz[(i%ic.keylength)]);
+      mpz_mul(cx1, cx1, dx1);
+      mpz_mod(cx1, cx1, mz);
+
+    // output[i] = alphabet_get_fromNum(alphabet, mpz_get_ui(cx) + offset);
+    output[i] = alphabet_get_fromNum(alphabet, mpz_get_ui(cx1)); // c -> char  
+  }
+
+  fprintf(o_file, "%s", output);
+  fflush(o_file);
+
+  cipher_status = true;
 
   end_aff_mod_anlz:
     _IC_free(&ic);
@@ -784,13 +839,13 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
     mpz_clears(xz2, cx2, yz2, dx2, NULL);
     if (az)
     {
-      for (i = 0; i < ic._M; i++)
+      for (i = 0; i < ic.keylength; i++)
         mpz_clear(az[i]);
       free(az);
     }
     if (bz)
     {
-      for (i = 0; i < ic._M; i++)
+      for (i = 0; i < ic.keylength; i++)
         mpz_clear(bz[i]);
       free(bz);
     }

@@ -260,9 +260,9 @@ double alphabet_getChrProb(alphabet_t *alphabet, char chr, enum LangMode MODE)
     if (A_NODES_AT(alphabet, i).chr == chr)
     {
       if (MODE == CASTILLIAN)
-        A_NODES_AT(alphabet, i).c_freq;
+        return A_NODES_AT(alphabet, i).c_freq;
       else
-        A_NODES_AT(alphabet, i).e_freq;
+        return A_NODES_AT(alphabet, i).e_freq;
     }
   }
 

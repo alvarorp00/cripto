@@ -306,7 +306,7 @@ int main(int argc, char const *argv[])
       fclose(o_file);
     }
 
-    cipher_status = true; // we don't want program to blame us bcs of this...
+    // cipher_status = true; // we don't want program to blame us bcs of this...
 
     goto end_main;
 
