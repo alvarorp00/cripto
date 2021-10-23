@@ -145,7 +145,10 @@ static float _computePartialIC(struct Frequency *freq, size_t len);
  */
 static size_t *_get_divisors(ssize_t n, size_t *divs);
 
-static void _kasiski(); // TODO
+static void _kasiski()
+{
+
+} 
 
 /**
  * @brief Initialize iterator
