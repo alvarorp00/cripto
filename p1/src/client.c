@@ -115,10 +115,36 @@ int main(int argc, char const *argv[])
 
   // #define __AFFINE_MOD__
   #ifdef __AFFINE_MOD__
-    #define KLENGTH 3
+    // #define KLENGTH 3
 
     printf(" ! @@@ AFFINE CIPHER MOD @@@ ! \n");
   
+    char *keylength = "-K";
+    char *keylvalue = NULL;
+    
+    argparse_add_argument(p, STR(keylength), SINGLE, keylength, 1, NULL);
+    if (!argparse_parse_args(p, argc, argv))
+    {
+      eprintf("Error while parsing keylength from args...");
+      goto end_main;
+    }
+
+    keylvalue = argparse_get_arg(p, STR(keylength));
+    if (!keylvalue)
+    {
+      eprintf("error while loading keylength");
+      goto end_main;
+    }
+    size_t KLENGTH = atoi(keylvalue);
+
+    argparse_clean(p); p = NULL;
+    p = argparse_init();
+    if (!p)
+    {
+      eprintf("Parser couldn't be reinitialized...");
+      goto end_main;
+    }
+    
     char *encrypt = "-C";
     char *decrypt = "-D";
     char *ct_size = "-m";
@@ -221,6 +247,8 @@ int main(int argc, char const *argv[])
     }
     o_file = (o_file == NULL) ? stdout : o_file;
 
+    cipher_status = false;
+
     affine_modified(opt, m, a_, b_, KLENGTH, i_file, o_file);
 
     if (i_file != stdin && i_file)
@@ -320,16 +348,23 @@ int main(int argc, char const *argv[])
 
   #endif
 
+  #ifdef __KASISKI__
+
+  #endif
+
   #ifdef __STREAM__
 
   #endif
   
   end_main:
+  
     if (!cipher_status)
     {
       eprintf("Cipher didn't worked as expected: %s", errbuff);
+      #ifdef __DEBUG__
+      #endif
     }
     argparse_clean(p);
   
-  return 0;
+  return (cipher_status) ? 0 : 1;
 }

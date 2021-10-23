@@ -206,7 +206,7 @@ void affine(
   char *input = NULL,
        *output = NULL;
 
-  alphabet_t *alphabet;
+  alphabet_t *alphabet = NULL;
   int_fast8_t offset;
 
   ssize_t len = 0; // current offset
@@ -231,7 +231,7 @@ void affine(
 
   extended_euclides_gcd(az, mz, gcd); // gcd (a, m) = 1 --> in m=26, gcd(a, 26) = 1!
   
-  if (mpz_cmp_ui(gcd, 1) != 0)
+  if (mpz_cmp_ui(gcd, 1L) != 0)
   {
     #line __LINE__ __FILE__
     gmp_snprintf(errbuff, ERRBUFF_LEN, "gcd(%Zd, %Zd) = %Zd != 1", az, mz, gcd);
@@ -240,7 +240,6 @@ void affine(
   }
 
   alphabet = alphabet_init(mpz_get_ui(mz));
-
   if (!alphabet)
   {
     #line __LINE__ __FILE__
@@ -327,6 +326,29 @@ void affine_modified(
   FILE *o_file
 )
 {
+  
+  #ifdef __DEBUG__
+    printf("\n\tAffine Configuration: \n");
+    printf("\t--> Mode: %s\n", opt == CIPHER ? "cipher" : "decipher");
+    printf("\t--> m: %s\n", m);
+    printf("\t--> klength: %d\n", klength);
+    printf("\t--> a: ( ");
+    for (size_t _i = 0; _i < klength; _i++ )
+    {
+      printf("%s ", a[_i]);
+    }
+    printf(")\n");
+    printf("\t--> b: ( ");
+    for (size_t _i = 0; _i < klength; _i++ )
+    {
+      printf("%s ", b[_i]);
+    }
+    printf(")\n\n");
+    // printf("--> i_file: %s\n", i_file);
+    // printf("--> o_file: %s\n", o_file);
+  return;
+  #endif
+  
   mpz_t mz, *az, *bz; // keyspace is a vector!
   mpz_t gcd;
   mpz_t xz, cx, yz, dx;
@@ -372,11 +394,13 @@ void affine_modified(
     // every b ∈ Zm if and only if gcd(a, m) = 1.
 
     extended_euclides_gcd(az[i], mz, gcd); // gcd (a, m) = 1 --> in m=26, gcd(a, 26) = 1!
+    // gmp_printf("Checking EUCLIDES for gcd(%Zd, %Zd)=%Zd\n", az[i], mz, gcd);
 
     if (mpz_cmp_ui(gcd, 1) != 0)
     {
       #line __LINE__ __FILE__
-      gmp_snprintf(errbuff, ERRBUFF_LEN, "gcd(%Zd, %Zd) = %Zd != 1", az, mz, gcd);
+      gmp_printf("Failure EUCLIDES for gcd(%Zd, %Zd)=%Zd\n", az[i], mz, gcd);
+      gmp_snprintf(errbuff, ERRBUFF_LEN, "gcd(%Zd, %Zd) = %Zd != 1", az[i], mz, gcd);
       cipher_status = false;
       goto end_affine_mod_cipher;
     }

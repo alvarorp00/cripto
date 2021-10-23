@@ -35,7 +35,7 @@ struct _alphabet_t{
 
 alphabet_t *alphabet_init(size_t a_size)
 {
-  alphabet_t *alphabet;
+  alphabet_t *alphabet = NULL;
 
   alphabet = (alphabet_t*)malloc(sizeof(alphabet_t));
 

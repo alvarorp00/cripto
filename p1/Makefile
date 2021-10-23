@@ -52,6 +52,9 @@ cryptanalyze_aff_mod: MODEL=__CRYPTANALYZE_AFF_MOD__ ## Compiles with Affine mod
 cryptanalyze_aff_mod: NAME=cryptanalyze_aff_mod 
 cryptanalyze_aff_mod: default
 
+test_cryptanalysis: affine_mod cryptanalyze_aff_mod
+	nohup ./test_cryptanalysis_affmod.sh > log.out
+
 hill: MODEL=__HILL__ ## Compiles with Hill cipher
 hill: NAME=hill
 hill: default
@@ -59,6 +62,10 @@ hill: default
 vigenere: MODEL=__VIGENERE__ ## Compiles with Vigenere cipher
 vigenere: NAME=vigenere
 vigenere: default
+
+kasiski: MODEL=__kasiski__
+kasiski: NAME=kasiski
+kasiski: default
 
 stream: MODEL=__STREAM__ ## Compiles with stream cipher
 stream: NAME=stream
@@ -70,4 +77,3 @@ clean: ## Cleans output and object files
 				@ rm -f $(OBJ)/*
 				@ rm -f $(OUT)/*
 				@ rm -f $(COMPILED)
-				@ rm -f $(TEST)/*
