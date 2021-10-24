@@ -319,15 +319,7 @@ void affine(
       alphabet_clean(alphabet);
 }
 
-void affine_modified(
-  enum OPTION opt,
-  const char *m,
-  char **a,
-  char **b,
-  uint8_t klength,
-  FILE *i_file,
-  FILE *o_file
-)
+void affine_modified( enum OPTION opt, const char *m, char **a, char **b, uint8_t klength, FILE *i_file, FILE *o_file )
 {
   
   #ifdef __DEBUG__
@@ -495,7 +487,6 @@ void affine_modified(
 }
 
 // criptoanalyze vectorized affine cipher
-// not very efficient at all...
 void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
 {
   mpz_t mz, *az, *bz; // keyspace is a vector!
@@ -879,20 +870,116 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
       free(output);
 }
 
-void vigenere(enum OPTION opt, const char *m, char *k, FILE *i_file, FILE *o_file)
+void vigenere(enum OPTION opt, const char *m, char *keystring, FILE *i_file, FILE *o_file)
 {
-  char *input;
+  char *input = NULL,
+       *output = NULL;
   
-  if (!m || !k || !i_file || !o_file)
+  alphabet_t *alphabet = NULL;
+
+  mpz_t mz, gcd, cx;
+  mpz_t *kz = NULL;
+
+  ssize_t len = 0; // current offset
+  size_t i, kl;
+  
+  if (!m || !keystring || !i_file || !o_file)
   {
     #line __LINE__ __FILE__
     snprintf(errbuff, ERRBUFF_LEN, "bad arguments");
     goto end_vigenere;
   }
+  
+  if (!m || !keystring)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    cipher_status = false;
+    goto end_vigenere;
+  }
 
-  // TODO
+  mpz_inits(mz, gcd, cx, NULL);
+  mpz_set_str(mz, m, 10L);
+  kl = strlen(keystring);
+
+  kz = (mpz_t*)calloc(kl, sizeof(mpz_t));
+  if (!kz)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
+    goto end_vigenere;
+  }
+
+  alphabet = alphabet_init(mpz_get_ui(mz));
+  if (!alphabet)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "can't start alphabet...");
+    cipher_status = false;
+    goto end_vigenere;
+  }
+
+  if (alphabet_loadFromFile(alphabet, _DICT_FNAME) == false)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "can't load alphabet from file...");
+    cipher_status = false;
+    goto end_vigenere;
+  }
+
+  for ( i=0; i<kl; i++ )
+  {
+    mpz_init(kz[i]);
+    mpz_set_si( kz[i], alphabet_get_fromChar(alphabet, keystring[i]) );
+  }
+
+  // input --> plain text
+
+  input = _load_from_file(i_file, alphabet);
+  if (!input)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "can't read from input file...");
+    cipher_status = false;
+    goto end_vigenere;
+  }
+  len = strlen(input);
+
+  output = (char*)calloc(len + 1, sizeof(char)); // len(cipher_text) == len(plain_text)
+
+  for ( i=0; i<len; i++ )
+  {
+    mpz_set_si( cx, alphabet_get_fromChar(alphabet, input[i]) );
+    // gmp_printf("\t Cipher with %Zd value.\n", kz[(i%kl)]);
+
+    if (opt == CIPHER)
+      mpz_add(cx, cx, kz[( i % kl )]);
+    else
+      mpz_sub(cx, cx, kz[( i % kl )]);
+    // gmp_printf("\t Shifted %c to %c\n", input[i], alphabet_get_fromNum(alphabet, mpz_get_si(cx)));
+    mpz_mod(cx, cx, mz); // cx has either encrypted or decrypted character at i-th position of the text
+    output[i] = alphabet_get_fromNum(alphabet, mpz_get_si(cx) );
+  }
+
+  output[len] = '\0'; // string length, trailing 0!
+
+  // print output onto given stream...
+  fprintf(o_file, "%s", output);
+  cipher_status = true;
 
   end_vigenere:
+    if (input)
+      free(input);
+    if (output)
+      free(output);
+    alphabet_clean(alphabet);
+    if (kz)
+    {
+      for ( i=0; i<kl; i++ )
+        mpz_clear(kz[i]);
+      free(kz);
+    }
+    mpz_clears(mz, gcd, cx, NULL);
     return;
 }
 

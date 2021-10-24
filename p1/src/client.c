@@ -135,7 +135,7 @@ int main(int argc, char const *argv[])
       eprintf("error while loading keylength");
       goto end_main;
     }
-    size_t KLENGTH = atoi(keylvalue);
+    size_t KLENGTH = atol(keylvalue);
 
     argparse_clean(p); p = NULL;
     p = argparse_init();
@@ -168,7 +168,7 @@ int main(int argc, char const *argv[])
     }
 
     enum OPTION opt;
-    char *m, *a, *b;
+    char *m;
 
     FILE *i_file = NULL,
          *o_file = NULL;
@@ -345,6 +345,80 @@ int main(int argc, char const *argv[])
   #endif
 
   #ifdef __VIGENERE__
+    printf(" ! @@@ VIGENERE @@@ ! \n");
+    
+    char *encrypt = "-C";
+    char *decrypt = "-D";
+    char *ct_size = "-m";
+    char *key = "-k";
+    char *ipf = "-i";
+    char *opf = "-o";
+
+    argparse_add_argument(p, STR(encrypt), EMPTY, encrypt, 0, NULL);
+    argparse_add_argument(p, STR(decrypt), EMPTY, decrypt, 0, NULL);
+    argparse_add_argument(p, STR(ct_size), SINGLE, ct_size, 1, NULL);
+    argparse_add_argument(p, STR(key), SINGLE, key, 1, NULL);
+    argparse_add_argument(p, STR(ipf), SINGLE, ipf, 1, NULL);
+    argparse_add_argument(p, STR(opf), SINGLE, opf, 1, NULL);
+
+    if (!argparse_parse_args(p, argc, argv))
+    {
+      eprintf("Error at %s while calling argparse_parse_args(3)", __func__);
+      goto end_main;
+    }
+
+    enum OPTION opt;
+    char *m, *k;
+
+    FILE *i_file = NULL,
+         *o_file = NULL;
+    
+    char *keystring = NULL;
+    queue_t *q;
+    size_t i;
+
+    opt = argparse_is_present(p, STR(encrypt)) ? CIPHER :
+      argparse_is_present(p, STR(decrypt)) ? DECIPHER : CIPHER;
+
+    m = argparse_get_arg(p, STR(ct_size));
+    k = argparse_get_arg(p, STR(key));
+
+    // i_file = argparse_is_present(p, STR(ipf)) ? READ(argparse_get_arg(p, STR(ipf))) : stdin; 
+    // o_file = argparse_is_present(p, STR(opf)) ? READ(argparse_get_arg(p, STR(opf))) : stdout;
+
+    if (argparse_is_present(p, STR(ipf)))
+    {
+      // i_file = READ(argparse_get_arg(p, STR(ipf)));
+      i_file = fopen(argparse_get_arg(p, STR(ipf)), "r");
+
+      if (!i_file)
+        eprintf("Could not open input file. Using stdin...");
+    }
+    i_file = (i_file == NULL) ? stdin : i_file;
+
+    if (argparse_is_present(p, STR(opf)))
+    {
+      // o_file = WRITE(argparse_get_arg(p, STR(opf)));
+      o_file = fopen(argparse_get_arg(p, STR(opf)), "w");
+
+      if (!o_file)
+        eprintf("Could not open output file. Using stdout...");
+    }
+    o_file = (o_file == NULL) ? stdout : o_file;
+
+    cipher_status = false;
+
+    vigenere(opt, m, k, i_file, o_file);
+
+    if (i_file != stdin && i_file)
+    {
+      fclose(i_file);
+    }
+
+    if (o_file != stdout && o_file)
+    {
+      fclose(o_file);
+    }
 
   #endif
 

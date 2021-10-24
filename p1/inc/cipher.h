@@ -55,10 +55,10 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file);
  * 
  * @param opt cipher or decipher
  * @param m alphabet_sz
- * @param k cipher keystring
+ * @param keystring cipher keystring
  * @param i_file input file
  * @param o_file output file
  */
-void vigenere(enum OPTION opt, const char *m, char *k, FILE *i_file, FILE *o_file);
+void vigenere(enum OPTION opt, const char *m, char *keystring, FILE *i_file, FILE *o_file);
 
 #endif
