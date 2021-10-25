@@ -827,7 +827,7 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
     output[i] = alphabet_get_fromNum(alphabet, mpz_get_ui(cx1)); // c -> char  
   }
 
-  fprintf(o_file, "%s", output);
+  fprintf(o_file, "%s\n", output);
   fflush(o_file);
 
   cipher_status = true;
@@ -950,7 +950,7 @@ void vigenere(enum OPTION opt, const char *m, char *keystring, FILE *i_file, FIL
   output[len] = '\0'; // string length, trailing 0!
 
   // print output onto given stream...
-  fprintf(o_file, "%s", output);
+  fprintf(o_file, "%s\n", output);
   cipher_status = true;
 
   end_vigenere:
@@ -971,11 +971,15 @@ void vigenere(enum OPTION opt, const char *m, char *keystring, FILE *i_file, FIL
 
 void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE *o_file)
 {
+  #define __KSK_AUTO "auto"
+  
   mpz_t mz, *key;
   mpf_t fx, gx, fig, pi, m_g, _m_g;
   
   char *input = NULL,
        *output = NULL;
+
+  ssize_t max_ngram;
   
   alphabet_t *alphabet;
   struct Frequency freq = {0};
@@ -1021,9 +1025,26 @@ void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE 
   freq.alphabet = alphabet;
   freq.textstring = input;
   freq.textlen = strlen(input);
-  freq.ngram = (ngram != NULL) ? atol(ngram) : 0;
 
-  _kasiski(&(freq));
+  if (ngram && strcmp(ngram, __KSK_AUTO) == 0) // test maximum value for kasiski ngrams
+  {
+    max_ngram = 0;
+    for ( i=2; i<freq.textlen; i++ )
+    {
+      freq.ngram = i;
+      _kasiski(&(freq));
+      if (freq.Kasiski.ok == false)
+        break;
+      max_ngram = i;
+    }
+    freq.ngram = max_ngram;
+    _kasiski(&(freq));
+  }
+  else
+  {
+    freq.ngram = (ngram != NULL) ? atol(ngram) : 0;
+    _kasiski(&(freq));
+  }
 
   if (freq.Kasiski.ok)
     _IC(&(freq), true);
@@ -1311,7 +1332,6 @@ static size_t *_get_divisors(ssize_t n, size_t *divs)
   for (_divs = 0, i = 1; i <= (n >> 1); i++)
     if (!(n % i))
       _divs++;
-  _divs++; // can be divided by itself too!
 
   k_divisors = (size_t*)calloc(_divs, sizeof(size_t));
   if (!k_divisors)
