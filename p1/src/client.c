@@ -422,6 +422,69 @@ int main(int argc, char const *argv[])
 
   #endif
 
+  #ifdef __CRYPTANALYZE_VIGENERE__
+    printf(" ! @@@ CRYPTANALYZE VIGENERE @@@ ! \n");
+    
+    char *ct_size = "-m";
+    char *ngram = "-l";
+    char *ipf = "-i";
+    char *opf = "-o";
+
+    argparse_add_argument(p, STR(ct_size), SINGLE, ct_size, 1, NULL);
+    argparse_add_argument(p, STR(ngram), SINGLE, ngram, 1, NULL);
+    argparse_add_argument(p, STR(ipf), SINGLE, ipf, 1, NULL);
+    argparse_add_argument(p, STR(opf), SINGLE, opf, 1, NULL);
+
+    if (!argparse_parse_args(p, argc, argv))
+    {
+      eprintf("Error at %s while calling argparse_parse_args(3)", __func__);
+      goto end_main;
+    }
+
+    char *m, *n;
+
+    FILE *i_file = NULL,
+         *o_file = NULL;
+    
+    
+    m = argparse_get_arg(p, STR(ct_size));
+    n = argparse_get_arg(p, STR(ngram));
+
+    if (argparse_is_present(p, STR(ipf)))
+    {
+      // i_file = READ(argparse_get_arg(p, STR(ipf)));
+      i_file = fopen(argparse_get_arg(p, STR(ipf)), "r");
+
+      if (!i_file)
+        eprintf("Could not open input file. Using stdin...");
+    }
+    i_file = (i_file == NULL) ? stdin : i_file;
+
+    if (argparse_is_present(p, STR(opf)))
+    {
+      // o_file = WRITE(argparse_get_arg(p, STR(opf)));
+      o_file = fopen(argparse_get_arg(p, STR(opf)), "w");
+
+      if (!o_file)
+        eprintf("Could not open output file. Using stdout...");
+    }
+    o_file = (o_file == NULL) ? stdout : o_file;
+
+    cipher_status = false;
+
+    cryptanalyze_vigenere(m, n, i_file, o_file);
+
+    if (i_file != stdin && i_file)
+    {
+      fclose(i_file);
+    }
+
+    if (o_file != stdout && o_file)
+    {
+      fclose(o_file);
+    }
+  #endif
+
   #ifdef __KASISKI__
 
   #endif

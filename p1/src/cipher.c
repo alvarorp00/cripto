@@ -27,31 +27,40 @@
 #define GB1 MB1 * KB1 // too big!
 #define BUFFER 256
 
+#define MG_IDEAL_VALUE 0.065
+#define MG_THRESHOLD 0.01
+
 char errbuff[ERRBUFF_LEN + 1];
 bool cipher_status;
 
 #define LANGMODE ENGLISH // CASTILLIAN
 
-// TODO struct ClassicCipher{...}
-
 struct Frequency{
   alphabet_t *alphabet; // must be provided
-  struct Param{
-    char chr;
-    double prob;
-    uint_fast64_t ocurrences;
-  } *params;
   size_t a_sz; // alphabet_size, must be provided
+  char *textstring; // input text, needs to be set up first
+  ssize_t textlen; // length of input text
+  struct Param{
+    char chr; // chr to search
+    double prob; // probability of ocurrence in given text
+    uint_fast64_t ocurrences; // number of times chr appears in given text
+  } *chrs;
   struct IC{
-    char *input; // input text, needs to be set up first
-    ssize_t len; // length of input text
     char **strs; // store final substrings
     size_t _M; // substrings length == len(Y_i) 
     size_t keylength; // length of the key
-    float IC; // index of coincidence
-    // struct Frequency freq; // frequency structure param, needs to be set up first
-    bool ok;
+    float IC; // index of coincidence value
+    bool ok; // return status for IC calc
   } IC;
+  struct Kasiski{
+    size_t keylength; // guessed key length
+    size_t distance; // distance between repeated sequences
+    char *str; // string match
+    size_t *keycandidates; // keylength candidates
+    size_t ncandidates; // number of keylength candidates
+    bool ok; // status of kasiski performance
+  } Kasiski;
+  uint_fast32_t ngram; // ngram used for kasiski and IC test
 };
 
 /**
@@ -70,22 +79,26 @@ struct Frequency{
  * 
  */
 struct TextFrequencyIterator{
-  alphabet_t *alphabet;
-  char *textstring;
+  alphabet_t *alphabet; // alphabet; must be supplied at initialization
+  char *textstring; // texstring to check frequency
   struct TFNode {
     char chr;
     float prob;
     struct TFNode *next;
     struct TFNode *last;
-  } *first;
-  size_t sz;
-  bool ok;
+  } *first; // first node in frequency iterator
+  size_t sz; // number of nodes
+  bool ok; // status of iterator build up
 };
 
 /* - - - - - - - - !! STATIC !! - - - - - - - - */
 
 /**
- * @brief 
+ * @brief Loads data from given file
+ * using alphabet. It performs a fseek
+ * into de first position of the file so
+ * it's not a destructive function as it
+ * preserves given file pointer at initial position
  * 
  * @param i_file 
  * @param alphabet 
@@ -99,7 +112,7 @@ static char *_load_from_file(FILE *i_file, alphabet_t *alphabet);
  * and stores info inside
  * 
  */
-static void _computeFrequency(struct Frequency *freq, char *textstring, ssize_t len);
+static void _computeFrequency(struct Frequency *freq, char *textstring, ssize_t textlen);
 
 /**
  * @brief Performs ic over given
@@ -110,7 +123,7 @@ static void _computeFrequency(struct Frequency *freq, char *textstring, ssize_t 
  * 
  * @return Data calculated is stored inside given structure 
  */
-static void _IC(struct Frequency *freq);
+static void _IC(struct Frequency *freq, bool use_kasiski_candidates);
 
 /**
  * @brief Cleans
@@ -145,11 +158,7 @@ static float _computePartialIC(struct Frequency *freq, size_t len);
  */
 static size_t *_get_divisors(ssize_t n, size_t *divs);
 
-static void _kasiski()
-{
-
-} 
-
+static void _kasiski(struct Frequency *freq);
 /**
  * @brief Initialize iterator
  * for given alphabet and textstring
@@ -320,30 +329,7 @@ void affine(
 }
 
 void affine_modified( enum OPTION opt, const char *m, char **a, char **b, uint8_t klength, FILE *i_file, FILE *o_file )
-{
-  
-  #ifdef __DEBUG__
-    printf("\n\tAffine Configuration: \n");
-    printf("\t--> Mode: %s\n", opt == CIPHER ? "cipher" : "decipher");
-    printf("\t--> m: %s\n", m);
-    printf("\t--> klength: %d\n", klength);
-    printf("\t--> a: ( ");
-    for (size_t _i = 0; _i < klength; _i++ )
-    {
-      printf("%s ", a[_i]);
-    }
-    printf(")\n");
-    printf("\t--> b: ( ");
-    for (size_t _i = 0; _i < klength; _i++ )
-    {
-      printf("%s ", b[_i]);
-    }
-    printf(")\n\n");
-    // printf("--> i_file: %s\n", i_file);
-    // printf("--> o_file: %s\n", o_file);
-  return;
-  #endif
-  
+{  
   mpz_t mz, *az, *bz; // keyspace is a vector!
   mpz_t gcd;
   mpz_t xz, cx, yz, dx;
@@ -548,9 +534,10 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
   }
   
   freq.alphabet = alphabet;
-  freq.IC.input = input;
+  freq.textstring = input;
+  freq.textlen = strlen(input);
 
-  _IC(&(freq));
+  _IC(&(freq), false);
 
   if (!freq.IC.ok)
     goto end_aff_mod_anlz;
@@ -686,9 +673,6 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
   freq.alphabet = alphabet;
   freq.a_sz = alphabet_getCurrentSize(alphabet);
 
-  #define MG_IDEAL 0.065
-  #define MG_THRESHOLD 0.01
-
   for (kpos = 0; kpos < freq.IC.keylength; kpos++) // each part of the key...
   {
     mpz_inits(az[kpos], bz[kpos], NULL);
@@ -786,7 +770,7 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
               mpf_add(M_g, M_g, px);
             }
 
-            mpf_set_d(px, MG_IDEAL);
+            mpf_set_d(px, MG_IDEAL_VALUE);
             mpf_sub(fx, M_g, px);
             mpf_abs(fx, fx);
 
@@ -983,6 +967,229 @@ void vigenere(enum OPTION opt, const char *m, char *keystring, FILE *i_file, FIL
     return;
 }
 
+void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE *o_file)
+{
+  mpz_t mz, *key;
+  mpf_t fx, gx, fig, pi, m_g, _m_g;
+  
+  char *input = NULL,
+       *output = NULL;
+  
+  alphabet_t *alphabet;
+  struct Frequency freq = {0};
+  struct Frequency substrfreq = {0};
+
+  size_t i, j, g, idx;
+  char *keystring = NULL;
+  bool key_found;
+  
+  if (!m || !i_file || !o_file)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_cryptanalyze_vigenere;
+  }
+
+  mpz_init(mz);
+  mpz_set_str(mz, m, 10L);
+
+  alphabet = alphabet_init(mpz_get_ui(mz));
+  if (!alphabet)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_cryptanalyze_vigenere;
+  }
+
+  if (alphabet_loadFromFile(alphabet, _DICT_FNAME) == false)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_cryptanalyze_vigenere;
+  }
+
+  input = _load_from_file(i_file, alphabet);
+  if (!input)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_cryptanalyze_vigenere;
+  }
+
+  freq.alphabet = alphabet;
+  freq.textstring = input;
+  freq.textlen = strlen(input);
+  freq.ngram = (ngram != NULL) ? atol(ngram) : 0;
+
+  _kasiski(&(freq));
+
+  if (freq.Kasiski.ok)
+    _IC(&(freq), true);
+  else
+    _IC(&(freq), false);
+
+  if (!freq.IC.ok)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "Coincidence index couldn't determine key length");
+    goto end_cryptanalyze_vigenere;
+  }
+
+  // key length guessed at this point
+
+  _computeFrequency(&(freq), freq.textstring, freq.textlen);
+
+  // lets find closest G in M_g, 0 <= G <= 25 (in english) that
+  // gives us a M_g closest to 0.065
+
+  key = (mpz_t*)calloc(freq.IC.keylength, sizeof(mpz_t));
+  if (!key)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_cryptanalyze_vigenere;
+  }
+
+  mpf_inits(m_g, _m_g, NULL);
+  mpf_inits(fx, gx, pi, fig, NULL);
+  
+  substrfreq.alphabet = alphabet;
+
+  for ( i=0; i<freq.IC.keylength; i++ ) // for each part of the key...
+  {
+    
+    substrfreq.textstring = freq.IC.strs[i];
+    substrfreq.textlen = strlen(substrfreq.textstring);
+    substrfreq.chrs = (struct Param*)calloc(alphabet_getCurrentSize(alphabet), sizeof(struct Param));
+
+    if (!substrfreq.chrs)
+    {
+      #line __LINE__ __FILE__
+      snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
+      goto end_cryptanalyze_vigenere;
+    }
+
+    _computeFrequency(&(substrfreq), substrfreq.textstring, substrfreq.textlen);
+
+    /**
+     * Frequencies analysis
+     * 
+     * 0 <= i < keylength
+     * 
+     * f_i is each node in text frequency iterator
+     * n', which is string length, is strlen ( freq.IC.strs[i] ) 
+     *     better than freq.IC._M as it can be unpadded and not
+     *     be fit exactly in ( total_length / keylength )
+     * strs[i] is each substring cipher by each part of the key,
+     *         so strs[0] will be all characters supposedly encrypted
+     *         by the first part of the key!
+     */
+
+    mpz_init(key[i]);
+    key_found = false;
+
+    mpf_set_ui(m_g, 0L);
+
+    #ifdef __DEBUG__
+    printf("Value of M_g(Y_%ld)\n", i+1);
+    #endif
+    
+    for ( g=0; g<alphabet_getCurrentSize(alphabet); g++ )
+    {
+      // Lets see which value of g produces the closest
+      // value of M_g to 0.065 defined as MG_IDEAL_VALUE
+      mpf_set_ui(_m_g, 0L);
+      for ( j=0; j<alphabet_getCurrentSize(alphabet); j++ )
+      {
+        // for each element of the alphabet...
+        // -> Sum(0..25) <= (p_i * f_i+g) / (n') <- i = [0, 25]
+        mpf_set_d(pi, alphabet_getNumProb(alphabet, j, ENGLISH)); // pi := p_i
+        idx = ( (j + g) % alphabet_getCurrentSize(alphabet) ); // idx := (i + g) % 26 (for english alphabets)
+        mpf_set_d(fig, substrfreq.chrs[ idx ].prob); // fig := ( f_i+g / n' ); as prob is not ocurrence but probability!
+        mpf_mul(fx, pi, fig); // fx := p_i * f_i+g
+        mpf_add(_m_g, _m_g, fx);
+      }
+
+      mpf_set_d(gx, MG_IDEAL_VALUE);
+
+      mpf_sub(fx, m_g, gx);
+      mpf_sub(gx, _m_g, gx);
+
+      mpf_abs(fx, fx);
+      mpf_abs(gx, gx);   
+
+      #ifdef __DEBUG__
+      gmp_printf("%Ff @ ", _m_g);
+      #endif
+
+      if ( mpf_cmp(gx, fx) < 0 ) // ¿ |gx| < |fx|? If yes, new M_g calculated is better and so G is our value
+      {
+        // gmp_printf("New M_G: %Ff @ Previous M_G: %Ff\n", _m_g, m_g);
+        mpf_set(m_g, _m_g); // save new M_g calculated as it's better than previous one
+        mpz_set_ui(key[i], g); // we've found part of the key!
+        // printf("\n\t Key %ld: %ld\n", i+1, g);
+        key_found = true;
+      }
+    }
+    if (substrfreq.chrs)
+    {
+      free(substrfreq.chrs);
+      substrfreq.chrs = NULL;
+    }
+
+    if (!key_found)
+    {
+      #line __LINE__ __FILE__
+      snprintf(errbuff, ERRBUFF_LEN, "Part [%ld/%ld] of key couldn't be found!", i+1, freq.IC.keylength);
+      break;
+    }
+    #ifdef __DEBUG__
+    printf("\n\n");
+    #endif
+  }
+
+  mpf_clears(m_g, _m_g, fx, gx, NULL);
+  mpf_clears(pi, fig, NULL);
+
+  if (!key_found)
+    goto end_cryptanalyze_vigenere;
+  
+  keystring = (char*)calloc(freq.IC.keylength + 1, sizeof(char)); // +1 for trailing '\0'
+  if (!keystring)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_cryptanalyze_vigenere;
+  }
+
+  for ( i=0; i<freq.IC.keylength; i++ )
+  {
+    keystring[i] = alphabet_get_fromNum(alphabet, mpz_get_si(key[i]) );
+  }
+  keystring[i] = '\0';
+
+  vigenere(DECIPHER, m, keystring, i_file, o_file);
+
+  #ifdef __DEBUG__
+  printf("Keystring: %s\n", keystring);
+  #endif
+
+  end_cryptanalyze_vigenere:
+    _freq_free(&freq);
+    if (alphabet)
+      alphabet_clean(alphabet);
+    if (keystring)
+      free(keystring);
+    mpz_clear(mz);
+    if (key)
+    {
+      for ( i=0; i<freq.IC.keylength; i++ )
+        mpz_clear(key[i]);
+      free(key);
+    }
+    return;
+}
+
 /* ! Static Helper Functions ! */
 
 static char *_load_from_file(FILE *i_file, alphabet_t *alphabet)
@@ -1031,31 +1238,35 @@ static char *_load_from_file(FILE *i_file, alphabet_t *alphabet)
   input = realloc(input, (len + 1) * sizeof(char)); // truncate
   input[len] = '\0';
 
+  fseek( i_file, 0, SEEK_SET ); // preserve i_file
+
   return input;
 }
 
-static void _computeFrequency(struct Frequency *freq, char *textstring, ssize_t len)
+static void _computeFrequency(struct Frequency *freq, char *textstring, ssize_t textlen)
 {
   size_t i;
   char c;
   
-  if (!freq || !textstring)
+  if (!freq)
     return;
+  
+  freq->a_sz = alphabet_getCurrentSize(freq->alphabet);
 
   // printf("Textstring: %s\n", textstring);
 
   for (i = 0; i < freq->a_sz; i++)
   {
-    freq->params[i].ocurrences = 0;
-    freq->params[i].chr = alphabet_get_fromNum(freq->alphabet, i + alphabet_get_offset(freq->alphabet));
+    freq->chrs[i].ocurrences = 0;
+    freq->chrs[i].chr = alphabet_get_fromNum(freq->alphabet, i + alphabet_get_offset(freq->alphabet));
   }
   
-  for (i = 0; i < len; i++)
+  for (i = 0; i < textlen; i++)
   {
     c = textstring[i];
     if ((alphabet_contains_chr(freq->alphabet, c)))
     {
-      (freq->params[alphabet_get_fromChar(freq->alphabet, c) 
+      (freq->chrs[alphabet_get_fromChar(freq->alphabet, c) 
         - alphabet_get_offset(freq->alphabet)].ocurrences)++;
     }
   }
@@ -1064,11 +1275,11 @@ static void _computeFrequency(struct Frequency *freq, char *textstring, ssize_t 
   // bcs we dont't want to perform
   // frequency prob calculation (floating point instruction...)
   // each time a character is read, so better
-  // do it in anoother loop, which seems to be
+  // do it in another loop, which seems to be
   // quite fast as alphabets are not usually large
   
   for (i = 0; i < freq->a_sz; i++)
-    freq->params[i].prob = (float)((float)(freq->params[i].ocurrences) / len);
+    freq->chrs[i].prob = (float)((float)(freq->chrs[i].ocurrences) / textlen);
 }
 
 static float _computePartialIC(struct Frequency *freq, size_t len)
@@ -1081,8 +1292,8 @@ static float _computePartialIC(struct Frequency *freq, size_t len)
 
   for (ic = 0.0, i = 0; i < freq->a_sz; i++)
   {
-    // ic += pow(freq.params[i].prob, 2.0);
-    ic += freq->params[i].ocurrences * (freq->params[i].ocurrences - 1);
+    // ic += pow(freq.chrs[i].prob, 2.0);
+    ic += freq->chrs[i].ocurrences * (freq->chrs[i].ocurrences - 1);
   }
   ic /= (len * (len - 1));
 
@@ -1120,13 +1331,12 @@ static size_t *_get_divisors(ssize_t n, size_t *divs)
 }
 
 // !!! Index of Coincidence !!! ///
-
-static void _IC (struct Frequency *freq)
+static void _IC(struct Frequency *freq, bool use_kasiski_candidates)
 {
   #define ENG_IC 0.065
   #define IC_THRESHOLD 0.01
 
-  size_t m, j, k, c;
+  size_t m, i, j, k, c;
   size_t _M;
 
   char **substr;
@@ -1141,9 +1351,7 @@ static void _IC (struct Frequency *freq)
   }
 
   ic = &(freq->IC);
-
   ic->ok = false;
-  ic->len = strlen(ic->input);
 
   // now we have in k_divisors a set of all elements that divide len
   // although we should've performed previous computations in a more
@@ -1162,9 +1370,9 @@ static void _IC (struct Frequency *freq)
   //   | | | | | | | |
   //   v v v v v v v v
 
-  freq->params = (struct Param*)calloc(alphabet_getCurrentSize(freq->alphabet), sizeof(struct Param));
+  freq->chrs = (struct Param*)calloc(alphabet_getCurrentSize(freq->alphabet), sizeof(struct Param));
 
-  if (!freq->params)
+  if (!freq->chrs)
   {
     #line __LINE__ __FILE__
     snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
@@ -1178,8 +1386,11 @@ static void _IC (struct Frequency *freq)
 
   // m stands for key length...
 
-  for (m = 1; m <= ic->len; m++)
+  for (i = 1; i <= freq->textlen; i++)
   { 
+    if (use_kasiski_candidates && i >= freq->Kasiski.ncandidates)
+      break;
+    m = (use_kasiski_candidates) ? freq->Kasiski.keycandidates[i] : i;
     substr = (char**)calloc(m, sizeof(char*));
     if (!substr)
     {
@@ -1191,7 +1402,7 @@ static void _IC (struct Frequency *freq)
     IC = 0.0;
     for (j = 0; j < m; j++)
     {
-      _M = (size_t)ceil((float)(ic->len) / (float)(m)); 
+      _M = (size_t)ceil((float)(freq->textlen) / (float)(m)); 
       substr[j] = (char*)calloc(_M + 1, sizeof(char)); // +1 for trailing '\0'
       if (!substr[j])
       {
@@ -1200,8 +1411,8 @@ static void _IC (struct Frequency *freq)
         goto end_IC;
       }
 
-      for (c = 0, k = j; k < ic->len; k += m, c++)
-        substr[j][c] = ic->input[k];
+      for (c = 0, k = j; k < freq->textlen; k += m, c++)
+        substr[j][c] = freq->textstring[k];
       substr[j][c] = '\0';
       _computeFrequency(freq, substr[j], c);
       IC += _computePartialIC(freq, c);
@@ -1211,21 +1422,18 @@ static void _IC (struct Frequency *freq)
     }
     IC /= m;
 
-    if (fabs(IC - ENG_IC) < IC_THRESHOLD)
+    if (fabs(IC - ENG_IC) < fabs(ic->IC - ENG_IC))
     {
       ic->IC = IC;
       ic->_M = _M;
       ic->keylength = m;
-      if (substr)
-        free(substr);
-      break;
     }
 
     if (substr)
       free(substr);
   }
 
-  ic->strs = (char**)calloc(ic->_M, sizeof(char*));
+  ic->strs = (char**)calloc(ic->keylength, sizeof(char*));
   if (!ic->strs)
   {
     #line __LINE__ __FILE__
@@ -1242,8 +1450,8 @@ static void _IC (struct Frequency *freq)
       snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
       goto end_IC;
     }
-    for (c = 0, k = j; k < ic->len; k += ic->keylength, c++)
-      ic->strs[j][c] = ic->input[k];
+    for (c = 0, k = j; k < freq->textlen; k += ic->keylength, c++)
+      ic->strs[j][c] = freq->textstring[k];
     ic->strs[j][c] = '\0';
   }
   ic->ok = true;
@@ -1252,7 +1460,57 @@ static void _IC (struct Frequency *freq)
     return;
 }
 
-static void _kasiski();
+static void _kasiski(struct Frequency *freq)
+{
+  size_t i, j, k; // indexes
+
+  char buffer[KB1 + 1];
+  
+  if (!freq)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "No frequency struct given");
+    goto _end_kasiski;
+  }
+
+  freq->Kasiski.ok = false;
+
+  if (freq->ngram == 0)
+    goto _end_kasiski;
+
+  /**
+   * Does not check if keylength matched
+   * divides whole text length as
+   * in vigenere is possible to not fit
+   * text length with key
+   * 
+   */
+
+  // search for repeated sequences...
+  for ( i=0; i<freq->textlen; i++ )
+  {
+    for ( j=i+1; j<freq->textlen; j++ )
+    {
+      for ( k=0; freq->textstring[i+k] == freq->textstring[j+k]; k++ )
+        buffer[k] = freq->textstring[i+k]; // copy value
+      buffer[k] = '\0'; // trailing 0!
+      if ( k>=freq->ngram && (( j - i ) % k == 0) ) // greater or equal than value searched && distance divisible by ngram length
+      {
+        freq->Kasiski.ok = true;
+        freq->Kasiski.distance = ( j - i ); // difference between two compared indexes
+        freq->Kasiski.keycandidates = _get_divisors(freq->Kasiski.distance, &(freq->Kasiski.ncandidates));
+        freq->Kasiski.str = (char*)calloc(k, sizeof(char));
+        if (!freq->Kasiski.str)
+          goto _end_kasiski;
+        strncpy(freq->Kasiski.str, buffer, k);
+        goto _end_kasiski;
+      }
+    }
+  }
+
+  _end_kasiski:
+    return;
+}
 
 static void _freq_free(struct Frequency *freq)
 {
@@ -1260,19 +1518,29 @@ static void _freq_free(struct Frequency *freq)
   
   if (!freq)
     return;
-  if (freq->params)
-    free(freq->params);
-  if (freq->alphabet)
-    alphabet_clean(freq->alphabet);
-  if (freq->IC.input)
-    free(freq->IC.input);
+  if (freq->chrs)
+  {
+    free(freq->chrs);
+    freq->chrs = NULL;
+  }
+  if (freq->textstring)
+  {
+    free(freq->textstring);
+    freq->textstring = NULL;
+  }
   if (freq->IC.strs)
   {
-    for (i = 0; i < freq->IC._M; i++)
+    for (i = 0; i < freq->IC.keylength; i++)
+    {
       if (freq->IC.strs[i])
         free(freq->IC.strs[i]);
+    }
     free (freq->IC.strs);
   }
+  if (freq->Kasiski.str)
+    free(freq->Kasiski.str);
+  if (freq->Kasiski.keycandidates)
+    free(freq->Kasiski.keycandidates);
 }
 
 // !!! TEXT FREQUENCY ITERATOR !!! ///
@@ -1293,16 +1561,18 @@ static void _text_frequency_iterator_new(struct TextFrequencyIterator *iterator)
 
   freq.alphabet = iterator->alphabet;
   freq.a_sz = alphabet_getCurrentSize(iterator->alphabet);
-  freq.params = (struct Param*)calloc(freq.a_sz, sizeof(struct Param));
+  freq.chrs = (struct Param*)calloc(freq.a_sz, sizeof(struct Param));
+  freq.textstring = iterator->textstring;
+  freq.textlen = strlen(iterator->textstring);
 
-  if (!freq.params)
+  if (!freq.chrs)
   {
     #line __LINE__ __FILE__
     snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
     goto text_freq_new_end;
   }
   
-  _computeFrequency(&freq, iterator->textstring, strlen(iterator->textstring));
+  _computeFrequency(&freq, freq.textstring, freq.textlen);
 
   for (i = 0; i < freq.a_sz; i++)
   {
@@ -1313,8 +1583,8 @@ static void _text_frequency_iterator_new(struct TextFrequencyIterator *iterator)
       snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
       goto text_freq_new_end;
     }
-    new->chr = freq.params[i].chr;
-    new->prob = freq.params[i].prob;
+    new->chr = freq.chrs[i].chr;
+    new->prob = freq.chrs[i].prob;
     new->last = NULL;
     new->next = NULL;
 
@@ -1359,8 +1629,8 @@ static void _text_frequency_iterator_new(struct TextFrequencyIterator *iterator)
   iterator->ok = true;
 
   text_freq_new_end:
-    if (freq.params)
-      free(freq.params);
+    if (freq.chrs) // don't call _freq_free as it's destructive and we would loose alphabet!
+      free(freq.chrs);
 }
 
 static struct TFNode* _text_frequency_iterator_at(struct TextFrequencyIterator *iterator, size_t idx)

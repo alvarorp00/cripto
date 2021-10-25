@@ -61,4 +61,14 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file);
  */
 void vigenere(enum OPTION opt, const char *m, char *keystring, FILE *i_file, FILE *o_file);
 
+/**
+ * @brief Cryptanalysis of vigenere cipher
+ * 
+ * @param m alphabet size
+ * @param ngram ngram size
+ * @param i_file input file
+ * @param o_file output file
+ */
+void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE *o_file);
+
 #endif

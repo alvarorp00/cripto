@@ -63,6 +63,10 @@ vigenere: MODEL=__VIGENERE__ ## Compiles with Vigenere cipher
 vigenere: NAME=vigenere
 vigenere: default
 
+cryptanalyze_vigenere: MODEL=__CRYPTANALYZE_VIGENERE__ ## Compiles with Vigenere mod analyzer
+cryptanalyze_vigenere: NAME=cryptanalyze_vigenere
+cryptanalyze_vigenere: default
+
 kasiski: MODEL=__kasiski__
 kasiski: NAME=kasiski
 kasiski: default

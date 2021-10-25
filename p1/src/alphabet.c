@@ -202,8 +202,8 @@ bool alphabet_loadFromFile(alphabet_t *alphabet, const char *filename)
 
     A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).chr = nx_json_item(item, 0)->text_value[0];
     A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).num = nx_json_item(item, 1)->num.s_value;
-    A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).c_freq = nx_json_item(item, 2)->num.dbl_value;
-    A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).e_freq = nx_json_item(item, 3)->num.dbl_value;
+    A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).c_freq = nx_json_item(item, 2)->num.dbl_value / 100;
+    A_NODES_AT(alphabet, A_CURR_SIZE(alphabet)).e_freq = nx_json_item(item, 3)->num.dbl_value / 100;
 
     A_CURR_SIZE(alphabet)++;
   }
@@ -242,6 +242,7 @@ void alphabet_clean(alphabet_t *alphabet)
     if (A_NODES(alphabet))
       free(A_NODES(alphabet));
     free (alphabet);
+    alphabet = NULL;
   }
 }
 
