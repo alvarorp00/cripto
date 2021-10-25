@@ -1037,8 +1037,8 @@ void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE 
         break;
       max_ngram = i;
     }
-    freq.ngram = max_ngram;
-    _kasiski(&(freq));
+    freq.ngram = max_ngram; // we don't need to run kasiski again...
+    freq.Kasiski.ok = true;
   }
   else
   {
