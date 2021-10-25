@@ -13,7 +13,7 @@ LIB=lib
 MODEL=FOO
 NAME=FOO
 
-COMPILED=affine affine_mod hill vigenere stream cryptanalyze_aff_mod
+COMPILED=affine affine_mod hill vigenere stream cryptanalyze_aff_mod cryptanalyze_vigenere
 
 VG_OPTIONS=--leak-check=full --show-leak-kinds=all --track-origins=yes
 DEBUG_MODE=__DEBUG__

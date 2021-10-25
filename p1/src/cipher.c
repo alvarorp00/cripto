@@ -27,8 +27,10 @@
 #define GB1 MB1 * KB1 // too big!
 #define BUFFER 256
 
-#define MG_IDEAL_VALUE 0.065
-#define MG_THRESHOLD 0.01
+#define ENG_IC 0.065
+#define IC_THRESHOLD 0.005
+#define MG_IDEAL_VALUE ENG_IC
+#define MG_THRESHOLD IC_THRESHOLD
 
 char errbuff[ERRBUFF_LEN + 1];
 bool cipher_status;
@@ -1171,7 +1173,8 @@ void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE 
   vigenere(DECIPHER, m, keystring, i_file, o_file);
 
   #ifdef __DEBUG__
-  printf("Keystring: %s\n", keystring);
+  printf("Key length: %ld\n", freq.IC.keylength);
+  printf("KEYSTRING: %s\n", keystring);
   #endif
 
   end_cryptanalyze_vigenere:
@@ -1317,7 +1320,7 @@ static size_t *_get_divisors(ssize_t n, size_t *divs)
     return NULL;
   }
 
-  for (c = 0, i = 1; i <= (n >> 1); i++)
+  for (c = 0, i = 2; i <= (n >> 1); i++)
     if (!(n % i))
     {
       k_divisors[c] = i;
@@ -1333,8 +1336,6 @@ static size_t *_get_divisors(ssize_t n, size_t *divs)
 // !!! Index of Coincidence !!! ///
 static void _IC(struct Frequency *freq, bool use_kasiski_candidates)
 {
-  #define ENG_IC 0.065
-  #define IC_THRESHOLD 0.01
 
   size_t m, i, j, k, c;
   size_t _M;
@@ -1386,11 +1387,11 @@ static void _IC(struct Frequency *freq, bool use_kasiski_candidates)
 
   // m stands for key length...
 
-  for (i = 1; i <= freq->textlen; i++)
+  for (i = 0; i < freq->textlen; i++)
   { 
     if (use_kasiski_candidates && i >= freq->Kasiski.ncandidates)
       break;
-    m = (use_kasiski_candidates) ? freq->Kasiski.keycandidates[i] : i;
+    m = (use_kasiski_candidates) ? freq->Kasiski.keycandidates[i] : ( i + 2 );
     substr = (char**)calloc(m, sizeof(char*));
     if (!substr)
     {
@@ -1427,6 +1428,8 @@ static void _IC(struct Frequency *freq, bool use_kasiski_candidates)
       ic->IC = IC;
       ic->_M = _M;
       ic->keylength = m;
+      if (fabs(ic->IC - ENG_IC) <= IC_THRESHOLD)
+        break;
     }
 
     if (substr)
