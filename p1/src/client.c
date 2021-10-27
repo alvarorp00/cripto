@@ -471,7 +471,7 @@ int main(int argc, char const *argv[])
   #endif
 
   #ifdef __IC__
-    printf(" ! @@@ KASISKI TEST @@@ ! \n");
+    printf(" ! @@@ IC TEST @@@ ! \n");
     
     char *ct_size = "-m";
     char *ngram = "-l";

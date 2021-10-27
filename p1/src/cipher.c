@@ -1339,8 +1339,7 @@ void IC(const char *m, const char *ngram, FILE *i_file, FILE *o_file)
   freq.textlen = strlen(input);
   freq.ngram = (ngram != NULL) ? atol(ngram) : 0;
 
-  if (freq.ngram != 0)
-    _kasiski(&(freq));
+  _kasiski(&(freq));
 
   if (!freq.Kasiski.ok)
     _IC(&(freq), false);

@@ -255,6 +255,7 @@ Un ejemplo de la ejecución de este programa es el siguiente (nótese que se cor
    6   │ AMRVLCRREMNDGLXRRIMGNSNRWCHRQHAEYEVTAQEBBI
    7   │ PEEWEVKAKOEWADREMXMTBHHCHRTKDNVRZCHRCLQOHP
    8   │ WQAIIWXNRMGWOIIFKEE
+   ────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 ❯ make kasiski
 Compiling all...
@@ -437,6 +438,97 @@ Primero que todo, vemos que además de la estructura, recibe un flag `use_kasisk
   6. Este proceso se repite para todas las posiciones de la posible clave. Se suman cada uno de los índices de coincidencia parciales y finalmente se divide entre el número de subcadenas en que lo hemos dividido (es decir, entre la longitud de la clave). Esta media será el índice de coincidencia total para esa longitud de cadena de cifrado.
   7. Aquí comparamos este nuevo valor con el que tenemos guardado en la estructura (que será el valor final). En caso de estar más cerca del índice de coincidencia ideal (0.065), actualizaremos en la estructura (que será donde recuperaremos los valores de respuesta) los valores para la longitud de clave, índice de coincidencia encontrado y número (máximo) de caracteres que cada posición de la clave habría cifrado.
   8. Finalmente, puesto que vamos liberando la memoria asociada a las cadenas calculadas, para el valor resultante de longitud de clave generamos las subcadenas que cada parte de la clave habría cifrado, y las guardamos en el campo `freq->IC.strs`, de donde podremos recuperarlas después. Si la longitud de la clave es **keylength**, entonces tendremos que realizar un análisis de frecuencias este número de veces (equivalente a atacar un número **keylength** de textos cifrados por un cifrador por desplazamiento _shift cipher_).
+
+El código del programa que utilizará esta función `_IC` es el siguiente (vemos que también se apoya en el test de Kasiski si así se especifica):
+
+```c
+void IC(const char *m, const char *ngram, FILE *i_file, FILE *o_file)
+{
+  struct Frequency freq = {0};
+  
+  char *input = NULL;
+  alphabet_t *alphabet = NULL;
+
+  size_t i;
+  
+  if (!m || !i_file || !o_file)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_IC;
+  }
+
+  alphabet = alphabet_init(atoi(m));
+  if (!alphabet)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_IC;
+  }
+
+  if (alphabet_loadFromFile(alphabet, _DICT_FNAME) == false)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_IC;
+  }
+
+  input = _load_from_file(i_file, alphabet);
+  if (!input)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_IC;
+  }
+
+  freq.alphabet = alphabet;
+  freq.textstring = input;
+  freq.textlen = strlen(input);
+  freq.ngram = (ngram != NULL) ? atol(ngram) : 0;
+
+  _kasiski(&(freq));
+
+  if (!freq.Kasiski.ok)
+    _IC(&(freq), false);
+  else
+    _IC(&(freq), true);
+
+  fprintf(o_file, "IC Results [for n-gram of length %ld]: \n", freq.ngram);
+  fprintf(o_file, "\t IC found: %f\n", freq.IC.IC );
+  fprintf(o_file, "\t Keylength guessed: %ld\n", freq.IC.keylength );
+  fprintf(o_file, "\t Cipher Strings (Y_i):\n");
+  for ( i=0; i<freq.IC.keylength; i++ )
+    fprintf(o_file, "\t\t Y_%ld -> %s\n", i+1, freq.IC.strs[i]);
+
+  cipher_status = true;
+
+  end_IC:
+    _freq_free(&(freq));
+    if (alphabet)
+      alphabet_clean(alphabet);
+    return; 
+}
+```
+
+Utilizaremos como texto cifrado el resultado de la siguiente ejecución:
+
+```
+❯ make vigenere
+Compiling all...
+Executable generated successfully!
+
+❯ ./vigenere -m 26 -k CIFRADO -C -i plaintexts/el_quijote.txt -o ciphertexts/el_quijote_cifrado.txt
+ ! @@@ VIGENERE @@@ ! 
+
+
+```
+
+Veamos un ejemplo de la ejecución del programa (considerar que el test de índice de coincidencia permite usar tamaño de n-grama, pero si no se lo especificamos será equivalente a pasarle **-l 0** y no lo tendrá en cuenta, por lo que no usará información proveniente de kasiski para sus cálculos):
+
+```
+
+
+```
 
 ### Criptoanálisis de Vigenère - Rotura mediante Kasiski e IC
 
