@@ -204,16 +204,6 @@ void affine(
   FILE *o_file
 )
 {
-  #ifdef __DEBUG__
-    printf("Affine Configuration: \n");
-    printf("--> Mode: %s\n", opt == CIPHER ? "cipher" : "decipher");
-    printf("--> m: %s\n", m);
-    printf("--> a: %s\n", a);
-    printf("--> b: %s\n", b);
-    // printf("--> i_file: %s\n", i_file);
-    // printf("--> o_file: %s\n", o_file);
-  #endif
-
   mpz_t mz, az, bz;
   mpz_t gcd;
   mpz_t xz, cx, yz, dx;
@@ -554,13 +544,6 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
   if (!freq.IC.ok)
     goto end_aff_mod_anlz;
 
-  // printf("IC found: %f @ Key length: %ld\n", ic.IC, ic.keylength);
-  // for (i = 0; i < ic._M; i++)
-  // {
-  //   printf("--> %s\n", ic.strs[i]);
-  // }
-  // printf("======================\n");
-
   /**
    * f_0 / ic._M , ... , f_25 / ic._M
    * f_ki / ic._M , ... , f_25+ki / ic._M
@@ -697,9 +680,6 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
     
     strncpy(buffer, freq.IC.strs[kpos], freq.IC._M + 1);
 
-    // printf("Buffer: %s\n", buffer);
-    // continue;
-
     tfiterator.textstring = buffer;
     _text_frequency_iterator_new(&tfiterator);
 
@@ -775,7 +755,6 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
 
               mpf_set_d(fx, _text_frequency_iterator_at(&tfiterator, mpz_get_ui(ix))->prob);
               mpf_mul_ui(fx, fx, 10L);
-              // gmp_printf("\t --> (%Ff * %Ff) / (%ld)\n", px, fx, strlen(buffer));
               mpf_mul(px, px, fx);
 
               mpf_div_ui(px, px, strlen(buffer));
@@ -790,8 +769,6 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
 
             if (mpf_cmp_d(fx, MG_THRESHOLD) <= 0) // We've found it!
             {
-              // gmp_printf("Valid pair: (%Zd, %Zd) \n", az[kpos], bz[kpos]);
-              // gmp_printf("--> M_g [%ld / %ld] = %Ff\n", kpos + 1, freq.IC.keylength, M_g);
               // cmp if nexts az possible values are better
               goto next_round;
             }
@@ -804,13 +781,6 @@ void affine_mod_cryptanalyze(const char *m, FILE *i_file, FILE *o_file)
     next_round:
       _text_frequency_iterator_clean(&tfiterator);
   }
-
-  // printf("--> ");
-  // for (i = 0; i < freq.IC.keylength; i++)
-  // {
-  //   gmp_printf("(%Zd, %Zd) ", az[i], bz[i]);
-  // }
-  // printf("\n");
 
   if (buffer)
     free(buffer);
@@ -946,13 +916,11 @@ void vigenere(enum OPTION opt, const char *m, char *keystring, FILE *i_file, FIL
   for ( i=0; i<len; i++ )
   {
     mpz_set_si( cx, alphabet_get_fromChar(alphabet, input[i]) );
-    // gmp_printf("\t Cipher with %Zd value.\n", kz[(i%kl)]);
 
     if (opt == CIPHER)
       mpz_add(cx, cx, kz[( i % kl )]);
     else
       mpz_sub(cx, cx, kz[( i % kl )]);
-    // gmp_printf("\t Shifted %c to %c\n", input[i], alphabet_get_fromNum(alphabet, mpz_get_si(cx)));
     mpz_mod(cx, cx, mz); // cx has either encrypted or decrypted character at i-th position of the text
     output[i] = alphabet_get_fromNum(alphabet, mpz_get_si(cx) );
   }
@@ -1125,10 +1093,6 @@ void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE 
     key_found = false;
 
     mpf_set_ui(m_g, 0L);
-
-    #ifdef __DEBUG__
-    printf("Value of M_g(Y_%ld)\n", i+1);
-    #endif
     
     for ( g=0; g<alphabet_getCurrentSize(alphabet); g++ )
     {
@@ -1152,18 +1116,12 @@ void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE 
       mpf_sub(gx, _m_g, gx);
 
       mpf_abs(fx, fx);
-      mpf_abs(gx, gx);   
-
-      #ifdef __DEBUG__
-      gmp_printf("%Ff @ ", _m_g);
-      #endif
+      mpf_abs(gx, gx);
 
       if ( mpf_cmp(gx, fx) < 0 ) // ¿ |gx| < |fx|? If yes, new M_g calculated is better and so G is our value
       {
-        // gmp_printf("New M_G: %Ff @ Previous M_G: %Ff\n", _m_g, m_g);
         mpf_set(m_g, _m_g); // save new M_g calculated as it's better than previous one
         mpz_set_ui(key[i], g); // we've found part of the key!
-        // printf("\n\t Key %ld: %ld\n", i+1, g);
         key_found = true;
       }
     }
@@ -1179,9 +1137,6 @@ void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE 
       snprintf(errbuff, ERRBUFF_LEN, "Part [%ld/%ld] of key couldn't be found!", i+1, freq.IC.keylength);
       break;
     }
-    #ifdef __DEBUG__
-    printf("\n\n");
-    #endif
   }
 
   mpf_clears(m_g, _m_g, fx, gx, NULL);
@@ -1205,11 +1160,6 @@ void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE 
   keystring[i] = '\0';
 
   vigenere(DECIPHER, m, keystring, i_file, o_file);
-
-  #ifdef __DEBUG__
-  printf("Key length: %ld\n", freq.IC.keylength);
-  printf("KEYSTRING: %s\n", keystring);
-  #endif
 
   end_cryptanalyze_vigenere:
     _freq_free(&freq);
@@ -1350,8 +1300,8 @@ void IC(const char *m, const char *ngram, FILE *i_file, FILE *o_file)
   fprintf(o_file, "\t IC found: %f\n", freq.IC.IC );
   fprintf(o_file, "\t Keylength guessed: %ld\n", freq.IC.keylength );
   fprintf(o_file, "\t Cipher Strings (Y_i):\n");
-  for ( i=0; i<freq.IC.keylength; i++ )
-    fprintf(o_file, "\t\t Y_%ld -> %s\n", i+1, freq.IC.strs[i]);
+  for ( i=0; i<freq.IC.keylength && i < 10; i++ ) // so we do not print excesive lines...
+    fprintf(o_file, "\t\t Y_%ld -> %.30s%s\n", i+1, freq.IC.strs[i], (strlen(freq.IC.strs[i]) > 30) ? "..." : "");
 
   cipher_status = true;
 
@@ -1424,8 +1374,6 @@ static void _computeFrequency(struct Frequency *freq, char *textstring, ssize_t 
     return;
   
   freq->a_sz = alphabet_getCurrentSize(freq->alphabet);
-
-  // printf("Textstring: %s\n", textstring);
 
   for (i = 0; i < freq->a_sz; i++)
   {
@@ -1516,6 +1464,7 @@ static void _IC(struct Frequency *freq, bool use_kasiski_candidates)
   {
     #line __LINE__ __FILE__
     snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto _end_IC;
   }
 
   ic = &(freq->IC);
