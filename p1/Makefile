@@ -13,7 +13,7 @@ LIB=lib
 MODEL=FOO
 NAME=FOO
 
-COMPILED=affine affine_mod hill vigenere stream cryptanalyze_aff_mod cryptanalyze_vigenere
+COMPILED=affine affine_mod hill vigenere stream cryptanalyze_aff_mod cryptanalyze_vigenere kasiski IC
 
 VG_OPTIONS=--leak-check=full --show-leak-kinds=all --track-origins=yes
 DEBUG_MODE=__DEBUG__
@@ -63,13 +63,17 @@ vigenere: MODEL=__VIGENERE__ ## Compiles with Vigenere cipher
 vigenere: NAME=vigenere
 vigenere: default
 
+kasiski: MODEL=__KASISKI__ ## Compiles with Kasiski test
+kasiski: NAME=kasiski
+kasiski: default
+
+IC: MODEL=__IC__ ## Compiles with IC test
+IC: NAME=IC
+IC: default
+
 cryptanalyze_vigenere: MODEL=__CRYPTANALYZE_VIGENERE__ ## Compiles with Vigenere mod analyzer
 cryptanalyze_vigenere: NAME=cryptanalyze_vigenere
 cryptanalyze_vigenere: default
-
-kasiski: MODEL=__kasiski__
-kasiski: NAME=kasiski
-kasiski: default
 
 stream: MODEL=__STREAM__ ## Compiles with stream cipher
 stream: NAME=stream

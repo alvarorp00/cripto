@@ -7,6 +7,8 @@
 
 typedef struct _alphabet_t alphabet_t;
 
+#define _DICT_FNAME "config/dictionary.json"
+
 #define NEXT(n) (n)->next
 
 struct AlphabetIterator

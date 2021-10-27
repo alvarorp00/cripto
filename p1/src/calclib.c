@@ -135,33 +135,33 @@ void extended_euclides_gcd(const mpz_t z, const mpz_t a, mpz_t gcd)
 
   while (mpz_sgn(r1) != 0) // just checking one bit
   {
-  //   c0 = r1;
-  //   qi = (r0 / r1);
-  //   r1 = (r0 % r1);
-  //   r0 = c0;
+    //   c0 = r1;
+    //   qi = (r0 / r1);
+    //   r1 = (r0 % r1);
+    //   r0 = c0;
 
-  mpz_set(c0, r1);
-  mpz_div(qi, r0, r1);
-  mpz_mod(r1, r0, r1);
-  mpz_set(r0, c0);
+    mpz_set(c0, r1);
+    mpz_div(qi, r0, r1);
+    mpz_mod(r1, r0, r1);
+    mpz_set(r0, c0);
 
-  //   c0 = s1;
-  //   s1 = s0 - qi * s1;
-  //   s0 = c0;
+    //   c0 = s1;
+    //   s1 = s0 - qi * s1;
+    //   s0 = c0;
 
-  mpz_set(c0, s1);
-  mpz_mul(cx, s1, qi);
-  mpz_sub(s1, s0, cx);
-  mpz_set(s0, c0);
+    mpz_set(c0, s1);
+    mpz_mul(cx, s1, qi);
+    mpz_sub(s1, s0, cx);
+    mpz_set(s0, c0);
 
-  //   c0 = t1;
-  //   t1 = t0 - qi * t1;
-  //   t0 = c0;
+    //   c0 = t1;
+    //   t1 = t0 - qi * t1;
+    //   t0 = c0;
 
-  mpz_set(c0, t1);
-  mpz_mul(cx, t1, qi);
-  mpz_sub(t1, t0, cx);
-  mpz_set(t0, c0);
+    mpz_set(c0, t1);
+    mpz_mul(cx, t1, qi);
+    mpz_sub(t1, t0, cx);
+    mpz_set(t0, c0);
   
   } // r_i-1 = a * s_i-1 + b * t_i-1
 

@@ -9,8 +9,6 @@
 #include "gmp.h"
 #include "alphabet.h"
 
-#define _DICT_FNAME "config/dictionary.json"
-
 enum OPTION {
   CIPHER, DECIPHER
 };
@@ -37,7 +35,7 @@ extern bool cipher_status;
  */
 void affine(enum OPTION opt, const char *m, const char *a, const char *b, FILE *i_file, FILE *o_file);
 
-void affine_modified(enum OPTION opt, const char *m, char **a, char **b, uint8_t klength, FILE *i_file, FILE *o_file);
+void affine_modified(enum OPTION opt, const char *m, char *a, char *b, FILE *i_file, FILE *o_file);
 
 /**
  * @brief Performs a known cipher text
@@ -70,5 +68,25 @@ void vigenere(enum OPTION opt, const char *m, char *keystring, FILE *i_file, FIL
  * @param o_file output file
  */
 void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE *o_file);
+
+/**
+ * @brief Kasiski test
+ * 
+ * @param m alphabet size
+ * @param ngram ngram size
+ * @param i_file input file
+ * @param o_file output file
+ */
+void kasiski(const char *m, const char *ngram, FILE *i_file, FILE *o_file);
+
+/**
+ * @brief Coincidence Index test
+ * 
+ * @param m alphabet size
+ * @param ngram ngram size
+ * @param i_file input file
+ * @param o_file output file
+ */
+void IC(const char *m, const char *ngram, FILE *i_file, FILE *o_file);
 
 #endif

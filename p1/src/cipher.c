@@ -21,6 +21,7 @@
 #include "gmp.h"
 #include "cipher.h"
 #include "calclib.h"
+//  #include "euclides.h"
 
 #define KB1 1024
 #define MB1 KB1 * KB1
@@ -46,7 +47,7 @@ struct Frequency{
     char chr; // chr to search
     double prob; // probability of ocurrence in given text
     uint_fast64_t ocurrences; // number of times chr appears in given text
-  } *chrs;
+  } *chrs; // characters loaded by frequency structure from given alphabet
   struct IC{
     char **strs; // store final substrings
     size_t _M; // substrings length == len(Y_i) 
@@ -298,7 +299,7 @@ void affine(
       mpz_add(cx, cx, bz);
       mpz_mod(cx, cx, mz);
     }
-    else // TODO!
+    else
     {
       mpz_set_si(yz, alphabet_get_fromChar(alphabet, input[i]));
       // mpz_set_ui(cx, 1L);
@@ -330,9 +331,9 @@ void affine(
       alphabet_clean(alphabet);
 }
 
-void affine_modified( enum OPTION opt, const char *m, char **a, char **b, uint8_t klength, FILE *i_file, FILE *o_file )
+void affine_modified( enum OPTION opt, const char *m, char *a, char *b, FILE *i_file, FILE *o_file )
 {  
-  mpz_t mz, *az, *bz; // keyspace is a vector!
+  mpz_t mz, minv, *az, *bz; // keyspace is a vector!
   mpz_t gcd;
   mpz_t xz, cx, yz, dx;
   
@@ -343,7 +344,7 @@ void affine_modified( enum OPTION opt, const char *m, char **a, char **b, uint8_
   int_fast8_t offset;
 
   ssize_t len = 0; // current offset
-  size_t i;
+  size_t i, klength;
 
   if (!m || !a || !b)
   {
@@ -353,7 +354,16 @@ void affine_modified( enum OPTION opt, const char *m, char **a, char **b, uint8_
     goto end_affine_mod_cipher;
   }
 
-  mpz_inits(mz, gcd, NULL);
+  if (strlen(a) != strlen(b))
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "Keystring (a,b) must be of same length");
+    goto end_affine_mod_cipher;
+  }
+
+  klength = strlen(a); // equiv to strlen (b)
+
+  mpz_inits(mz, gcd, minv, NULL);
   mpz_set_str(mz, m, 10);
 
   az = (mpz_t*)calloc(klength, sizeof(mpz_t));
@@ -365,28 +375,6 @@ void affine_modified( enum OPTION opt, const char *m, char **a, char **b, uint8_
     snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
     cipher_status = false;
     goto end_affine_mod_cipher;
-  }
-
-  for (i = 0; i < klength; i++)
-  {
-    mpz_inits(az[i], bz[i], NULL);
-    mpz_set_str(az[i], a[i], 10);
-    mpz_set_str(bz[i], b[i], 10); 
-
-    // THEOREM 2.1 The congruence ax ≡ b (mod m) has a unique solution x ∈ Zm for
-    // every b ∈ Zm if and only if gcd(a, m) = 1.
-
-    extended_euclides_gcd(az[i], mz, gcd); // gcd (a, m) = 1 --> in m=26, gcd(a, 26) = 1!
-    // gmp_printf("Checking EUCLIDES for gcd(%Zd, %Zd)=%Zd\n", az[i], mz, gcd);
-
-    if (mpz_cmp_ui(gcd, 1) != 0)
-    {
-      #line __LINE__ __FILE__
-      gmp_printf("Failure EUCLIDES for gcd(%Zd, %Zd)=%Zd\n", az[i], mz, gcd);
-      gmp_snprintf(errbuff, ERRBUFF_LEN, "gcd(%Zd, %Zd) = %Zd != 1", az[i], mz, gcd);
-      cipher_status = false;
-      goto end_affine_mod_cipher;
-    }
   }
 
   alphabet = alphabet_init(mpz_get_ui(mz));
@@ -405,6 +393,28 @@ void affine_modified( enum OPTION opt, const char *m, char **a, char **b, uint8_
     snprintf(errbuff, ERRBUFF_LEN, "can't load alphabet from file...");
     cipher_status = false;
     goto end_affine_mod_cipher;
+  }
+
+  for (i = 0; i < klength; i++)
+  {
+    mpz_inits(az[i], bz[i], NULL);
+    mpz_set_si(az[i], alphabet_get_fromChar(alphabet, a[i]));
+    mpz_set_si(bz[i], alphabet_get_fromChar(alphabet, b[i])); 
+
+    // THEOREM 2.1 The congruence ax ≡ b (mod m) has a unique solution x ∈ Zm for
+    // every b ∈ Zm if and only if gcd(a, m) = 1.
+
+    extended_euclides_gcd(az[i], mz, gcd); // gcd (a, m) = 1 --> in m=26, gcd(a, 26) = 1
+    // euclides_ext(az[i], mz, gcd, minv); // gcd (a, m) = 1 --> in m=26, gcd(a, 26) = 1 <-- TODO
+
+    if (mpz_cmp_ui(gcd, 1) != 0)
+    {
+      #line __LINE__ __FILE__
+      gmp_printf("Failure EUCLIDES for gcd(%Zd, %Zd)=%Zd\n", az[i], mz, gcd);
+      gmp_snprintf(errbuff, ERRBUFF_LEN, "gcd(%Zd, %Zd) = %Zd != 1", az[i], mz, gcd);
+      cipher_status = false;
+      goto end_affine_mod_cipher;
+    }
   }
   
   // input --> plain text
@@ -431,19 +441,19 @@ void affine_modified( enum OPTION opt, const char *m, char **a, char **b, uint8_
       mpz_mul(cx, az[(i%klength)], xz);
       mpz_add(cx, cx, bz[(i%klength)]);
       mpz_mod(cx, cx, mz);
-      // gmp_printf("Val a: %Zd\t b: %Zd\n", az[(i%klength)], bz[(i%klength)]);
     }
     else
     {
       mpz_set_si(yz, alphabet_get_fromChar(alphabet, input[i]));
       // mpz_set_ui(cx, 1L);
       mpz_invert(cx, az[(i%klength)], mz);
+      // euclides_ext(az[(i%klength)], mz, gcd, minv); <-- TODO
       mpz_sub(dx, yz, bz[(i%klength)]);
       mpz_mul(cx, cx, dx);
+      // mpz_mul(cx, minv, dx); <-- TODO
       mpz_mod(cx, cx, mz);
     }
 
-    // output[i] = alphabet_get_fromNum(alphabet, mpz_get_ui(cx) + offset);
     output[i] = alphabet_get_fromNum(alphabet, mpz_get_ui(cx)); // c -> char  
   }
 
@@ -460,7 +470,7 @@ void affine_modified( enum OPTION opt, const char *m, char **a, char **b, uint8_
     {
       mpz_clears(az[i], bz[i], NULL);
     }
-    mpz_clears(mz, gcd, NULL);
+    mpz_clears(mz, gcd, minv, NULL);
     if (az)
       free(az);
     if (bz)
@@ -971,9 +981,10 @@ void vigenere(enum OPTION opt, const char *m, char *keystring, FILE *i_file, FIL
 
 void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE *o_file)
 {
-  #define __KSK_AUTO "auto"
+  #define __KSK_AUTO "auto" // string to match if auto mode has been selected
+  #define __KSK_AUTO_THRS 8 // threshold of auto search mode. Means kasiski will never be executed for ngrams bigger than 8 in auto mode
   
-  mpz_t mz, *key;
+  mpz_t mz, *key; // mz -> alphabet size; *key => key vector
   mpf_t fx, gx, fig, pi, m_g, _m_g;
   
   char *input = NULL,
@@ -1026,7 +1037,7 @@ void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE 
   freq.textstring = input;
   freq.textlen = strlen(input);
 
-  if (ngram && strcmp(ngram, __KSK_AUTO) == 0) // test maximum value for kasiski ngrams
+  if (!ngram || strcmp(ngram, __KSK_AUTO) == 0) // test maximum value for kasiski ngrams
   {
     max_ngram = 0;
     for ( i=2; i<freq.textlen; i++ )
@@ -1036,6 +1047,8 @@ void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE 
       if (freq.Kasiski.ok == false)
         break;
       max_ngram = i;
+      if (max_ngram >= __KSK_AUTO_THRS)
+        break;
     }
     freq.ngram = max_ngram; // we don't need to run kasiski again...
     freq.Kasiski.ok = true;
@@ -1214,6 +1227,142 @@ void cryptanalyze_vigenere(const char *m, const char *ngram, FILE *i_file, FILE 
     return;
 }
 
+void kasiski(const char *m, const char *ngram, FILE *i_file, FILE *o_file)
+{
+  struct Frequency freq = {0};
+  
+  char *input = NULL;
+  alphabet_t *alphabet = NULL;
+
+  size_t i;
+  
+  if (!m || !i_file || !o_file)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_kasiski;
+  }
+
+  alphabet = alphabet_init(atoi(m));
+  if (!alphabet)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_kasiski;
+  }
+
+  if (alphabet_loadFromFile(alphabet, _DICT_FNAME) == false)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_kasiski;
+  }
+
+  input = _load_from_file(i_file, alphabet);
+  if (!input)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_kasiski;
+  }
+
+  freq.alphabet = alphabet;
+  freq.textstring = input;
+  freq.textlen = strlen(input);
+  freq.ngram = atol(ngram);
+
+  _kasiski(&(freq));
+
+  if (!freq.Kasiski.ok)
+  {
+    snprintf(errbuff, ERRBUFF_LEN, "Kasiski couldn't find substr matching required n-gram");
+    goto end_kasiski;
+  }
+
+  fprintf(o_file, "Kasiski Results [for n-gram of length %ld]: \n", freq.ngram);
+  fprintf(o_file, "\t Distance: %ld\n", freq.Kasiski.distance );
+  fprintf(o_file, "\t String matched: %s\n", freq.Kasiski.str );
+  fprintf(o_file, "\t Candidates [total: %ld]:\n", freq.Kasiski.ncandidates);
+  for ( i=0; i<freq.Kasiski.ncandidates; i++ )
+    fprintf(o_file, "\t\t -> %ld\n", freq.Kasiski.keycandidates[i]);
+
+  cipher_status = true;
+
+  end_kasiski:
+    _freq_free(&(freq));
+    if (alphabet)
+      alphabet_clean(alphabet);
+    return; 
+}
+
+void IC(const char *m, const char *ngram, FILE *i_file, FILE *o_file)
+{
+  struct Frequency freq = {0};
+  
+  char *input = NULL;
+  alphabet_t *alphabet = NULL;
+
+  size_t i;
+  
+  if (!m || !i_file || !o_file)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_IC;
+  }
+
+  alphabet = alphabet_init(atoi(m));
+  if (!alphabet)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_IC;
+  }
+
+  if (alphabet_loadFromFile(alphabet, _DICT_FNAME) == false)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_IC;
+  }
+
+  input = _load_from_file(i_file, alphabet);
+  if (!input)
+  {
+    #line __LINE__ __FILE__
+    snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
+    goto end_IC;
+  }
+
+  freq.alphabet = alphabet;
+  freq.textstring = input;
+  freq.textlen = strlen(input);
+  freq.ngram = (ngram != NULL) ? atol(ngram) : 0;
+
+  if (freq.ngram != 0)
+    _kasiski(&(freq));
+
+  if (!freq.Kasiski.ok)
+    _IC(&(freq), false);
+  else
+    _IC(&(freq), true);
+
+  fprintf(o_file, "IC Results [for n-gram of length %ld]: \n", freq.ngram);
+  fprintf(o_file, "\t IC found: %f\n", freq.IC.IC );
+  fprintf(o_file, "\t Keylength guessed: %ld\n", freq.IC.keylength );
+  fprintf(o_file, "\t Cipher Strings (Y_i):\n");
+  for ( i=0; i<freq.IC.keylength; i++ )
+    fprintf(o_file, "\t\t Y_%ld -> %s\n", i+1, freq.IC.strs[i]);
+
+  cipher_status = true;
+
+  end_IC:
+    _freq_free(&(freq));
+    if (alphabet)
+      alphabet_clean(alphabet);
+    return; 
+}
+
 /* ! Static Helper Functions ! */
 
 static char *_load_from_file(FILE *i_file, alphabet_t *alphabet)
@@ -1353,7 +1502,6 @@ static size_t *_get_divisors(ssize_t n, size_t *divs)
   return k_divisors;
 }
 
-// !!! Index of Coincidence !!! ///
 static void _IC(struct Frequency *freq, bool use_kasiski_candidates)
 {
 
@@ -1397,7 +1545,7 @@ static void _IC(struct Frequency *freq, bool use_kasiski_candidates)
   {
     #line __LINE__ __FILE__
     snprintf(errbuff, ERRBUFF_LEN, "%s\n", strerror(errno));
-    goto end_IC;
+    goto _end_IC;
   }
 
   freq->a_sz = alphabet_getCurrentSize(freq->alphabet);
@@ -1417,7 +1565,7 @@ static void _IC(struct Frequency *freq, bool use_kasiski_candidates)
     {
       #line __LINE__ __FILE__
       snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
-      goto end_IC;
+      goto _end_IC;
     }
 
     IC = 0.0;
@@ -1429,7 +1577,7 @@ static void _IC(struct Frequency *freq, bool use_kasiski_candidates)
       {
         #line __LINE__ __FILE__
         snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
-        goto end_IC;
+        goto _end_IC;
       }
 
       for (c = 0, k = j; k < freq->textlen; k += m, c++)
@@ -1461,7 +1609,7 @@ static void _IC(struct Frequency *freq, bool use_kasiski_candidates)
   {
     #line __LINE__ __FILE__
     snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
-    goto end_IC;
+    goto _end_IC;
   }
 
   for (j = 0; j < ic->keylength; j++)
@@ -1471,7 +1619,7 @@ static void _IC(struct Frequency *freq, bool use_kasiski_candidates)
     {
       #line __LINE__ __FILE__
       snprintf(errbuff, ERRBUFF_LEN, "%s", strerror(errno));
-      goto end_IC;
+      goto _end_IC;
     }
     for (c = 0, k = j; k < freq->textlen; k += ic->keylength, c++)
       ic->strs[j][c] = freq->textstring[k];
@@ -1479,7 +1627,7 @@ static void _IC(struct Frequency *freq, bool use_kasiski_candidates)
   }
   ic->ok = true;
 
-  end_IC:
+  _end_IC:
     return;
 }
 
@@ -1539,31 +1687,33 @@ static void _freq_free(struct Frequency *freq)
 {
   size_t i;
   
-  if (!freq)
-    return;
-  if (freq->chrs)
+  if ( freq )
   {
-    free(freq->chrs);
-    freq->chrs = NULL;
-  }
-  if (freq->textstring)
-  {
-    free(freq->textstring);
-    freq->textstring = NULL;
-  }
-  if (freq->IC.strs)
-  {
-    for (i = 0; i < freq->IC.keylength; i++)
+    if (freq->chrs)
     {
-      if (freq->IC.strs[i])
-        free(freq->IC.strs[i]);
+      free(freq->chrs);
+      freq->chrs = NULL;
     }
-    free (freq->IC.strs);
+    if (freq->textstring)
+    {
+      free(freq->textstring);
+      freq->textstring = NULL;
+    }
+    if (freq->IC.strs)
+    {
+      for (i = 0; i < freq->IC.keylength; i++)
+      {
+        if (freq->IC.strs[i])
+          free(freq->IC.strs[i]);
+      }
+      free (freq->IC.strs);
+    }
+    if (freq->Kasiski.str)
+      free(freq->Kasiski.str);
+    if (freq->Kasiski.keycandidates)
+      free(freq->Kasiski.keycandidates);
   }
-  if (freq->Kasiski.str)
-    free(freq->Kasiski.str);
-  if (freq->Kasiski.keycandidates)
-    free(freq->Kasiski.keycandidates);
+  return;
 }
 
 // !!! TEXT FREQUENCY ITERATOR !!! ///
