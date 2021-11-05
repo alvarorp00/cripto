@@ -4,30 +4,20 @@
 bdir="build"
 edir="executables"
 pdir="../"
+epdir="$pdir$edir"
 
 # Commands
 cmd="cd $bdir"
-run="cmake $pdir"
-
+load="cmake $pdir"
+run="cmake --build ."
 mve="mv $edir $pdir"
-mvm="mv Makefile $pdir"
 
-# check dir
-if [ ! -d "$bdir" ];then
-	mkdir $bdir
-fi
-
-if [ -d "$pdir$edir" ]; then
-  rm -rf $pdir$edir
-fi
-
-rm -f Makefile
+[[ ! -d $bdir ]] && mkdir $bdir
 
 $cmd
 status=$?
 
 if [ $status -eq 0 ];then
-  rm -rf *
-	$run
-	$mve
+	$load && $run
+  [[ -d $epdir ]] && rsync -a $edir $epdir || $mve
 fi

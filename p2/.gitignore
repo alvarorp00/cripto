@@ -1,3 +1,4 @@
 executables/
 build/
 bin/
+.vscode/
