@@ -23,6 +23,17 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/executables)
 
+set(COMMON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/common)
+
+## common
+
+include_directories(${COMMON_DIR})
+
+## alphabet
+
+set(ALPHABET_DIR ${COMMON_DIR}/dictionary)
+include_directories(${ALPHABET_DIR})
+
 ## nxjson
 
 ExternalProject_add(

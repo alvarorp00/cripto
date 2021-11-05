@@ -9,6 +9,8 @@ set(DES_TABLE tables)
 set(LIBS "-lm -lcrypto")
 set(GMPLIB "-lgmp")
 
+
+
 file(GLOB sources ${DES_SRC}/*.c ${DES_TABLE}/*.c)
 
 include_directories(${DES_INC})
@@ -21,4 +23,8 @@ add_compile_options(${LIBS} ${GMPLIB})
 
 # executable
 
-add_executable(des ${sources})
+add_executable(des
+  code/des_main.c
+
+  ${sources}
+)

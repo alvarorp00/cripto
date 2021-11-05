@@ -19,5 +19,5 @@ status=$?
 
 if [ $status -eq 0 ];then
 	$load && $run
-  [[ -d $epdir ]] && rsync -a $edir $epdir || $mve
+  # [[ -d $epdir ]] && rsync -a $edir $epdir || $mve
 fi
