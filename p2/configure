@@ -10,6 +10,7 @@ cmd="cd $bdir"
 run="cmake $pdir"
 
 mve="mv $edir $pdir"
+mvm="mv Makefile $pdir"
 
 # check dir
 if [ ! -d "$bdir" ];then
@@ -19,6 +20,8 @@ fi
 if [ -d "$pdir$edir" ]; then
   rm -rf $pdir$edir
 fi
+
+rm -f Makefile
 
 $cmd
 status=$?
