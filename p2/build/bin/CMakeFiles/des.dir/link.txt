@@ -1,1 +1,0 @@
-gcc    CMakeFiles/des.dir/code/src/test.c.o CMakeFiles/des.dir/tables/DES_tables.c.o  -o ../executables/des 
