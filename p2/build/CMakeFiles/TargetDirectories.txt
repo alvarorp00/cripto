@@ -1,0 +1,7 @@
+/home/alvarorp00/Documents/uam/c4/cripto/p2/build/CMakeFiles/edit_cache.dir
+/home/alvarorp00/Documents/uam/c4/cripto/p2/build/CMakeFiles/rebuild_cache.dir
+/home/alvarorp00/Documents/uam/c4/cripto/p2/build/CMakeFiles/GMP.dir
+/home/alvarorp00/Documents/uam/c4/cripto/p2/build/CMakeFiles/NXJSON.dir
+/home/alvarorp00/Documents/uam/c4/cripto/p2/build/bin/CMakeFiles/edit_cache.dir
+/home/alvarorp00/Documents/uam/c4/cripto/p2/build/bin/CMakeFiles/rebuild_cache.dir
+/home/alvarorp00/Documents/uam/c4/cripto/p2/build/bin/CMakeFiles/des.dir

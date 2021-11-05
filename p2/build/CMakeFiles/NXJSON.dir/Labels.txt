@@ -1,0 +1,13 @@
+# Target labels
+ NXJSON
+# Source files and their labels
+/home/alvarorp00/Documents/uam/c4/cripto/p2/build/CMakeFiles/NXJSON
+/home/alvarorp00/Documents/uam/c4/cripto/p2/build/CMakeFiles/NXJSON.rule
+/home/alvarorp00/Documents/uam/c4/cripto/p2/build/CMakeFiles/NXJSON-complete.rule
+/home/alvarorp00/Documents/uam/c4/cripto/p2/external/nxjson/src/NXJSON-stamp/NXJSON-install.rule
+/home/alvarorp00/Documents/uam/c4/cripto/p2/external/nxjson/src/NXJSON-stamp/NXJSON-mkdir.rule
+/home/alvarorp00/Documents/uam/c4/cripto/p2/external/nxjson/src/NXJSON-stamp/NXJSON-download.rule
+/home/alvarorp00/Documents/uam/c4/cripto/p2/external/nxjson/src/NXJSON-stamp/NXJSON-update.rule
+/home/alvarorp00/Documents/uam/c4/cripto/p2/external/nxjson/src/NXJSON-stamp/NXJSON-patch.rule
+/home/alvarorp00/Documents/uam/c4/cripto/p2/external/nxjson/src/NXJSON-stamp/NXJSON-configure.rule
+/home/alvarorp00/Documents/uam/c4/cripto/p2/external/nxjson/src/NXJSON-stamp/NXJSON-build.rule

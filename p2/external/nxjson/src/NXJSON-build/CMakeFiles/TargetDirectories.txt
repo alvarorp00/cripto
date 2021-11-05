@@ -1,0 +1,3 @@
+/home/alvarorp00/Documents/uam/c4/cripto/p2/external/nxjson/src/NXJSON-build/CMakeFiles/rebuild_cache.dir
+/home/alvarorp00/Documents/uam/c4/cripto/p2/external/nxjson/src/NXJSON-build/CMakeFiles/edit_cache.dir
+/home/alvarorp00/Documents/uam/c4/cripto/p2/external/nxjson/src/NXJSON-build/CMakeFiles/NXJSON.dir

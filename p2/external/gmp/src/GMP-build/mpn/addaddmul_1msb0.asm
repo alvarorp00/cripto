@@ -1,0 +1,1 @@
+../../GMP/mpn/x86_64/addaddmul_1msb0.asm

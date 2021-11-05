@@ -1,3 +1,6 @@
 [submodule "p1/modules/nxjson"]
 	path = p1/modules/nxjson
 	url = https://github.com/thestr4ng3r/nxjson
+[submodule "p2/p2/external/nxjson/src/NXJSON"]
+	path = p2/p2/external/nxjson/src/NXJSON
+	url = https://github.com/alvarorp00/nxjson

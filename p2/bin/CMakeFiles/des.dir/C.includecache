@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/alvarorp00/Documents/uam/c4/cripto/p2/des/code/src/test.c
+stdio.h
+-
+stdlib.h
+-
+
+/home/alvarorp00/Documents/uam/c4/cripto/p2/des/tables/DES_tables.c
+
