@@ -37,8 +37,9 @@ int main(int argc, char const *argv[])
   // printf("\n");
 
   err = des_configure(des, CFB, CIPHER, def_key, (byte_ptr)0, 16, 8, stdin, stdout, NULL);
-
   printf("ERR: %d\n", err);
+
+  des_execute(des);
 
   return 0;
 }

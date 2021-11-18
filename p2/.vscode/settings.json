@@ -1,7 +1,0 @@
-{
-  "cmake.configureOnOpen": false,
-  "files.associations": {
-    "des.h": "c",
-    "alphabet.h": "c"
-  }
-}
