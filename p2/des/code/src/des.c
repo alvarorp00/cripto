@@ -1,6 +1,5 @@
 /**
  * @file des.c
- * @author Álvaro Rodríguez (alvarorp00@sigsuspend.net)
  * @brief DES algorithm
  * @version 0.1
  * @date 2021-11-05
@@ -11,28 +10,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #include "des.h"
-#include "alphabet.h"
-
-#define KEY_LENGTH_BYTES 8
-#define KEY_LENGTH_BITS 64
-#define IVL 8 // size in bytes -> 8bits
-#define BITCONV 8 // 1 byte <-> 8 bits
-
-#define BLOCKSZ 64
-
-/* Constantes para el DES */
-#define BITS_IN_PC1 56
-#define BITS_IN_PC2 48
-#define ROUNDS 16
-#define BITS_IN_IP 64
-#define BITS_IN_E 48
-#define BITS_IN_P 32
-#define NUM_S_BOXES 8
-#define ROWS_PER_SBOX 4
-#define COLUMNS_PER_SBOX 16
 
 // #define callback_proto (void)(des_t*)
 typedef des_error_t (*callback_proto)(des_t*);
@@ -40,53 +21,82 @@ typedef des_error_t (*callback_proto)(des_t*);
 /* STRUCT DEFINITION */
 
 struct _des_t {
-  des_mode_t mode; // only supports CBF for now...
   des_action_t action; // cipher, decipher, analyze
-  byte *key; // key used in byte level -> 8 bytes
-  byte *iv; // initialization vector
-  byte rounds; // number of rounds des will run
-  byte bitn; // number of bits
+  union bconv_t key; // key used, 64b
+  union bconv_t subk[ROUNDS]; // 16 keys of 48b each
+  dword iv; // initialization vector
+  byte sbit; // number of bits
   FILE *i_file; // file to read from
   FILE *o_file; // file to dump to
-  alphabet_t *alphabet; // alphabet to translate
-  callback_proto operate; // run des with config previously set
+};
+
+struct state_t {
+  word l;
+  word r;
 };
 
 /* STATIC PROTOTYPES USED */
 
-/**
- * @brief Sets new key in 64 bits
- * from one in 56 bits.
- * 
- * @param destkey destination key in 64 bits
- * @param srckey source key in 56 bits
- */
-void _build_parity_key(byte_ptr destkey, byte_ptr srckey);
 
 /**
- * @brief Changes default des execution mode
+ * @brief Performs cipher
+ * over a 64b aligned block
  * 
- * @param des 
- * @param mode 
+ * @param des struc
+ * @param msg to cipher
+ * @param output 64b block cipher
+ * @return des_error_t maybe an error
  */
-void des_set_mode(des_t *des, des_mode_t mode);
+des_error_t _des(des_t *des, dword msg, dword *output);
 
 /**
- * @brief returns callback reference given operation mode
+ * @brief F function
  * 
- * @param mode mode used for switching
- * @return correspondant prototype
+ * @param r 32b
+ * @param sbk 48b
+ * @return word 32b output
  */
-callback_proto _get_callback(des_mode_t mode);
+word _f(word r, union bconv_t sbk);
 
-// mode operations -> ECB, CBC, CFB, OFB, CTR
+/**
+ * @brief Selects key to be used
+ * depending on the round and on
+ * the des mode (CIPHER or DECIPHER)
+ * 
+ * @param des structure
+ * @param round 
+ * @return selected key from des.sbkey
+ */
+union bconv_t _key_selector(des_t *des, byte round);
 
-des_error_t des_ecb(des_t*);
-des_error_t des_cbc(des_t*);
-des_error_t des_cfb(des_t*);
-des_error_t des_ofb(des_t*);
-des_error_t des_ctr(des_t*);
-des_error_t des_nil(des_t*);
+/**
+ * @brief Expands key into
+ * 16 subkeys of 48 bits each
+ * 
+ * @param des structure
+ */
+void _key_expansion(des_t *des);
+
+/**
+ * @brief Performs initial
+ * permutation of block
+ * 
+ * @param state state
+ * @param msg message
+ */
+void _IP(struct state_t *state, dword msg);
+
+/**
+ * @brief Performs
+ * final inverse permutation
+ * of block
+ * 
+ * @param state as comes from
+ * previous operations, with no
+ * swap done yet
+ * @param output final output
+ */
+void _IP_INV(struct state_t *state, dword *output);
 
 /* IMPLEMENTATIONS */
 
@@ -100,39 +110,208 @@ des_t *des_new()
 }
 
 des_error_t des_configure
-  (des_t *des, des_mode_t mode, des_action_t action, byte *key, byte *iv,
-    byte rounds, byte bitn, FILE *i_file, FILE *o_file, const char* dictpath)
+  (des_t *des, des_action_t action,
+    dword key, dword iv, dword sbit, FILE *i_file, FILE *o_file)
 {
-  des_error_t err = OK;
-  
-  if (!des || !key || !i_file || !o_file)
+  if (!des || !i_file || !o_file)
     return BAD_ARG;
 
   /* Common configs */
-
-  des->key = (byte*)calloc(KEY_LENGTH_BYTES, sizeof(byte));
-  if (!des->key)
-    return INIT_ERROR;
-
-  // des->mode = mode;
+  des->key.l = key; // assume key is already parity builded
   des->action = action;
   des->iv = iv;
-  des->rounds = rounds;
-  des->bitn = bitn;
+  des->sbit = sbit;
   des->i_file = i_file;
   des->o_file = o_file;
-  des->alphabet = NULL; // not using alphabet now, just ascii conversion
 
-  des_set_mode(des, mode);
-
-  /* Load key */
-
-  _build_parity_key(des->key, key);
-
-  return err;
+  return OK;
 }
 
-void des_parse_error(des_error_t error)
+/* !! STATIC !! */
+
+des_error_t _des(des_t *des, dword msg, dword *block)
+{  
+  struct state_t state;
+  union bconv_t k;
+  word l, r, _r;
+  byte i;
+  
+  if (!des || !msg)
+    return BAD_ARG; 
+
+  _key_expansion(des);
+  _IP(&state, msg);
+
+  l = state.l;
+  r = state.r;
+  for (i=0; i<ROUNDS; i++)
+  {
+    k = _key_selector(des, i);
+    _r = r;
+    r  = l ^ _f(r, k);;
+    l  = _r;
+  }
+
+  state.l = l;
+  state.r = r;
+
+  _IP_INV(&state, block);
+  
+  return OK;
+}
+
+union bconv_t _key_selector(des_t *des, byte round)
+{
+  union bconv_t k = {0x00};
+  
+  if (!des)
+    return k;
+
+  if (des->action == CIPHER)
+    k = des->subk[round];
+  else /* if (des ->mode == DECIPHER) */
+    k = des->subk[(ROUNDS-1) - round];
+  return k;
+}
+
+word _f(word r, union bconv_t sbk)
+{
+  dword ker;
+  dword er;
+  dword k;
+
+  word  s;
+  word  rs;
+  
+  byte  i;
+  byte  b;
+  
+  byte  row;
+  byte  column;
+
+  k = sbk.l; // using 48b full representation
+
+  er = 0;
+  for (i=0; i<BITS_IN_E; i++)
+  {
+    er <<= 1;
+    er |= (dword) ((r >> (32 - E[i])) & 1);
+  }
+
+  ker = k ^ er; // 48b expanded key, 8blocks of 6bit
+
+  #define MASK_1_6 0x0000840000000000 /* 1st and 6th bit */
+  #define MASK_2_5 0x0000780000000000 /* 2th - 5th bit */
+
+  s = 0;
+  for (i=0; i<NUM_S_BOXES; i++)
+  {
+    b      = (byte)((ker & (MASK_1_6 >> 6*i)) >> (42 - 6*i));
+    row    = ((b >> 4) | (b & 0x01)); /* get [0,1,2,3] as index */
+
+    /* last shift (43 but no 42) because now we have 4 bits aligned */
+    column = (byte)(((ker & (MASK_2_5 >> 6*i)) >> (43 - 6*i)));
+
+    s      <<= 4; /* each iteration causes 4 bit shift */
+    s      |= (word)(S_BOXES[i][row][column] & 0x0F);
+  }
+
+  rs = 0;
+  for (i=0; i<BITS_IN_P; i++)
+  {
+    rs <<= 1;
+    rs |= (s >> (32 - P[i])) & 1;
+  }
+  
+  return rs;
+}
+
+void _IP(struct state_t *state, dword msg)
+{
+  // union bconv_t conversion;
+  dword _ip;
+  int32_t i;
+
+  if (!state || !msg)
+    return;
+
+  _ip = 0;
+  for (i=0; i<BITS_IN_IP; i++)
+  {
+    _ip <<= 1;
+    _ip |= (msg >> (BITS_IN_IP - IP[i])) & 1;
+  }
+
+  #define BMASK32 0x00000000FFFFFFFF
+
+  state->l = (word)(_ip >> 32) & BMASK32;
+  state->r = (word)(_ip) & BMASK32;
+}
+
+void _IP_INV(struct state_t *state, dword *output)
+{
+  dword blck;
+  dword inv_ip;
+
+  byte i;
+
+  blck = ((((dword)state->r) << 32) | (dword) state->l);
+
+  inv_ip = 0;
+  for (i=0; i<BITS_IN_IP; i++)
+  {
+    inv_ip <<= 1;
+    inv_ip |= (blck >> (BITS_IN_IP - IP_INV[i] )) & 1;
+  }
+
+  *(output) = inv_ip;
+}
+
+void _key_expansion(des_t *des) // 64b; 16 keys of 48bits
+{
+  dword _key64, _key56, _key48;
+  word c, d;
+  byte i, j;
+
+  if (!des)
+    return; // exit
+
+  _key64 = des->key.l;
+
+  for (i=0; i<BITS_IN_PC1; i++)
+  {
+    _key56 <<= 1;
+    _key56 |= (_key64 >> (KLBITS - PC1[i])) & 1;
+  }
+
+  #define SPLITKMASK 0x0000000FFFFFFF
+
+  c = (word)(_key56 >> 28) & SPLITKMASK;
+  d = (word) _key56 & SPLITKMASK;
+
+  #define CSHIFT(x,l,s) ((x<<l) | (x>> (s -l)))
+  // #define CSHIFT(x,l,s) ((MASK28B&(x<<l)) | ((x >> (s-l)) & l))
+
+  for (i=0; i<ROUNDS; i++)
+  {
+    c = (SPLITKMASK) & CSHIFT(c, ROUND_SHIFTS[i], 28);
+    d = (SPLITKMASK) & CSHIFT(d, ROUND_SHIFTS[i], 28);
+
+    _key48 = (((dword) c) << 28 | d);
+
+    des->subk[i].l = 0;
+    for (j=0; j<BITS_IN_PC2; j++)
+    {
+      des->subk[i].l <<= 1;
+      des->subk[i].l |= (_key48 >> (56 - PC2[j])) & 1;
+    }
+  } // keys generated
+}
+
+
+/* ERROR PARSER */
+
+void des_parse_error(des_error_t error, char errbuff[static 128])
 {
   switch (error)
   {
@@ -148,232 +327,49 @@ void des_parse_error(des_error_t error)
   }
 }
 
-void des_set_mode(des_t *des, des_mode_t mode)
-{
-  if (des)
-  {
-    des->mode = mode;
-    des->operate = _get_callback(des->mode);
-  }
-}
-
-des_error_t des_execute(des_t *des)
-{  
-  if (!des || !des->operate)
-    return BAD_ARG;
-
-  return des->operate(des);
-}
-
-/* !! STATIC !! */
-
-void build_parity_key(byte_ptr destkey, byte_ptr srckey)
-{
-  size_t i, j, cutter;
-
-  if (!destkey || !srckey)
-    return;
-    
-  for (i=0; i<KEY_LENGTH_BYTES; i++) // for each part of the given key (8 blocks of 7b)
-  {
-    destkey[i] = 0;
-    for (j=0, cutter=0x01; j<BITCONV - 1; j++, cutter<<=1) // shift 1b every round
-      destkey[i] |= (cutter & srckey[i]);
-  destkey[i] |= 0; // i-th block of the key gets a zero-bit, redundant but explicit
-  }
-}
-
-callback_proto _get_callback(des_mode_t mode)
-{
-  // ECB, CBC, CFB, OFB, CTR
-  
-  switch (mode)
-  {
-  case ECB:
-    return des_ecb;
-    break;
-  case CBC:
-    return des_cbc;
-    break;
-  case CFB:
-    return des_cfb;
-    break;
-  case OFB:
-    return des_ofb;
-    break;
-  case CTR:
-    return des_ctr;
-    break;
-  default:
-    return des_nil;
-    break;
-  }
-}
-
 /** MODE OPERATIONS IMPLEMENTATIONS **/
-
-des_error_t des_ecb(des_t* des)
-{
-  if (!des)
-    return;
-
-  // TODO
-}
-
-des_error_t des_cbc(des_t* des)
-{
-  if (!des)
-    return;
-  
-  // TODO
-}
 
 des_error_t des_cfb(des_t* des)
 {
-  if (!des)
-    return;
+  dword rd;        // data read
+  dword block = 0; // cipher block
 
-  printf("DES_ECB\n");
+  dword shift_reg    = 0; // shift register
   
-  // TODO
-}
+  byte i;
 
-des_error_t des_ofb(des_t* des)
-{
   if (!des)
-    return;
+    return BAD_ARG;
+
+  shift_reg = des->iv;
+
+  if (des->i_file == stdin)
+  {
+    printf("-> Enter message [8B] (press CTRL + D in new line to finish): \n");
+  }
+
+  while ( !feof( des->i_file ) )
+  {
+    // padding is already done in this way
+    size_t n = fread( &rd, sizeof(dword), 1, des->i_file );
+
+    if ( des->action == CIPHER )
+    {
+      _des(des, shift_reg, &(block));
+      block >>= (64 - des->sbit);
+      block ^= rd;
+      shift_reg = (block >> des->sbit);
+    }
+    else /* if des.action == DECIPHER*/
+    {
+      _des(des, shift_reg, &(block));
+      block >>= (64 - des->sbit);
+      block ^= rd;
+      shift_reg = (rd >> des->sbit);
+    }
+
+    fwrite(&block, sizeof(dword), 1, des->o_file);
+  }
   
-  // TODO
+  return OK;
 }
-
-des_error_t des_ctr(des_t* des)
-{
-  if (!des)
-    return;
-  
-  // TODO
-}
-
-des_error_t des_nil(des_t *des){}
-
-/** * * * * * * * TABLES * * * * * * * **/
-
-/* "permutaci�n" PC1 */
-static const unsigned short PC1[BITS_IN_PC1] = { 
-	57, 49, 41, 33, 25, 17, 9,
-	1, 58, 50, 42, 34, 26, 18,
-	10, 2, 59, 51, 43, 35, 27,
-	19, 11, 3, 60, 52, 44, 36,
-	63, 55, 47, 39, 31, 23, 15,
-	7, 62, 54, 46, 38, 30, 22,
-	14, 6, 61, 53, 45, 37, 29,
-	21, 13, 5, 28, 20, 12, 4
-};
-
-/* "permutaci�n" PC2 */
-static const unsigned short PC2[BITS_IN_PC2] = {
-	14, 17, 11, 24, 1, 5,
-	3, 28, 15, 6, 21, 10,
-	23, 19, 12, 4, 26, 8,
-	16, 7, 27, 20, 13, 2,
-	41, 52, 31, 37, 47, 55,
-	30, 40, 51, 45, 33, 48,
-	44, 49, 39, 56, 34, 53,
-	46, 42, 50, 36, 29, 32
-};
-
-/* n�mero de bits que hay que rotar cada semiclave seg�n el n�mero de ronda */
-static const unsigned short ROUND_SHIFTS[ROUNDS] = {
-	1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1
-};
-
-/* permutaci�n IP */
-static const unsigned short IP[BITS_IN_IP] = {
-	58, 50, 42, 34, 26, 18, 10, 2,
-	60, 52, 44, 36, 28, 20, 12, 4,
-	62, 54, 46, 38, 30, 22, 14, 6,
-	64, 56, 48, 40, 32, 24, 16, 8,
-	57, 49, 41, 33, 25, 17, 9, 1,
-	59, 51, 43, 35, 27, 19, 11, 3,
-	61, 53, 45, 37, 29, 21, 13, 5,
-	63, 55, 47, 39, 31, 23, 15, 7
-};
-
-/* inversa de IP */
-static const unsigned short IP_INV[BITS_IN_IP] = {
-	40, 8, 48, 16, 56, 24, 64, 32,
-	39, 7, 47, 15, 55, 23, 63, 31,
-	38, 6, 46, 14, 54, 22, 62, 30,
-	37, 5, 45, 13, 53, 21, 61, 29,
-	36, 4, 44, 12, 52, 20, 60, 28,
-	35, 3, 43, 11, 51, 19, 59, 27,
-	34, 2, 42, 10, 50, 18, 58, 26,
-	33, 1, 41, 9, 49, 17, 57, 25
-};
-
-/* expansi�n E */
-static const unsigned short E[BITS_IN_E] = {
-	32, 1, 2, 3, 4, 5,
-	4, 5, 6, 7, 8, 9,
-	8, 9, 10, 11, 12, 13,
-	12, 13, 14, 15, 16, 17,
-	16, 17, 18, 19, 20, 21,
-	20, 21, 22, 23, 24, 25,
-	24, 25, 26, 27, 28, 29,
-	28, 29, 30, 31, 32, 1
-};
-
-/* permutaci�n P */
-static const unsigned short P[BITS_IN_P] = {
-	16, 7, 20, 21,
-	29, 12, 28, 17,
-	1, 15, 23, 26,
-	5, 18, 31, 10,
-	2, 8, 24, 14,
-	32, 27, 3, 9,
-	19, 13, 30, 6,
-	22, 11, 4, 25
-};
-
-/* cajas S */
-static const unsigned short S_BOXES[NUM_S_BOXES][ROWS_PER_SBOX][COLUMNS_PER_SBOX] = {
-	{	{ 14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7 },
-		{ 0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8 },
-		{ 4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0 },
-		{ 15, 12, 8, 2, 4, 9, 1, 7, 5, 11, 3, 14, 10, 0, 6, 13 } 	},
-	{
-		{ 15, 1, 8, 14, 6, 11, 3, 4, 9, 7, 2, 13, 12, 0, 5, 10 },
-		{ 3, 13, 4, 7, 15, 2, 8, 14, 12, 0, 1, 10, 6, 9, 11, 5 },
-		{ 0, 14, 7, 11, 10, 4, 13, 1, 5, 8, 12, 6, 9, 3, 2, 15 },
-		{ 13, 8, 10, 1, 3, 15, 4, 2, 11, 6, 7, 12, 0, 5, 14, 9 }	},
-
-	{	{ 10, 0, 9, 14, 6, 3, 15, 5, 1, 13, 12, 7, 11, 4, 2, 8 },
-		{ 13, 7, 0, 9, 3, 4, 6, 10, 2, 8, 5, 14, 12, 11, 15, 1 },
-		{ 13, 6, 4, 9, 8, 15, 3, 0, 11, 1, 2, 12, 5, 10, 14, 7 },
-		{ 1, 10, 13, 0, 6, 9, 8, 7, 4, 15, 14, 3, 11, 5, 2, 12 }	},
-
-	{	{ 7, 13, 14, 3, 0, 6, 9, 10, 1, 2, 8, 5, 11, 12, 4, 15 },
-		{ 13, 8, 11, 5, 6, 15, 0, 3, 4, 7, 2, 12, 1, 10, 14, 9 },
-		{ 10, 6, 9, 0, 12, 11, 7, 13, 15, 1, 3, 14, 5, 2, 8, 4 },
-		{ 3, 15, 0, 6, 10, 1, 13, 8, 9, 4, 5, 11, 12, 7, 2, 14 }	},
-	{
-		{ 2, 12, 4, 1, 7, 10, 11, 6, 8, 5, 3, 15, 13, 0, 14, 9 },
-		{ 14, 11, 2, 12, 4, 7, 13, 1, 5, 0, 15, 10, 3, 9, 8, 6 },
-		{ 4, 2, 1, 11, 10, 13, 7, 8, 15, 9, 12, 5, 6, 3, 0, 14 },
-		{ 11, 8, 12, 7, 1, 14, 2, 13, 6, 15, 0, 9, 10, 4, 5, 3 }	},
-	{	
-		{ 12, 1, 10, 15, 9, 2, 6, 8, 0, 13, 3, 4, 14, 7, 5, 11 },
-		{ 10, 15, 4, 2, 7, 12, 9, 5, 6, 1, 13, 14, 0, 11, 3, 8 },
-		{ 9, 14, 15, 5, 2, 8, 12, 3, 7, 0, 4, 10, 1, 13, 11, 6 },
-		{ 4, 3, 2, 12, 9, 5, 15, 10, 11, 14, 1, 7, 6, 0, 8, 13 }	},
-	{
- 		{ 4, 11, 2, 14, 15, 0, 8, 13, 3, 12, 9, 7, 5, 10, 6, 1 },
-		{ 13, 0, 11, 7, 4, 9, 1, 10, 14, 3, 5, 12, 2, 15, 8, 6 },
-		{ 1, 4, 11, 13, 12, 3, 7, 14, 10, 15, 6, 8, 0, 5, 9, 2 },
-		{ 6, 11, 13, 8, 1, 4, 10, 7, 9, 5, 0, 15, 14, 2, 3, 12 }	},
-	{
-		{ 13, 2, 8, 4, 6, 15, 11, 1, 10, 9, 3, 14, 5, 0, 12, 7 },
-		{ 1, 15, 13, 8, 10, 3, 7, 4, 12, 5, 6, 11, 0, 14, 9, 2 },
-		{ 7, 11, 4, 1, 9, 12, 14, 2, 0, 6, 10, 13, 15, 3, 5, 8 },
-		{ 2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11 }	}
-};

@@ -4,20 +4,16 @@
 
 set(DES_INC code/inc)
 set(DES_SRC code/src)
-set(DES_TABLE tables)
 
 set(LIBS "-lm -lcrypto")
 set(GMPLIB "-lgmp")
+# set(LIBLIBSODIUM "-lsodium")
 
-
-
-file(GLOB sources ${DES_SRC}/*.c ${DES_TABLE}/*.c)
+file(GLOB sources ${DES_SRC}/*.c)
 
 include_directories(${DES_INC})
 
 # link libraries
-
-# target_link_libraries( ${LIBS} ${GMPLIB})
 
 add_compile_options(${LIBS} ${GMPLIB})
 
@@ -25,6 +21,7 @@ add_compile_options(${LIBS} ${GMPLIB})
 
 add_executable(des
   code/des_main.c
-
   ${sources}
 )
+
+target_link_libraries(des ${LIBLIBSODIUM})

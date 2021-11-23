@@ -1,3 +1,0 @@
-repository='https://github.com/alvarorp00/nxjson'
-module=''
-tag='origin'

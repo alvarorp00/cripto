@@ -1,0 +1,3 @@
+repository='external project URL'
+module='https://download.libsodium.org/libsodium/releases/libsodium-1.0.17-stable.tar.gz'
+tag=''

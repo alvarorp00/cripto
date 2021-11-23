@@ -17,32 +17,71 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-typedef char byte;
+#ifdef __DEBUG__
+  #define TRACE eprintf("Err at: %s @%s : %s", __FILE__, __func__, __LINE__)
+#else
+  #define TRACE fprintf(stderr, "");
+#endif
+
+#define eprintf(str, ...) \
+          fprintf(stderr, ">> " str "\n", ##__VA_ARGS__)
+
+/**
+ * Converts literal to string
+ * @param x literal to convert
+ */
+#define STR(x) #x
+
+/**
+ * Opens file in read mode
+ * @param file to open
+ */
+#define READ(file) fopen(file, "r");
+
+/**
+ * Opens file in write mode
+ * @param file to open
+ */
+#define WRITE(file) fopen(file, "w");
+
+/**
+ * Prints in stderr
+ * @param format string to print
+ * @param __VA_ARGS__ args to be formatted
+ */
+#define TO_STDERR(format, ...) \
+            fprintf(stderr, ">>> " format ".\n", ##__VA_ARGS__)
+
+/**
+ * Prints in stdout
+ * @param format string to print
+ * @param __VA_ARGS__ args to be formatted
+ */
+#define TO_STDOUT(format, ...) \
+            fprintf(stdout, ">>> " format ".\n", ##__VA_ARGS__)
+
+/**
+ * Prints in given file
+ * @param file where to print
+ * @param format string to print
+ * @param __VA_ARGS__ args to be formatted
+ */
+#define TO_FILE(file, format, ...) \
+            fprintf(file, format "\n", ##__VA_ARGS__)
+
+typedef unsigned char byte;
 typedef byte* byte_ptr;
+typedef uint32_t word;
+typedef uint64_t dword;
+
+union bconv_t {
+  byte bytes[8];
+  dword l; 
+};
 
 #define KB1 1024
 #define MB1 KB1 * KB1
 #define GB1 MB1 * KB1 // too big!
-
-#define LCHAR 65
-#define HCHAR 90
-
-/**
- * @brief Loads data stored inside 
- * given file starting in given offset.
- * Amount read is specified in blocksz.
- * Preserves file pointer performing fseek
- * to starting point of file before and after
- * searching data.
- * 
- * Please, for using stdin give a zero-offset
- * 
- * @param i_file input file
- * @param blocksz maximum data read
- * @param offset shift position
- * @return char* 
- */
-byte_ptr load_from_file(FILE *i_file, size_t blocksz, size_t offset);
 
 /**
  * @brief Loads all data stored inside
@@ -51,6 +90,96 @@ byte_ptr load_from_file(FILE *i_file, size_t blocksz, size_t offset);
  * @param i_file input file
  * @return data read
  */
-byte_ptr load_all_from_file(FILE *i_file);
+char* load_all_from_file(FILE *i_file);
+
+/**
+ * @brief Prints msg into given file
+ * 
+ * @param o_file file
+ * @param msg to print
+ * @param size of msg
+ * @return uint32_t amount of data printed
+ */
+uint32_t dump_to_file(FILE *o_file, char* msg, size_t size);
+
+/**
+ * @brief Converts char array
+ * into base64
+ * 
+ * @param msg 
+ * @return dword 
+ */
+dword string8ToB64(byte msg[]);
+
+/**
+ * @brief Generates
+ * random 64b unsigned number
+ * 
+ */
+dword get_random_key();
+
+/**
+ * @brief Reverses values at bit level,
+ * performing lsb to msb and viceversa
+ * 
+ * @param n number to reverse
+ * @param k bits to reverse (max: 64)
+ * @return dword reversed number
+ */
+dword reverse(const dword n, const dword k);
+
+/**
+ * @brief Retrieves bit
+ * at pos from given value
+ * 
+ * @param from to retrieve from
+ * @param pos position of desired bit
+ * @return byte 
+ */
+byte bitAt(dword from, byte pos);
+
+/**
+ * @brief Sets bit at position
+ * with given value
+ * 
+ * @param to destination
+ * @param val value of bit
+ * @param pos position to update
+ */
+void setBitAt(dword *to, byte val, byte pos);
+
+/**
+ * @brief Converts
+ * hexadecimal bytearray to string
+ * 
+ * @param bytearray input
+ * @param buff output
+ */
+void hexToString(dword bytearray, char buff[]);
+
+/**
+ * @brief Checks parity of 64b given key and builds new
+ * 
+ * @param k to be checked
+ * @return parity key
+ */
+dword build_parity_key(dword k);
+
+/**
+ * @brief Checks parity of given
+ * key
+ * 
+ * @param k key
+ * @return {1: odd parity; 0: even parity} 
+ */
+byte check_dword_parity(dword k);
+
+/**
+ * @brief Checks parity of given byte
+ * 
+ * @param b byte to check
+ * @return {1: odd; 0: even}
+ */
+byte check_byte_parity(byte b);
 
 #endif

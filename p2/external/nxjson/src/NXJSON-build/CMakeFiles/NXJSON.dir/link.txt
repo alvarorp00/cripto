@@ -1,2 +1,0 @@
-/usr/bin/ar qc libNXJSON.a  CMakeFiles/NXJSON.dir/nxjson.c.o
-/usr/bin/ranlib libNXJSON.a

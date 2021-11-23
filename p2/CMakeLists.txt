@@ -29,26 +29,23 @@ set(COMMON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/common)
 
 include_directories(${COMMON_DIR})
 
-## alphabet
-
-set(ALPHABET_DIR ${COMMON_DIR}/dictionary)
-include_directories(${ALPHABET_DIR})
-
-## nxjson
+## Libsodium
 
 ExternalProject_add(
-  NXJSON
-  PREFIX ${EXTERNAL_INSTALL_LOCATION}/nxjson
-  GIT_REPOSITORY https://github.com/alvarorp00/nxjson
+  LIBSODIUM
+  PREFIX ${EXTERNAL_INSTALL_LOCATION}/libsodium
+  URL https://download.libsodium.org/libsodium/releases/libsodium-1.0.17-stable.tar.gz
+  CONFIGURE_COMMAND sh -c "CC=gcc ../LIBSODIUM/configure"
+  BUILD_COMMAND make -j4 && make check
   INSTALL_COMMAND ""
   UPDATE_COMMAND ""
 )
 
-ExternalProject_Get_property(NXJSON BINARY_DIR)
-set (LIBJSON ${BINARY_DIR}/nxjson.a)
+ExternalProject_Get_property(LIBSODIUM BINARY_DIR)
+set(LIBLIBSODIUM ${BINARY_DIR}/src/libsodium/.libs/libsodium.a)
 
-ExternalProject_Get_property(NXJSON SOURCE_DIR)
-include_directories(${SOURCE_DIR})
+ExternalProject_Get_property( LIBSODIUM SOURCE_DIR )
+include_directories( ${SOURCE_DIR} )
 
 ## gmp
 

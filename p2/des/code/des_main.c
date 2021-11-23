@@ -10,36 +10,121 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "des.h"
+#include "params.h"
+#include "logger.h"
+#include "util.h"
 
-int main(int argc, char const *argv[])
+static FILE *i_file = NULL;
+static FILE *o_file = NULL;
+
+static des_params_t *d_params = NULL;
+
+int main(int argc, char **argv)
 {
-  des_t *des;
-  des_error_t err;
-  // size_t i;
+  des_t *des          = NULL;
+  des_action_t action = CIPHER; // by default, ciphers
+  dword key           = 0x00;
+  dword iv            = 0x00;
+  byte  sbit          = 0x00;
 
-  printf("DES Algorithm\n");
-
-  des = des_new();
-
-  if (!des)
+  if (!(des = des_new()))
   {
-    printf("Failure initializing des\n");
+    LOG_ERR("Failure initializing des: %s\n", strerror(errno));
     exit(EXIT_FAILURE);
   }
 
-  byte def_key[7] = {0xFF};
+  d_params = params_parse_des(argc, argv);
 
-  // printf("STARTER KEY: ");
-  // for(i=0;i<7;i++)
-  //   printf("%d ", def_key[i]);
-  // printf("\n");
+  if (!d_params)
+  {
+    LOG_ERR("Fatal error parsing params\n");
+    exit(EXIT_FAILURE);
+  }
 
-  err = des_configure(des, CFB, CIPHER, def_key, (byte_ptr)0, 16, 8, stdin, stdout, NULL);
-  printf("ERR: %d\n", err);
+  if (d_params->def.infPath == NULL)
+  {
+    i_file = stdin;
+  }
+  else
+  {
+    i_file = fopen(d_params->def.infPath, "rb");
+    if (!i_file)
+    {
+      LOG_ERR("input stream couldn't be opened: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+  }
 
-  des_execute(des);
+  if (d_params->def.outfPath == NULL)
+  {
+    o_file = stdout;
+  }
+  else
+  {
+    o_file = fopen(d_params->def.outfPath, "wb");
+    if (!o_file)
+    {
+      LOG_ERR("output stream couldn't be opened: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  if (d_params->def.D)
+  {
+    if (d_params->key != NULL)
+    {
+      sscanf(d_params->key, "%lx", &key);
+      if (check_dword_parity(key) == 0)
+      {
+        LOG_ERR("Bad parity for given key\n");
+        exit(EXIT_FAILURE);
+      }
+      else if (key == 0x00)
+      {
+        LOG_WARN("Using 0x00 as key\n");
+      }
+    }
+    action = DECIPHER;
+  }
+  else
+  {
+    key = build_parity_key( get_random_key() );
+    action = CIPHER;
+  }
+
+  if (d_params->iv != NULL)
+  {
+    sscanf(d_params->iv, "%lx", &iv);
+    if (iv == 0x00)
+    {
+      LOG_WARN("Using 0x00 as IV\n");
+    }
+  }
+  
+  sbit = d_params->sbit;
+
+  #define __PRINT_CONFIG
+  #ifdef __PRINT_CONFIG
+    printf("Key: %lx\n", key);
+    printf("IV:  %lx\n", iv);
+    printf("SBN: %x \n", sbit);
+    printf("DES: %s \n", action ? "decipher" : "cipher");
+  #endif
+
+  LOG_INFO("Using hex key: %lx\n", key);
+
+  des_configure(des, action, key, iv, sbit, i_file, o_file);
+
+  des_cfb(des);
+
+  if (i_file != NULL && i_file != stdin)
+    fclose(i_file);
+
+  if (o_file != NULL && o_file != stdout)
+    fclose(o_file);
 
   return 0;
 }
