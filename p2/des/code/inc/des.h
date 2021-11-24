@@ -34,7 +34,14 @@
 #define ROWS_PER_SBOX 4
 #define COLUMNS_PER_SBOX 16
 
-enum _des_action_t {CIPHER, DECIPHER, ANALYZE}; // DES available actions
+
+enum _des_action_t {CIPHER, DECIPHER}; // DES available actions
+
+/**
+ * @brief Posible
+ * des errors
+ * 
+ */
 enum _des_error_t {
   OK,
   INIT_ERROR,
@@ -45,13 +52,39 @@ enum _des_error_t {
   UNSUPP_MODE
 }; // ERROR CODES
 
+/**
+ * @brief 3DES cipher
+ * structure
+ * 
+ */
+typedef struct _tdes_t tdes_t;
+
+/**
+ * @brief Single des
+ * cipher structure
+ * 
+ */
 typedef struct _des_t des_t;
 
-typedef enum _des_mode_t des_mode_t;
+/**
+ * @brief Defines
+ * des action {CIPHER; DECIPHER}
+ * 
+ */
 typedef enum _des_action_t des_action_t;
+
+/**
+ * @brief Structure
+ * for handling des errors
+ * 
+ */
 typedef enum _des_error_t des_error_t;
 
-/* PROTOTYPES */
+/* **************************** */
+/* **************************** */
+/* ************ DES *********** */
+/* **************************** */
+/* **************************** */
 
 /**
  * @brief New des structure
@@ -59,6 +92,14 @@ typedef enum _des_error_t des_error_t;
  * @return des_t* 
  */
 des_t *des_new();
+
+/**
+ * @brief Removes des
+ * structure allocation
+ * 
+ * @param des to be removed
+ */
+void des_clean(des_t *des);
 
 /**
  * @brief 
@@ -75,11 +116,19 @@ des_t *des_new();
  */
 des_error_t des_configure
   (des_t *des, des_action_t action,
-    uint64_t key, dword iv, dword bitn, FILE *i_file, FILE *o_file);
+    uint64_t key, dword iv, byte sbit, FILE *i_file, FILE *o_file);
 
 /**
  * @brief runs cipher with previous config
  * with cfb operations
+ * 
+ * For further information
+ * about how this works, please consider
+ * visiting:
+ * 
+ * https://www.geeksforgeeks.org/block-cipher-modes-of-operation/
+ * 
+ * and see the cfb related topic
  * 
  * @param des structure
  * @return des_error_t 
@@ -98,18 +147,66 @@ des_error_t des_block(des_t *des, byte msg[]);
 /**
  * @brief 
  * 
- * @param error 
- * @param errbuff 
+ * @param error code
+ * @return error string
  */
-void des_parse_error(des_error_t error, char errbuff[static 128]);
+const char *des_parse_error(des_error_t error);
+
+/* **************************** */
+/* **************************** */
+/* *********** 3DES *********** */
+/* **************************** */
+/* **************************** */
 
 /**
- * @brief Finds parity of a byte
+ * @brief Instantiates new
+ * structure with TDEA
  * 
- * @param b byte input
- * @return {1: odd parity; 0: even parity}
+ * @return tdes_t* new tdes struct
  */
-byte byte_parity(byte b);
+tdes_t *tdes_new();
+
+/**
+ * @brief Configures
+ * TDEA with it's config
+ * 
+ * @param tdes struct
+ * @param action action
+ * @param keys 3 keys
+ * @param iv initial vector
+ * @param sbit shift bits
+ * @param i_file input file
+ * @param o_file output file
+ * @return des_error_t possible error
+ */
+des_error_t tdes_configure
+  (tdes_t *tdes, des_action_t action,
+    dword keys[3], dword iv, byte sbit,
+      FILE *i_file, FILE *o_file);
+
+/**
+ * @brief performs cipher
+ * using CFB operation mode
+ * 
+ * @param tdes structure with config
+ * @return des_error_t possible error
+ */
+des_error_t tdes_cfb(tdes_t* tdes);
+
+/**
+ * @brief Deletes tdes
+ * associated resources
+ * 
+ * @param tdes struct to be cleaned
+ */
+void tdes_clean(tdes_t *tdes);
+
+
+/* **************************** */
+/* **************************** */
+/* ********** TABLES ********** */
+/* **************************** */
+/* **************************** */
 
 /** * * * * * * * TABLES * * * * * * * **/
 

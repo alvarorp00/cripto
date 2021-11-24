@@ -21,9 +21,9 @@ static des_params_t g_des_params;
 
 static struct argp_option des_options[] = {
   DEFAULT_OPTIONS,
-  { "vector",    't',  "NUMBER",       0,             "Initialization Vector"},
-  { "key",       'k',  "NUMBER",       0,             "key of 64b[56b + 8parity], just for decipher"},
-  { "sbit",      'S',  "NUMBER",       0,             "Number of bits to shift"},
+  { "iv",        't',  "HEXSTR",       0,             "Initialization Vector"},
+  { "key",       'k',  "HEXSTR",       0,             "key of 64b[56b + 8parity]"},
+  { "sbit",      'S',  "NUMBER",       0,             "Number of bits to shift [1,8,16,32,64]"},
   OPTIONS_END
 };
 

@@ -69,14 +69,46 @@
 #define TO_FILE(file, format, ...) \
             fprintf(file, format "\n", ##__VA_ARGS__)
 
+/**
+ * @brief Performs a circular
+ * shift of x in l positions
+ * to the left of a s-bit
+ * length source
+ * 
+ * @param x to be shifted
+ * @param l amount to be shifted to the left
+ * @param s length of x in bits
+ */
+#define CLSHIFT(x,l,s) ((x<<l) | (x>> (s -l)))
+
+/**
+ * @brief Performs a circular
+ * shift of x in r positions
+ * to the right of a s-bit
+ * length source
+ * 
+ * @param x to be shifted
+ * @param r amount to be shifted to the right
+ * @param s length of x in bits
+ */
+#define CRSHIFT(x,r,s) ((x>>r) | (x<< (s -r)))
+
 typedef unsigned char byte;
 typedef byte* byte_ptr;
 typedef uint32_t word;
 typedef uint64_t dword;
 
+/**
+ * @brief Structure
+ * to represent
+ * 64-bit length number
+ * in bytearray[8] either
+ * 64b all-number 
+ * 
+ */
 union bconv_t {
-  byte bytes[8];
-  dword l; 
+  byte bytes[8]; // bytearray
+  dword l; // representation in 64b
 };
 
 #define KB1 1024

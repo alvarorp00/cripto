@@ -24,13 +24,15 @@ static des_params_t *d_params = NULL;
 
 int main(int argc, char **argv)
 {
-  des_t *des          = NULL;
+  tdes_t *tdes        = NULL;
   des_action_t action = CIPHER; // by default, ciphers
-  dword key           = 0x00;
+  dword key[3]        = {0x00}; // 3keys
   dword iv            = 0x00;
   byte  sbit          = 0x00;
 
-  if (!(des = des_new()))
+  byte i              = 0; // indexer for loop
+
+  if (!(tdes = tdes_new()))
   {
     LOG_ERR("Failure initializing des: %s\n", strerror(errno));
     exit(EXIT_FAILURE);
@@ -76,22 +78,28 @@ int main(int argc, char **argv)
   {
     if (d_params->key != NULL)
     {
-      sscanf(d_params->key, "%lx", &key);
-      if (check_dword_parity(key) == 0)
+      sscanf(d_params->key, "%016lx%016lx%016lx", &key[0], &key[1], &key[2]);
+      for (i=0;i<3;i++)
       {
-        LOG_ERR("Bad parity for given key\n");
-        exit(EXIT_FAILURE);
-      }
-      else if (key == 0x00)
-      {
-        LOG_WARN("Using 0x00 as key\n");
+        if (check_dword_parity(key[i]) == 0)
+        {
+          LOG_ERR("Bad parity for given key\n");
+          exit(EXIT_FAILURE);
+        }
+        else if (key[i] == 0x00)
+        {
+          LOG_WARN("Using 0x00 as key\n");
+        }
       }
     }
     action = DECIPHER;
   }
   else
   {
-    key = build_parity_key( get_random_key() );
+    for (i=0;i<3;i++)
+    {
+      key[i] = build_parity_key( get_random_key() );
+    }
     action = CIPHER;
   }
 
@@ -112,19 +120,11 @@ int main(int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
-  // #define __PRINT_CONFIG
-  #ifdef __PRINT_CONFIG
-    printf("Key: %lx\n", key);
-    printf("IV:  %lx\n", iv);
-    printf("SBN: %x \n", sbit);
-    printf("DES: %s \n", action ? "decipher" : "cipher");
-  #endif
+  LOG_INFO("Using hex key: %lx%lx%lx\n", key[0], key[1], key[2]);
 
-  LOG_INFO("Using hex key: %lx\n", key);
+  tdes_configure(tdes, action, key, iv, sbit, i_file, o_file);
 
-  des_configure(des, action, key, iv, sbit, i_file, o_file);
-
-  des_cfb(des);
+  tdes_cfb(tdes);
 
   if (i_file != NULL && i_file != stdin)
     fclose(i_file);

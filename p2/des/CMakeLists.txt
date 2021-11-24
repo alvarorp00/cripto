@@ -24,4 +24,10 @@ add_executable(des
   ${sources}
 )
 
+add_executable(tdea
+  code/main_3DES.c
+  ${sources}
+)
+
 target_link_libraries(des ${LIBLIBSODIUM})
+target_link_libraries(tdea ${LIBLIBSODIUM})
