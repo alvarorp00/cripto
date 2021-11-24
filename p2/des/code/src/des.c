@@ -343,7 +343,6 @@ des_error_t _cfb( union des_selector select, enum des_versions version )
 
     if ( action == CIPHER )
     {
-      // _des(des, shift_reg, &(shift_reg));
       if (version == DES)
         _des(des, shift_reg, &(shift_reg));
       else
@@ -355,7 +354,6 @@ des_error_t _cfb( union des_selector select, enum des_versions version )
     }
     else /* if des->action == DECIPHER */
     {
-      // _des(des, shift_reg, &(shift_reg));
       if (version == DES)
         _des(des, shift_reg, &(shift_reg));
       else
@@ -396,7 +394,7 @@ des_error_t _cfb( union des_selector select, enum des_versions version )
   byte i;
   
   if (!des || !msg)
-    return BAD_ARG; 
+    return BAD_ARG;
 
   _key_expansion(des);
   _IP(&state, msg);
@@ -474,8 +472,8 @@ word _f(word r, union bconv_t sbk)
   byte  i;
   byte  b;
   
-  byte  row;
-  byte  column;
+  // byte  row;
+  // byte  column;
 
   k = sbk.l; // using 48b full representation
 
@@ -488,20 +486,18 @@ word _f(word r, union bconv_t sbk)
 
   ker = k ^ er; // 48b expanded key, 8blocks of 6bit
 
-  #define MASK_1_6 0x0000840000000000 /* 1st and 6th bit */
-  #define MASK_2_5 0x0000780000000000 /* 2th - 5th bit */
+  #define S_BOX_AT(sbox, row, column) S_BOXES[sbox][row][column]
+  #define SIXB_MSK(b) (b & 0x3F)
+  #define SIXB_ROW(b) ( ( (b & 0x20) >> 5 ) | ( b & 0x01 ) )
+  #define SIXB_CLM(b) ( ( b & 0x1E ) >> 1 )
 
   s = 0;
   for (i=0; i<NUM_S_BOXES; i++)
   {
-    b      = (byte)((ker & (MASK_1_6 >> 6*i)) >> (42 - 6*i));
-    row    = ((b >> 4) | (b & 0x01)); /* get [0,1,2,3] as index */
+    b   = SIXB_MSK( (ker >> (6*i)) );
 
-    /* last shift (43 but no 42) because now we have 4 bits aligned */
-    column = (byte)(((ker & (MASK_2_5 >> 6*i)) >> (43 - 6*i)));
-
-    s      <<= 4; /* each iteration causes 4 bit shift */
-    s      |= (word)(S_BOXES[i][row][column] & 0x0F);
+    s   <<= 4; /* each iteration causes 4 bit shift */
+    s   |= (word)S_BOX_AT(i, SIXB_ROW(b), SIXB_CLM(b));
   }
 
   rs = 0;

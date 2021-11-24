@@ -122,7 +122,7 @@ byte bitAt(dword from, byte pos)
 
 void setBitAt(dword *to, byte val, byte pos)
 {
-  *(to) |= (val << pos);
+  *(to) = (((*(to) | (1 << pos)) ^ (1 << pos))) | (val << pos);
 }
 
 void hexToString(dword bytearray, char *buff)

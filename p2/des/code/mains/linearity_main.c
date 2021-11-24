@@ -77,7 +77,8 @@ struct _matches_t {
   word  r_block1; // msg block
   word  r_block2; // msg block
   dword k_block; // key generated
-  byte  hdistance; // hamming distance
+  byte  hdistance; // hamming distance for f()
+  byte  blockdistance; // hamming distance for r1 & r2 
 };
 
 void swap (void *a_ptr, void *b_ptr, size_t size);
@@ -94,8 +95,6 @@ void matches_test();
 
 int main(int argc, char **argv)
 {
-  ssize_t parm_f = 2; // params of f
-  double  bent_n = 0; // bent n value
 
   matches_test(); // run matches test
   
@@ -118,6 +117,11 @@ void swap (void *a_ptr, void *b_ptr, size_t size)
   free(tmp);
 }
 
+/**
+ * Purely base on geek for geeks quick implementation.
+ * 
+ * See: https://www.geeksforgeeks.org/quick-sort/
+ */
 int32_t partition(struct _matches_t *data, int32_t low, int32_t hight)
 {
   byte pivot;
@@ -213,10 +217,11 @@ void matches_test()
 
     f_retrx = _f( ( r_block1 ^ r_block2 ), kc );
 
-    matches[i].k_block   = k_block;
-    matches[i].r_block2  = r_block2;
-    matches[i].r_block1  = r_block1;
-    matches[i].hdistance = hamming(f_retrx, f_retr1 ^ f_retr2 );
+    matches[i].k_block       = k_block;
+    matches[i].r_block2      = r_block2;
+    matches[i].r_block1      = r_block1;
+    matches[i].hdistance     = hamming(f_retrx, f_retr1 ^ f_retr2 );
+    matches[i].blockdistance = hamming(r_block1, r_block2);
   }
 
   quickSort(matches, 0, __G_ROUNDS - 1);
@@ -235,18 +240,25 @@ void matches_test()
   LOG_INFO("Number of exact matches (distace == 0): %ld\n", match_count);
   LOG_INFO("Tests done: %d rounds.\n", __G_ROUNDS);
 
-  LOG_INFO("Print n-th distances given [introduce n]: ");
 
-  uint16_t n;
-
-  scanf("%hu", &n);
-
-  for (i=0; i<n && i<__G_ROUNDS; i++)
+  int16_t n = -1;
+  do
   {
-    LOG_INFO("\t->Distance [nº%ld]: %d\n", i+1, matches[i].hdistance);
-    if (matches[i].hdistance == 0 )
+    LOG_INFO("Print n-th distances given [introduce n]: ");
+    scanf("%hd", &n);
+    
+    LOG_INFO("\t->Distance [nº%hd]: %d\n", n, matches[n].hdistance);
+    LOG_INFO("\t\t->hamming(r1, r2) = %d\n", matches[n].blockdistance);
+    LOG_INFO("\t\t->r1_32b: %x\n", matches[n].r_block1);
+    LOG_INFO("\t\t->r2_32b: %x\n", matches[n].r_block2);
+    LOG_INFO("\t\t->ke_48b: %lx\n", matches[n].k_block);
+    if (matches[n].hdistance == 0 )
     {
-      LOG_INFO("\t\t ->Match with (r1 | a: %x), (r2 | b: %x)\n", matches[i].r_block1, matches[i].r_block2);
+      LOG_INFO("\t\t ->CLUE! Match with (r1 | a: %x), (r2 | b: %x)\n", matches[n].r_block1, matches[n].r_block2);
     }
-  }
+
+  } while (n<=8192 && n>=0);
+  
+
+  
 }

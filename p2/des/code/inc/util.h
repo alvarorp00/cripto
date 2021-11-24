@@ -146,7 +146,10 @@ dword string8ToB64(byte msg[]);
 /**
  * @brief Generates
  * random 64b unsigned number
+ * with parity in each of
+ * it's bytes
  * 
+ * @return random dword
  */
 dword get_random_key();
 
