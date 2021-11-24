@@ -23,19 +23,6 @@
 #include "des.h"
 #include "sodium.h"
 
-/**
- * @brief Performs
- * hamming distance between
- * two numbers given
- * 
- * See: https://en.wikipedia.org/wiki/Hamming_distance
- * 
- * @param s1 
- * @param s2 
- * @return {byte} hamming distance
- */
-static byte hamming(dword s1, dword s2);
-
 const char *__info = "\nStrict Avalanche Criteria (Theorem):\n\
                       \n\rAn output bit from SBoxes will change\n\
                       \rwith 1/2 probability when an input bit is complemented.\n\
@@ -43,16 +30,11 @@ const char *__info = "\nStrict Avalanche Criteria (Theorem):\n\
                       \r\t let b = b1b2b3b4 <- SBox(a)\n\
                       \n\r\t P(bj = 1 | /ai) = P(bj = 0 | /ai) = 1/2.\n\r";
 
-const char *__extra__info = "\nConsider a bent function (in combinatory, a boolean\n\r\
-                             \rfunction with N parameters that is maximally non-linear); \n\r\
-                             \rit's different as most from all linear & affine function's set\n\r\
-                             \rwhen measured with hamming distance between truth tables.\n\r\
-                             \r\nThis puts as in the next:\n\n\
-                             \r  -> A bent function is a boolean function in n variables (n is even)\n\r\
-                             \r     such that for any nonzero vector y, it's derivative Dy(f(x)) = f(x) xor f (x xor y) is balanced,\n\r\
-                             \r     which means that takes values of 1 or 0 equally often [Definition 2].\n\r\
-                             \r\nSee https://www.sciencedirect.com/topics/mathematics/bent-function for further info.\n\r";
-
+const char *__extra__info = "With previous information, if we calculate the times bj=1 & bj=0 occur,\n\r\
+                             \rwe'll see that they must be quite similar. This means the next: if we do the factor between them, then:\n\r\
+                             \r\n\t(times(b_j=0) / times(b_j=1)) ~ 1\n\
+                             \r\nWe'll be doing 4096 iteratios, each of them will toggle each bit in 6b sbox input, and then check 4b output values\n\
+                             \rto see if they're either 1 or 0.\r\n";
 
 /** ********************************* **/
 /** ********************************* **/
@@ -60,8 +42,9 @@ const char *__extra__info = "\nConsider a bent function (in combinatory, a boole
 /** ********************************* **/
 /** ********************************* **/
 
-#define __A_ROUNDS    8192 // avalanche rounds
-#define __T_ROUNDS    32 // toggle rounds
+#define __A_ROUNDS    4096 // avalanche rounds
+#define __T_ROUNDS    6 // toggle rounds
+#define __B_ROUNDS    4 // output is of 4b
 #define __S_ROUNDS    8 // 8 SBOXES
 
 void toggleBitRandom(dword *block, byte upperbound);
@@ -75,82 +58,69 @@ void toggleBitAt    (dword *block, byte pos       );
 
 typedef struct
 {
-  byte   changes[32]; // count amount of changes for each bit
-  double pprobs [32]; // probability of each bit of changing it's value
-  double tprob      ; // normalized probability of a bit changing it's value
-}avalanche_matches_t;
+  uint64_t changes1[4]; // count amount of ones for each bit
+  uint64_t changes0[4]; // count amount of zeros for each bit
+  float    eq      [4]; // factor between changes1 and changes0
+}sbox_matches;
 
 
 int main(int argc, char const *argv[])
-{
-  // des_t *cipher = NULL; // des cryptogram
-  
+{ 
   dword  block       = 0x00; // 48b block
-  word   output      = 0x00; // 32b output for each round
-  word   prev_out    = 0x00; // previous round 32b output
-  byte   sixb        = 0x00; // storing 6 bits
-  byte   fourb       = 0x00; // storing 4 bits
-  size_t acc         = 0x00; // count total difference found
-
-  byte   diff        = 0x00; // hamming result
+  dword  sixb        = 0x00; // storing 6 bits
+  dword  fourb       = 0x00; // storing 4 bits
   
-  size_t i, j;
+  size_t a, i, j, k;
   
-  avalanche_matches_t matches = {0x00};
+  sbox_matches matches = {0x00};
 
   LOG_INFO("%s\n", __info);
-  // LOG_INFO("%s\n", __extra__info);
+  LOG_INFO("%s\n", __extra__info);
   
   assert(sodium_init() >= 0);
 
-  block = ( ( (dword)( ( randombytes_random() & 0xFFFF ) ) << 32 ) | randombytes_random() );
-
-  /**
-   * We're starting with a 48b random seed
-   * for block.
-   * 
-   * We then do an initial partialization of
-   * it computing an output so
-   * then we can toggle a bit and check
-   * those bits that would've changed
-   * in every of the __A_ROUND (1 - 32)
-   * 
-   * Should be ~32, checking with previous
-   * output using hamming distance
-   */
-
-  for ( i=0; i<__S_ROUNDS; i++ ) // we must initialize output
+  for ( a=0; a<__A_ROUNDS; a++ )
   {
-    sixb   = SIXB_MSK( (block >> (6*i)) );
-    fourb  = S_BOX_AT(i, SIXB_ROW(sixb), SIXB_CLM(sixb));
-    output <<= 4;
-    output |= fourb;
-  }
-
-  for ( i=0; i<__T_ROUNDS; i++ )
-  {
-    prev_out = output; // preserve for comparison
-    toggleBitAt(&(block), i); // toggle value
-    output = 0x00; // clean previous data
-    for ( j=0; j<__S_ROUNDS; j++ )
+    block = ( ( (dword)( ( randombytes_random() & 0xFFFF ) ) << 32 ) | randombytes_random() );
+    
+    for ( i=0; i<__S_ROUNDS; i++ ) // we must initialize output
     {
-      sixb   = SIXB_MSK( (block >> (6*j)) );
-      fourb  = S_BOX_AT(j, SIXB_ROW(sixb), SIXB_CLM(sixb));
-      output <<= 4;
-      output |= fourb;
-    }
+      // initial load
+      sixb  = SIXB_MSK( (block >> (6*i)) );
 
-    // recalculate differences
-    for ( j=0; j<__T_ROUNDS; j++ )
-    {
-      if (bitAt(prev_out, j) != bitAt(output, j))
+      for ( j=0; j<__T_ROUNDS; j++ ) // available toggle rounds!
       {
+        toggleBitAt(&(sixb), j);
+        fourb  = S_BOX_AT(i, SIXB_ROW(sixb), SIXB_CLM(sixb));
         
+        for ( k=0; k<__B_ROUNDS; k++ )
+        {
+          if (bitAt(fourb, k) == 0)
+          {
+            matches.changes0[k] += 1;
+          }
+          else
+          {
+            matches.changes1[k] += 1;
+          }
+        }
       }
     }
-    
   }
 
+  // matches.tprob = 0;
+  for ( i=0; i<__B_ROUNDS; i++)
+    matches.eq[i] = ((double)matches.changes1[i]) / ((double)matches.changes0[i]);
+
+  for ( i=0; i<__B_ROUNDS; i++)
+  {
+    LOG_INFO("Values for b%ld:\n", i+1);
+    LOG_INFO("\t P[b%ld=0] = %f\n", i+1, ((float)matches.changes0[i])/(__A_ROUNDS*__S_ROUNDS*__T_ROUNDS));
+    LOG_INFO("\t P[b%ld=1] = %f\n", i+1, ((float)matches.changes1[i])/(__A_ROUNDS*__S_ROUNDS*__T_ROUNDS));
+    LOG_INFO("\t times(b%ld=1) / times(b%ld=0) = %f\n", i+1, i+1, matches.eq[i]);
+  }
+
+  // LOG_INFO("Prob. of changing: %lf\n", matches.tprob);
   
   return 0;
 }
@@ -178,20 +148,4 @@ void toggleBitAt (dword *block, byte pos)
     return;
   new = (bitAt(*(block), pos)) ? 0 : 1; // toggle value
   setBitAt(block, new, pos);
-}
-
-static byte hamming(dword s1, dword s2)
-{
-  dword xored = 0;
-
-  byte h      = 0;
-  byte i      = 0;
-
-  xored = s1 ^ s2;
-
-  for (i=0; i<64; i++)
-    if (bitAt(xored, i))
-      h++;
-  
-  return h;
 }
