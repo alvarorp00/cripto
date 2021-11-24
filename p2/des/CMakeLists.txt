@@ -29,5 +29,11 @@ add_executable(TDEA-CFB
   ${sources}
 )
 
+add_executable(linearitySB
+  ${DES_MAIN}/linearity_main.c
+  ${sources}
+)
+
 target_link_libraries(desCFB ${LIBLIBSODIUM})
 target_link_libraries(TDEA-CFB ${LIBLIBSODIUM})
+target_link_libraries(linearitySB ${LIBLIBSODIUM})

@@ -2734,7 +2734,7 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for attr_get
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/ccKloeQJ.o: in function `main':
+/usr/bin/ld: /tmp/ccMv05eX.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `attr_get'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -2851,7 +2851,7 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for cputime
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/ccFwlkey.o: in function `main':
+/usr/bin/ld: /tmp/ccpKgBcJ.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `cputime'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -2977,7 +2977,7 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for getsysinfo
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/ccAjvLLd.o: in function `main':
+/usr/bin/ld: /tmp/cc8qHYGx.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `getsysinfo'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -3128,7 +3128,7 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for processor_info
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/ccIphHOw.o: in function `main':
+/usr/bin/ld: /tmp/ccd7GJya.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `processor_info'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -3252,7 +3252,7 @@ configure: failed program was:
 configure:21373: result: no
 configure:21373: checking for pstat_getprocessor
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/ccGYNrmS.o: in function `main':
+/usr/bin/ld: /tmp/ccSwtcYv.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `pstat_getprocessor'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -3380,7 +3380,7 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for read_real_time
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/cc032ETD.o: in function `main':
+/usr/bin/ld: /tmp/ccaZiROi.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `read_real_time'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -3513,13 +3513,13 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for sigstack
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/cc5KfNFU.o: in function `main':
+/usr/bin/ld: /tmp/cchMFpGy.o: in function `main':
 conftest.c:(.text.startup+0xb): warning: the `sigstack' function is dangerous.  `sigaltstack' should be used instead.
 configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for syssgi
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/ccEAd15A.o: in function `main':
+/usr/bin/ld: /tmp/ccxyXxRd.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `syssgi'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -3684,7 +3684,7 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for sysctlbyname
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/ccgr257s.o: in function `main':
+/usr/bin/ld: /tmp/ccwTScw5.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `sysctlbyname'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -4608,10 +4608,10 @@ configure:24609: checking lex output file root
 configure:24623: result: lex.yy
 configure:24628: checking lex library
 configure:24642: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c   >&5
-/usr/bin/ld: /tmp/ccWHnW4a.o: in function `yylex':
+/usr/bin/ld: /tmp/ccldCjqb.o: in function `yylex':
 conftest.c:(.text+0xee6): undefined reference to `yywrap'
 /usr/bin/ld: conftest.c:(.text+0x1165): undefined reference to `yywrap'
-/usr/bin/ld: /tmp/ccWHnW4a.o: in function `main':
+/usr/bin/ld: /tmp/ccldCjqb.o: in function `main':
 conftest.c:(.text.startup+0xd): undefined reference to `yywrap'
 collect2: error: ld returned 1 exit status
 configure:24642: $? = 1
@@ -10893,10 +10893,10 @@ configure: failed program was:
 configure:24652: result: none needed
 configure:24658: checking whether yytext is a pointer
 configure:24675: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c   >&5
-/usr/bin/ld: /tmp/ccwxjl9Y.o: in function `yylex':
+/usr/bin/ld: /tmp/cchzim4C.o: in function `yylex':
 conftest.c:(.text+0xee6): undefined reference to `yywrap'
 /usr/bin/ld: conftest.c:(.text+0x1165): undefined reference to `yywrap'
-/usr/bin/ld: /tmp/ccwxjl9Y.o: in function `main':
+/usr/bin/ld: /tmp/cchzim4C.o: in function `main':
 conftest.c:(.text.startup+0xd): undefined reference to `yywrap'
 collect2: error: ld returned 1 exit status
 configure:24675: $? = 1

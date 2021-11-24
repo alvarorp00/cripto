@@ -67,6 +67,16 @@ typedef struct _tdes_t tdes_t;
 typedef struct _des_t des_t;
 
 /**
+ * @brief struct
+ * containing an state
+ * of des process
+ * 
+ * (L, R)
+ * 
+ */
+typedef struct _state_t state_t;
+
+/**
  * @brief Defines
  * des action {CIPHER; DECIPHER}
  * 
@@ -116,7 +126,7 @@ void des_clean(des_t *des);
  */
 des_error_t des_configure
   (des_t *des, des_action_t action,
-    uint64_t key, dword iv, byte sbit, FILE *i_file, FILE *o_file);
+    dword key, dword iv, byte sbit, FILE *i_file, FILE *o_file);
 
 /**
  * @brief runs cipher with previous config

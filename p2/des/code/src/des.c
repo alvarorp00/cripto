@@ -47,7 +47,7 @@ struct _des_t {
   FILE *o_file; // file to dump to
 };
 
-struct state_t {
+struct _state_t {
   word l;
   word r;
 };
@@ -81,8 +81,8 @@ des_error_t _tdes(tdes_t *tdes, dword msg, dword *output);
 /**
  * @brief F function
  * 
- * @param r 32b
- * @param sbk 48b
+ * @param r 32b input
+ * @param sbk 48b key
  * @return word 32b output
  */
 word _f(word r, union bconv_t sbk);
@@ -96,7 +96,7 @@ word _f(word r, union bconv_t sbk);
  * @param round 
  * @return selected key from des.sbkey
  */
-union bconv_t _key_selector(des_t *des, byte round);
+ union bconv_t _key_selector(des_t *des, byte round);
 
 /**
  * @brief Expands key into
@@ -113,7 +113,7 @@ void _key_expansion(des_t *des);
  * @param state state
  * @param msg message
  */
-void _IP(struct state_t *state, dword msg);
+void _IP(struct _state_t *state, dword msg);
 
 /**
  * @brief Performs
@@ -125,7 +125,7 @@ void _IP(struct state_t *state, dword msg);
  * swap done yet
  * @param output final output
  */
-void _IP_INV(struct state_t *state, dword *output);
+void _IP_INV(struct _state_t *state, dword *output);
 
 /**
  * @brief performs cfb operation
@@ -233,13 +233,164 @@ void tdes_clean(tdes_t *tdes)
   }
 }
 
+
+/* ERROR PARSER */
+
+const char *des_errors[7] = {
+  "everything ok",
+  "error while initializing resource",
+  "error while configurating des",
+  "error while loading resource",
+  "error due to bad argument",
+  "error due to bad parity found",
+  "error due to unsupported required mode"
+};
+const char *des_parse_error(des_error_t error){ return des_errors[error]; }
+
+/** ******************************* **/
+/** MODE OPERATIONS IMPLEMENTATIONS **/
+/** ******************************* **/
+
+des_error_t des_cfb(des_t* des)
+{
+  union des_selector selector;
+  
+  if (!des)
+    return BAD_ARG;
+
+  selector.des = des;
+  return _cfb(selector, DES);
+}
+
+des_error_t tdes_cfb(tdes_t* tdes)
+{
+  union des_selector selector;
+  
+  if (!tdes)
+    return BAD_ARG;
+
+  selector.tdes = tdes;
+  return _cfb(selector, TDEA);
+}
+
+des_error_t _cfb( union des_selector select, enum des_versions version )
+{
+  des_t   *des        = NULL;
+  tdes_t  *tdes       = NULL;
+  
+  dword block         = 0; // cipher block
+  dword rd            = 0; // data read
+
+  dword shift_reg     = 0; // shift register
+  dword ctb           = 0; // partial cipher text block
+  dword ptb           = 0; // partial plain text block
+  byte  bround        = 0; // bits read in round 
+
+  size_t n            = 0; // check fread return
+
+  des_action_t action = 0; // cfb action
+  dword iv            = 0; // init. vector
+  byte sbit           = 0; // shift bits
+  FILE *ifile         = NULL; //input file
+  FILE *ofile         = NULL; // output file
+
+  if (version == DES)
+  {
+    des = select.des;
+    if (!des)
+      return BAD_ARG;
+
+    // config...
+    action = des->action;
+    des->action = CIPHER; // always use des encryption
+    
+    iv = des->iv;
+    sbit = des->sbit;
+
+    ifile = des->i_file;
+    ofile = des->o_file;
+  }
+  else /* if version == TDEA */ 
+  {
+    tdes = select.tdes;
+    if (!tdes)
+      return BAD_ARG;
+
+    // config...
+    action = tdes->action;
+    tdes->action = CIPHER;
+
+    iv = tdes->iv;
+    sbit = tdes->sbit;
+
+    ifile = tdes->i_file;
+    ofile = tdes->o_file;
+  }
+
+  shift_reg = iv;
+
+  if (ifile == stdin)
+  {
+    printf("-> Enter message (press CTRL + D in new line to finish): \n");
+  }
+
+  while ( !feof( ifile ) )
+  {
+    n = fread( &rd, (sbit / 8), 1, ifile );
+    
+    if (n == 0)
+      break;
+
+    if ( action == CIPHER )
+    {
+      // _des(des, shift_reg, &(shift_reg));
+      if (version == DES)
+        _des(des, shift_reg, &(shift_reg));
+      else
+        _tdes(tdes, shift_reg, &(shift_reg));
+      ctb = rd ^ (shift_reg >> (64 - sbit));
+      shift_reg <<= sbit;
+      shift_reg |= ctb;
+      block |= (ctb << (bround));
+    }
+    else /* if des->action == DECIPHER */
+    {
+      // _des(des, shift_reg, &(shift_reg));
+      if (version == DES)
+        _des(des, shift_reg, &(shift_reg));
+      else
+        _tdes(tdes, shift_reg, &(shift_reg));
+      ptb = rd ^ (shift_reg >> (64 - sbit));
+      shift_reg <<= sbit;
+      shift_reg |= rd;
+      block |= (ptb << (bround));
+    }
+
+    bround = (bround + sbit);
+
+    if ((bround % BITBLOCKSZ) == 0) // fits well
+    {
+      fwrite(&block, sizeof(dword), 1, ofile); // print block
+      block = 0;
+      bround = 0;
+    }
+  }
+
+  if (bround > 0) // pad ?
+    fwrite(&block, bround / 8, 1, ofile); // print remaining...
+  
+  return OK;
+}
+
+/* **************************** */
 /* **************************** */
 /* ********* STATIC *********** */
 /* **************************** */
+/* **************************** */
 
-des_error_t _des(des_t *des, dword msg, dword *block)
+ des_error_t _des(des_t *des, dword msg, dword *block)
 {  
-  struct state_t state;
+  struct _state_t state;
   union bconv_t k;
   word l, r, _r;
   byte i;
@@ -363,7 +514,7 @@ word _f(word r, union bconv_t sbk)
   return rs;
 }
 
-void _IP(struct state_t *state, dword msg)
+void _IP(struct _state_t *state, dword msg)
 {
   // union bconv_t conversion;
   dword _ip;
@@ -385,7 +536,7 @@ void _IP(struct state_t *state, dword msg)
   state->r = (word)(_ip) & BMASK32;
 }
 
-void _IP_INV(struct state_t *state, dword *output)
+void _IP_INV(struct _state_t *state, dword *output)
 {
   dword blck;
   dword inv_ip;
@@ -440,151 +591,4 @@ void _key_expansion(des_t *des) // 64b; 16 keys of 48bits
       des->subk[i].l |= (_key48 >> (56 - PC2[j])) & 1;
     }
   } // keys generated
-}
-
-
-/* ERROR PARSER */
-
-const char *des_errors[7] = {
-  "everything ok",
-  "error while initializing resource",
-  "error while configurating des",
-  "error while loading resource",
-  "error due to bad argument",
-  "error due to bad parity found",
-  "error due to unsupported required mode"
-};
-const char *des_parse_error(des_error_t error){ return des_errors[error]; }
-
-/** MODE OPERATIONS IMPLEMENTATIONS **/
-
-des_error_t _cfb( union des_selector select, enum des_versions version )
-{
-  des_t   *des        = NULL;
-  tdes_t  *tdes       = NULL;
-  
-  dword block         = 0; // cipher block
-  dword rd            = 0; // data read
-
-  dword shift_reg     = 0; // shift register
-  dword ctb           = 0; // partial cipher text block
-  dword ptb           = 0; // partial plain text block
-  byte  bround        = 0; // bits read in round 
-
-  size_t n            = 0; // check fread return
-
-  des_action_t action = 0; // cfb action
-  dword iv            = 0; // init. vector
-  byte sbit           = 0; // shift bits
-  FILE *ifile         = NULL; //input file
-  FILE *ofile         = NULL; // output file
-
-  if (version == DES)
-  {
-    des = select.des;
-    if (!des)
-      return BAD_ARG;
-
-    // config...
-    action = des->action;
-    des->action = CIPHER; // always use des encryption
-    
-    iv = des->iv;
-    sbit = des->sbit;
-
-    ifile = des->i_file;
-    ofile = des->o_file;
-  }
-  else /* if version == TDEA */ 
-  {
-    tdes = select.tdes;
-    if (!tdes)
-      return BAD_ARG;
-
-    // config...
-    action = tdes->action;
-    tdes->action = CIPHER;
-
-    iv = tdes->iv;
-    sbit = tdes->sbit;
-
-    ifile = tdes->i_file;
-    ofile = tdes->o_file;
-  }
-
-  shift_reg = iv;
-
-  if (ifile == stdin)
-  {
-    printf("-> Enter message (press CTRL + D in new line to finish): \n");
-  }
-
-  while ( !feof( ifile ) )
-  {
-    n = fread( &rd, (sbit / 8), 1, ifile );
-    
-    if (n == 0)
-      break;
-
-    if ( action == CIPHER )
-    {
-      // _des(des, shift_reg, &(shift_reg));
-      if (version == DES)
-        _des(des, shift_reg, &(shift_reg));
-      else
-        _tdes(tdes, shift_reg, &(shift_reg));
-      ctb = rd ^ (shift_reg >> (64 - sbit));
-      shift_reg <<= sbit;
-      shift_reg |= ctb;
-      block |= (ctb << (bround));
-    }
-    else /* if des->action == DECIPHER */
-    {
-      // _des(des, shift_reg, &(shift_reg));
-      if (version == DES)
-        _des(des, shift_reg, &(shift_reg));
-      else
-        _tdes(tdes, shift_reg, &(shift_reg));
-      ptb = rd ^ (shift_reg >> (64 - sbit));
-      shift_reg <<= sbit;
-      shift_reg |= rd;
-      block |= (ptb << (bround));
-    }
-
-    bround = (bround + sbit);
-
-    if ((bround % BITBLOCKSZ) == 0) // fits well
-    {
-      fwrite(&block, sizeof(dword), 1, ofile); // print block
-      block = 0;
-      bround = 0;
-    }
-  }
-
-  if (bround > 0) // pad ?
-    fwrite(&block, bround / 8, 1, ofile); // print remaining...
-  
-  return OK;
-}
-
-des_error_t des_cfb(des_t* des)
-{
-  union des_selector selector;
-  
-  if (!des)
-    return BAD_ARG;
-
-  selector.des = des;
-  return _cfb(selector, DES);
-}
-
-des_error_t tdes_cfb(tdes_t* tdes)
-{
-  union des_selector selector;
-  
-  if (!tdes)
-    return BAD_ARG;
-
-  selector.tdes = tdes;
-  return _cfb(selector, TDEA);
 }

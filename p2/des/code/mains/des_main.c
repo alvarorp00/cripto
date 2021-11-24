@@ -132,5 +132,7 @@ int main(int argc, char **argv)
   if (o_file != NULL && o_file != stdout)
     fclose(o_file);
 
+  des_clean(des); // clean
+
   return 0;
 }
