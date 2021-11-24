@@ -257,7 +257,7 @@ void matches_test()
       LOG_INFO("\t\t ->CLUE! Match with (r1 | a: %x), (r2 | b: %x)\n", matches[n].r_block1, matches[n].r_block2);
     }
 
-  } while (n<=8192 && n>=0);
+  } while (n<8192 && n>=0);
   
 
   
