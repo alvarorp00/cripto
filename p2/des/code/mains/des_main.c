@@ -106,9 +106,9 @@ int main(int argc, char **argv)
   
   sbit = d_params->sbit;
 
-  if (sbit == 0 || (BITBLOCKSZ % sbit))
+  if (sbit == 0 || (sbit % 8) || (sbit > 64))
   {
-    LOG_ERR("S bits to shift can't be 0 neither non-64 multiple\n");
+    LOG_ERR("S bits to shift can't be 0 neither non-8 multiple. Must be <= 64 too\n");
     exit(EXIT_FAILURE);
   }
 

@@ -165,7 +165,8 @@ des_error_t des_configure
     return BAD_PARITY;
   des->action = action;
   des->iv = iv;
-  des->sbit = (BITBLOCKSZ % sbit) ? 8 : sbit; // if !(sbit|64) use 8-CFB 
+  // des->sbit = (BITBLOCKSZ % sbit) ? 8 : sbit; // if !(sbit|64) use 8-CFB 
+  des->sbit = (sbit % 8) ? 8 : sbit;
   des->i_file = i_file;
   des->o_file = o_file;
 
@@ -350,7 +351,7 @@ des_error_t _cfb( union des_selector select, enum des_versions version )
       ctb = rd ^ (shift_reg >> (64 - sbit));
       shift_reg <<= sbit;
       shift_reg |= ctb;
-      block |= (ctb << (bround));
+      block = ctb;
     }
     else /* if des->action == DECIPHER */
     {
@@ -361,21 +362,22 @@ des_error_t _cfb( union des_selector select, enum des_versions version )
       ptb = rd ^ (shift_reg >> (64 - sbit));
       shift_reg <<= sbit;
       shift_reg |= rd;
-      block |= (ptb << (bround));
+      block = ptb;
     }
 
     bround = (bround + sbit);
 
-    if ((bround % BITBLOCKSZ) == 0) // fits well
-    {
-      fwrite(&block, sizeof(dword), 1, ofile); // print block
-      block = 0;
-      bround = 0;
-    }
+    fwrite(&(block), (sbit / 8), 1, ofile);
+    block = 0x00; // clean block
+    if (bround >= BITBLOCKSZ)
+      bround -= BITBLOCKSZ;
   }
 
-  if (bround > 0) // pad ?
-    fwrite(&block, bround / 8, 1, ofile); // print remaining...
+  if (bround > 0)
+  {
+    block = 0x00; // empty block
+    fwrite(&(block), bround / 8, 1, ofile);
+  }
   
   return OK;
 }
