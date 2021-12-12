@@ -801,6 +801,82 @@ Finalmente, observar las diferencias entre **RSA** y **DSA**. **DSA** es más es
 
 ### Certificados X.509
 
+Los problemas de la capa de transporte (nivel 4 según el estándar OSI) residen principalmente en la vulnerabilidad a ataques _man in the middle_, _spoofing_ o _replay attack_. De esta forma, puesto que encontramos entre los usos más comunes de los certificados X.509 algunos de los siguientes:
+
+  - Cifrado web con SSL (Secure Socket Layer), nivel 3.5 entre capa de aplicación y transporte.
+  - Cifrado y certificación de correos electrónicos mediante el protocolo S/MIME.
+  - Firma digital
+  - Autenticación y no repudio
+
+otorgan una confianza entre las partes implicadas en la comunicación.
+
+Debido a su estructura, pueden contener información relevante como nombre del sujeto que se está certificando, país, región, provincia, estado, localidad, organización...
+
+De hecho, utilizamos uno de estos en el [apartado de cifrados asimétricos](#cifrados-asimétricos), donde hicimos primero el ejemplo con RSA y luego con curvas elípticas, siendo en este último necesario hacerlo con certificados para la fase de firma y verificación.
+
+Ahora generaremos un certificado auto-firmado (_self-signed certificate_), que aunque en la red sean inseguros, para el ejemplo que nos concierne es suficiente. $^{26}$
+
+```text
+$ openssl req -x509 -newkey rsa:3072 -keyout private_key.pem -out certificate.pem -sha512 -nodes -subj '/CN=localhost'
+Generating a RSA private key
+......................++++
+............................................................................................................................++++
+writing new private key to 'private_key.pem'
+-----
+```
+
+Ponemos el _flag_ `-nodes` para que no se nos pida una _passphrase_ (contraseña), y el _flag_ `-subj` para indicarle quién será el sujeto del certificado, y así evitar que se nos solicite introducir más información. Si hubiésemos querido ponerle expiración concreta, podríamos haber añadido el flag `-days`.
+
+Vemos los valores del certificado:
+
+```text
+$ openssl x509 -text -noout -in certificate.pem
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            6a:9d:f0:79:aa:2d:6c:e8:06:fd:18:49:ce:6b:42:ce:ee:fd:e7:92
+        Signature Algorithm: sha512WithRSAEncryption
+        Issuer: CN = localhost
+        Validity
+            Not Before: Dec 12 11:08:19 2021 GMT
+            Not After : Jan 11 11:08:19 2022 GMT
+        Subject: CN = localhost
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                RSA Public-Key: (3072 bit)
+                Modulus:
+                    00:d7:b3:ea:88:dd:14:4d:29:98:e7:f0:2e:f3:2b:
+                    [...]
+                    4f:fc:95:f0:c4:de:69:51:aa:29
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Subject Key Identifier: 
+                91:B5:53:54:5A:F9:FE:FE:10:54:0D:DA:8E:E9:86:8E:0F:03:94:B7
+            X509v3 Authority Key Identifier: 
+                keyid:91:B5:53:54:5A:F9:FE:FE:10:54:0D:DA:8E:E9:86:8E:0F:03:94:B7
+
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+    Signature Algorithm: sha512WithRSAEncryption
+         86:90:96:f1:77:0c:6a:a2:b4:03:d4:10:b9:39:a7:c7:8a:98:
+         [...]
+         24:20:3d:42:d4:f9
+```
+
+Podemos ver la información que contiene, como el algoritmo _hash_ que se ha utilizado para firmarlo; período de validez; algoritmo asimétrico utilizado (**RSA**), así como la cantidad de $bits$ generados; etc.
+
+Así, el certificado quedó firmado y podemos verificarlo de la siguiente forma:
+
+```text
+$ openssl x509 -noout -modulus -in certificate.pem | openssl sha512
+(stdin)= 33f2dbaf2bfc3ea6f54169bebe3c9ab9efbb07afb91cf8c8737750423a7f544d9adc9a12dd884c24aa0ce286f88460bef12db4d9e733199db4f4f73ef56e1fb5
+$ openssl rsa -noout -modulus -in private_key.pem | openssl sha512
+(stdin)= 33f2dbaf2bfc3ea6f54169bebe3c9ab9efbb07afb91cf8c8737750423a7f544d9adc9a12dd884c24aa0ce286f88460bef12db4d9e733199db4f4f73ef56e1fb5
+$ diff <(openssl x509 -noout -modulus -in certificate.pem | openssl sha512) <(openssl rsa -noout -modulus -in private_key.pem | openssl sha512) | wc -c
+0
+```
+
 ## Referencias
 
 \[1]: https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.197.pdf
@@ -853,6 +929,8 @@ Finalmente, observar las diferencias entre **RSA** y **DSA**. **DSA** es más es
 
 \[25]: https://es.wikipedia.org/wiki/Curve25519
 
+\[26]: https://www.openssl.org/docs/manmaster/man1/req.html
+
 <!-- Links -->
 
 [1]: https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.197.pdf
@@ -880,3 +958,4 @@ Finalmente, observar las diferencias entre **RSA** y **DSA**. **DSA** es más es
 [23]: https://www.openssl.org/docs/man1.1.1/man1/openssl-speed.html
 [24]: https://es.wikipedia.org/wiki/Elliptic-curve_Diffie-Hellman
 [25]: https://es.wikipedia.org/wiki/Curve25519
+[26]: https://www.openssl.org/docs/manmaster/man1/req.html
