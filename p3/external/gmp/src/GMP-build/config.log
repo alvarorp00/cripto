@@ -2732,7 +2732,7 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for attr_get
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/ccw3UFp5.o: in function `main':
+/usr/bin/ld: /tmp/cc0lisdv.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `attr_get'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -2849,7 +2849,7 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for cputime
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/cci3CrL2.o: in function `main':
+/usr/bin/ld: /tmp/cc5wEJfj.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `cputime'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -2975,7 +2975,7 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for getsysinfo
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/ccSWzrOd.o: in function `main':
+/usr/bin/ld: /tmp/ccrg5KiZ.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `getsysinfo'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -3126,7 +3126,7 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for processor_info
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/cccsTARV.o: in function `main':
+/usr/bin/ld: /tmp/ccTRWx6I.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `processor_info'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -3250,7 +3250,7 @@ configure: failed program was:
 configure:21373: result: no
 configure:21373: checking for pstat_getprocessor
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/ccIdiu0g.o: in function `main':
+/usr/bin/ld: /tmp/cc4mz3f7.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `pstat_getprocessor'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -3378,7 +3378,7 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for read_real_time
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/ccDOGZQ4.o: in function `main':
+/usr/bin/ld: /tmp/cc1zNhCU.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `read_real_time'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -3511,13 +3511,13 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for sigstack
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/ccuiWHOk.o: in function `main':
+/usr/bin/ld: /tmp/ccN47hp9.o: in function `main':
 conftest.c:(.text.startup+0xb): warning: the `sigstack' function is dangerous.  `sigaltstack' should be used instead.
 configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for syssgi
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/cckHBcaY.o: in function `main':
+/usr/bin/ld: /tmp/cceUaYIO.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `syssgi'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -3682,7 +3682,7 @@ configure:21373: $? = 0
 configure:21373: result: yes
 configure:21373: checking for sysctlbyname
 configure:21373: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c  >&5
-/usr/bin/ld: /tmp/ccyBSBQP.o: in function `main':
+/usr/bin/ld: /tmp/ccNNb59L.o: in function `main':
 conftest.c:(.text.startup+0xb): undefined reference to `sysctlbyname'
 collect2: error: ld returned 1 exit status
 configure:21373: $? = 1
@@ -4606,10 +4606,10 @@ configure:24609: checking lex output file root
 configure:24623: result: lex.yy
 configure:24628: checking lex library
 configure:24642: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c   >&5
-/usr/bin/ld: /tmp/ccTZHUxX.o: in function `yylex':
+/usr/bin/ld: /tmp/ccjCNYVx.o: in function `yylex':
 conftest.c:(.text+0xee6): undefined reference to `yywrap'
 /usr/bin/ld: conftest.c:(.text+0x1165): undefined reference to `yywrap'
-/usr/bin/ld: /tmp/ccTZHUxX.o: in function `main':
+/usr/bin/ld: /tmp/ccjCNYVx.o: in function `main':
 conftest.c:(.text.startup+0xd): undefined reference to `yywrap'
 collect2: error: ld returned 1 exit status
 configure:24642: $? = 1
@@ -10891,10 +10891,10 @@ configure: failed program was:
 configure:24652: result: none needed
 configure:24658: checking whether yytext is a pointer
 configure:24675: gcc -o conftest -O2 -pedantic -fomit-frame-pointer -m64 -mtune=znver1 -march=znver1   conftest.c   >&5
-/usr/bin/ld: /tmp/cctGL7Fl.o: in function `yylex':
+/usr/bin/ld: /tmp/ccdbiFwX.o: in function `yylex':
 conftest.c:(.text+0xee6): undefined reference to `yywrap'
 /usr/bin/ld: conftest.c:(.text+0x1165): undefined reference to `yywrap'
-/usr/bin/ld: /tmp/cctGL7Fl.o: in function `main':
+/usr/bin/ld: /tmp/ccdbiFwX.o: in function `main':
 conftest.c:(.text.startup+0xd): undefined reference to `yywrap'
 collect2: error: ld returned 1 exit status
 configure:24675: $? = 1
@@ -13038,7 +13038,6 @@ config.status:1570: creating gmp.h
 config.status:1570: creating gmp.pc
 config.status:1570: creating gmpxx.pc
 config.status:1570: creating config.h
-config.status:1736: config.h is unchanged
 config.status:1796: linking ../GMP/mpn/x86_64/invert_limb_table.asm to mpn/invert_limb_table.asm
 config.status:1796: linking ../GMP/mpn/generic/add.c to mpn/add.c
 config.status:1796: linking ../GMP/mpn/generic/add_1.c to mpn/add_1.c
