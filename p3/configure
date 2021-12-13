@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# exe final dir
+bdir="build"
+edir="executables"
+pdir="../"
+epdir="$pdir$edir"
+
+# Commands
+cmd="cd $bdir"
+load="cmake $pdir"
+run="cmake --build ."
+mve="mv $edir $pdir"
+
+[[ ! -d $bdir ]] && mkdir $bdir
+
+$cmd
+status=$?
+
+if [ $status -eq 0 ];then
+	$load && $run
+  # [[ -d $epdir ]] && rsync -a $edir $epdir || $mve
+fi

@@ -5,6 +5,7 @@ bin/CMakeFiles/potenciacion.dir/code/mains/power_main.c.o: ../external/gmp/src/G
 bin/CMakeFiles/potenciacion.dir/code/mains/power_main.c.o: ../rsa/code/inc/logger.h
 bin/CMakeFiles/potenciacion.dir/code/mains/power_main.c.o: ../rsa/code/inc/params.h
 bin/CMakeFiles/potenciacion.dir/code/mains/power_main.c.o: ../rsa/code/inc/power.h
+bin/CMakeFiles/potenciacion.dir/code/mains/power_main.c.o: ../rsa/code/inc/util.h
 bin/CMakeFiles/potenciacion.dir/code/mains/power_main.c.o: ../rsa/code/mains/power_main.c
 
 bin/CMakeFiles/potenciacion.dir/code/src/logger.c.o: ../rsa/code/inc/logger.h

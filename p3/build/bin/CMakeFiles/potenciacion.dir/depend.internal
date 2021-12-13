@@ -6,6 +6,7 @@ bin/CMakeFiles/potenciacion.dir/code/mains/power_main.c.o
  ../rsa/code/inc/logger.h
  ../rsa/code/inc/params.h
  ../rsa/code/inc/power.h
+ ../rsa/code/inc/util.h
  /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/mains/power_main.c
 bin/CMakeFiles/potenciacion.dir/code/src/logger.c.o
  ../rsa/code/inc/logger.h

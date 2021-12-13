@@ -1,0 +1,3 @@
+repository='external project URL'
+module='https://gmplib.org/download/gmp/gmp-6.2.1.tar.lz'
+tag=''
