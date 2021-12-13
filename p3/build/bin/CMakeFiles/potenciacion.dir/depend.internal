@@ -20,5 +20,6 @@ bin/CMakeFiles/potenciacion.dir/code/src/power.c.o
  ../rsa/code/inc/util.h
  /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.c
 bin/CMakeFiles/potenciacion.dir/code/src/util.c.o
+ ../external/gmp/src/GMP-build/gmp.h
  ../rsa/code/inc/util.h
  /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/util.c
