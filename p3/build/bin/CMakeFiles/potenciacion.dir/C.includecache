@@ -1,0 +1,46 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../external/gmp/src/GMP-build/gmp.h
+iosfwd
+-
+cstdio
+-
+stddef.h
+-
+limits.h
+-
+
+../rsa/code/inc/power.h
+stdint.h
+-
+gmp.h
+../rsa/code/inc/gmp.h
+
+../rsa/code/inc/util.h
+stdio.h
+-
+stdlib.h
+-
+stdint.h
+-
+
+/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.c
+stdio.h
+-
+stdlib.h
+-
+stdint.h
+-
+unistd.h
+-
+power.h
+/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.h
+util.h
+/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/util.h
+

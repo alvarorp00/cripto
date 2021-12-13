@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles/LIBSODIUM"
+		},
+		{
+			"file" : "/home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles/LIBSODIUM.rule"
+		},
+		{
+			"file" : "/home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles/LIBSODIUM-complete.rule"
+		},
+		{
+			"file" : "/home/alvarorp00/Documents/uam/c4/cripto/p3/external/libsodium/src/LIBSODIUM-stamp/LIBSODIUM-install.rule"
+		},
+		{
+			"file" : "/home/alvarorp00/Documents/uam/c4/cripto/p3/external/libsodium/src/LIBSODIUM-stamp/LIBSODIUM-mkdir.rule"
+		},
+		{
+			"file" : "/home/alvarorp00/Documents/uam/c4/cripto/p3/external/libsodium/src/LIBSODIUM-stamp/LIBSODIUM-download.rule"
+		},
+		{
+			"file" : "/home/alvarorp00/Documents/uam/c4/cripto/p3/external/libsodium/src/LIBSODIUM-stamp/LIBSODIUM-update.rule"
+		},
+		{
+			"file" : "/home/alvarorp00/Documents/uam/c4/cripto/p3/external/libsodium/src/LIBSODIUM-stamp/LIBSODIUM-patch.rule"
+		},
+		{
+			"file" : "/home/alvarorp00/Documents/uam/c4/cripto/p3/external/libsodium/src/LIBSODIUM-stamp/LIBSODIUM-configure.rule"
+		},
+		{
+			"file" : "/home/alvarorp00/Documents/uam/c4/cripto/p3/external/libsodium/src/LIBSODIUM-stamp/LIBSODIUM-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"LIBSODIUM"
+		],
+		"name" : "LIBSODIUM"
+	}
+}
