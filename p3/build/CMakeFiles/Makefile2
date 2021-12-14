@@ -75,6 +75,7 @@ clean: bin/clean
 # Directory level rules for directory bin
 
 # Recursive "all" directory target.
+bin/all: bin/CMakeFiles/primo.dir/all
 bin/all: bin/CMakeFiles/potenciacion.dir/all
 
 .PHONY : bin/all
@@ -85,6 +86,7 @@ bin/preinstall:
 .PHONY : bin/preinstall
 
 # Recursive "clean" directory target.
+bin/clean: bin/CMakeFiles/primo.dir/clean
 bin/clean: bin/CMakeFiles/potenciacion.dir/clean
 
 .PHONY : bin/clean
@@ -144,18 +146,45 @@ CMakeFiles/LIBSODIUM.dir/clean:
 .PHONY : CMakeFiles/LIBSODIUM.dir/clean
 
 #=============================================================================
+# Target rules for target bin/CMakeFiles/primo.dir
+
+# All Build rule for target.
+bin/CMakeFiles/primo.dir/all:
+	$(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/depend
+	$(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles --progress-num=24,25,26,27,28,29,30 "Built target primo"
+.PHONY : bin/CMakeFiles/primo.dir/all
+
+# Build rule for subdir invocation for target.
+bin/CMakeFiles/primo.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles 7
+	$(MAKE) -f CMakeFiles/Makefile2 bin/CMakeFiles/primo.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles 0
+.PHONY : bin/CMakeFiles/primo.dir/rule
+
+# Convenience name for target.
+primo: bin/CMakeFiles/primo.dir/rule
+
+.PHONY : primo
+
+# clean rule for target.
+bin/CMakeFiles/primo.dir/clean:
+	$(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/clean
+.PHONY : bin/CMakeFiles/primo.dir/clean
+
+#=============================================================================
 # Target rules for target bin/CMakeFiles/potenciacion.dir
 
 # All Build rule for target.
 bin/CMakeFiles/potenciacion.dir/all:
 	$(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/depend
 	$(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles --progress-num=17,18,19,20,21,22 "Built target potenciacion"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles --progress-num=17,18,19,20,21,22,23 "Built target potenciacion"
 .PHONY : bin/CMakeFiles/potenciacion.dir/all
 
 # Build rule for subdir invocation for target.
 bin/CMakeFiles/potenciacion.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles 6
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles 7
 	$(MAKE) -f CMakeFiles/Makefile2 bin/CMakeFiles/potenciacion.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles 0
 .PHONY : bin/CMakeFiles/potenciacion.dir/rule

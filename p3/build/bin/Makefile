@@ -111,6 +111,21 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+bin/CMakeFiles/primo.dir/rule:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f CMakeFiles/Makefile2 bin/CMakeFiles/primo.dir/rule
+.PHONY : bin/CMakeFiles/primo.dir/rule
+
+# Convenience name for target.
+primo: bin/CMakeFiles/primo.dir/rule
+
+.PHONY : primo
+
+# fast build rule for target.
+primo/fast:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/build
+.PHONY : primo/fast
+
+# Convenience name for target.
 bin/CMakeFiles/potenciacion.dir/rule:
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f CMakeFiles/Makefile2 bin/CMakeFiles/potenciacion.dir/rule
 .PHONY : bin/CMakeFiles/potenciacion.dir/rule
@@ -152,12 +167,40 @@ code/mains/power_main.c.s:
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/mains/power_main.c.s
 .PHONY : code/mains/power_main.c.s
 
+code/mains/prime_main.o: code/mains/prime_main.c.o
+
+.PHONY : code/mains/prime_main.o
+
+# target to build an object file
+code/mains/prime_main.c.o:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/mains/prime_main.c.o
+.PHONY : code/mains/prime_main.c.o
+
+code/mains/prime_main.i: code/mains/prime_main.c.i
+
+.PHONY : code/mains/prime_main.i
+
+# target to preprocess a source file
+code/mains/prime_main.c.i:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/mains/prime_main.c.i
+.PHONY : code/mains/prime_main.c.i
+
+code/mains/prime_main.s: code/mains/prime_main.c.s
+
+.PHONY : code/mains/prime_main.s
+
+# target to generate assembly for a file
+code/mains/prime_main.c.s:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/mains/prime_main.c.s
+.PHONY : code/mains/prime_main.c.s
+
 code/src/logger.o: code/src/logger.c.o
 
 .PHONY : code/src/logger.o
 
 # target to build an object file
 code/src/logger.c.o:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/logger.c.o
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/logger.c.o
 .PHONY : code/src/logger.c.o
 
@@ -167,6 +210,7 @@ code/src/logger.i: code/src/logger.c.i
 
 # target to preprocess a source file
 code/src/logger.c.i:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/logger.c.i
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/logger.c.i
 .PHONY : code/src/logger.c.i
 
@@ -176,6 +220,7 @@ code/src/logger.s: code/src/logger.c.s
 
 # target to generate assembly for a file
 code/src/logger.c.s:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/logger.c.s
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/logger.c.s
 .PHONY : code/src/logger.c.s
 
@@ -185,6 +230,7 @@ code/src/params.o: code/src/params.c.o
 
 # target to build an object file
 code/src/params.c.o:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/params.c.o
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/params.c.o
 .PHONY : code/src/params.c.o
 
@@ -194,6 +240,7 @@ code/src/params.i: code/src/params.c.i
 
 # target to preprocess a source file
 code/src/params.c.i:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/params.c.i
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/params.c.i
 .PHONY : code/src/params.c.i
 
@@ -203,6 +250,7 @@ code/src/params.s: code/src/params.c.s
 
 # target to generate assembly for a file
 code/src/params.c.s:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/params.c.s
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/params.c.s
 .PHONY : code/src/params.c.s
 
@@ -212,6 +260,7 @@ code/src/power.o: code/src/power.c.o
 
 # target to build an object file
 code/src/power.c.o:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/power.c.o
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/power.c.o
 .PHONY : code/src/power.c.o
 
@@ -221,6 +270,7 @@ code/src/power.i: code/src/power.c.i
 
 # target to preprocess a source file
 code/src/power.c.i:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/power.c.i
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/power.c.i
 .PHONY : code/src/power.c.i
 
@@ -230,8 +280,39 @@ code/src/power.s: code/src/power.c.s
 
 # target to generate assembly for a file
 code/src/power.c.s:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/power.c.s
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/power.c.s
 .PHONY : code/src/power.c.s
+
+code/src/prime.o: code/src/prime.c.o
+
+.PHONY : code/src/prime.o
+
+# target to build an object file
+code/src/prime.c.o:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/prime.c.o
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/prime.c.o
+.PHONY : code/src/prime.c.o
+
+code/src/prime.i: code/src/prime.c.i
+
+.PHONY : code/src/prime.i
+
+# target to preprocess a source file
+code/src/prime.c.i:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/prime.c.i
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/prime.c.i
+.PHONY : code/src/prime.c.i
+
+code/src/prime.s: code/src/prime.c.s
+
+.PHONY : code/src/prime.s
+
+# target to generate assembly for a file
+code/src/prime.c.s:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/prime.c.s
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/prime.c.s
+.PHONY : code/src/prime.c.s
 
 code/src/util.o: code/src/util.c.o
 
@@ -239,6 +320,7 @@ code/src/util.o: code/src/util.c.o
 
 # target to build an object file
 code/src/util.c.o:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/util.c.o
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/util.c.o
 .PHONY : code/src/util.c.o
 
@@ -248,6 +330,7 @@ code/src/util.i: code/src/util.c.i
 
 # target to preprocess a source file
 code/src/util.c.i:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/util.c.i
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/util.c.i
 .PHONY : code/src/util.c.i
 
@@ -257,6 +340,7 @@ code/src/util.s: code/src/util.c.s
 
 # target to generate assembly for a file
 code/src/util.c.s:
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/code/src/util.c.s
 	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build && $(MAKE) -f bin/CMakeFiles/potenciacion.dir/build.make bin/CMakeFiles/potenciacion.dir/code/src/util.c.s
 .PHONY : code/src/util.c.s
 
@@ -268,10 +352,14 @@ help:
 	@echo "... depend"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
+	@echo "... primo"
 	@echo "... potenciacion"
 	@echo "... code/mains/power_main.o"
 	@echo "... code/mains/power_main.i"
 	@echo "... code/mains/power_main.s"
+	@echo "... code/mains/prime_main.o"
+	@echo "... code/mains/prime_main.i"
+	@echo "... code/mains/prime_main.s"
 	@echo "... code/src/logger.o"
 	@echo "... code/src/logger.i"
 	@echo "... code/src/logger.s"
@@ -281,6 +369,9 @@ help:
 	@echo "... code/src/power.o"
 	@echo "... code/src/power.i"
 	@echo "... code/src/power.s"
+	@echo "... code/src/prime.o"
+	@echo "... code/src/prime.i"
+	@echo "... code/src/prime.s"
 	@echo "... code/src/util.o"
 	@echo "... code/src/util.i"
 	@echo "... code/src/util.s"

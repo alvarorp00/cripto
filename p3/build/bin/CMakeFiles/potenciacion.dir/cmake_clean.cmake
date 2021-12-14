@@ -5,6 +5,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/potenciacion.dir/code/src/logger.c.o"
   "CMakeFiles/potenciacion.dir/code/src/params.c.o"
   "CMakeFiles/potenciacion.dir/code/src/power.c.o"
+  "CMakeFiles/potenciacion.dir/code/src/prime.c.o"
   "CMakeFiles/potenciacion.dir/code/src/util.c.o"
 )
 

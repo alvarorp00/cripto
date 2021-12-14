@@ -25,7 +25,25 @@ void setBitAt(byte *to, byte val, byte pos)
   *(to) = (((*(to) | (1 << pos)) ^ (1 << pos))) | (val << pos);
 }
 
+// a % b
 void computeModulus(mpz_t a, mpz_t b, mpz_t res)
+{
+  mpz_t _d;
+  size_t remn;
+
+  mpz_init_set(_d, b);
+
+  mpz_tdiv_r(res, a, b);
+
+  remn = mpz_size(res);
+  if(remn < 0)
+    mpz_add(res, res, b); // bounded to R⁺
+  
+  mpz_clear(_d);
+}
+
+// a % b
+void _oldModCompute(mpz_t a, mpz_t b, mpz_t res)
 {
   mpz_t _reg, _res;
 

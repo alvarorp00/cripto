@@ -137,6 +137,19 @@ LIBSODIUM/fast:
 .PHONY : LIBSODIUM/fast
 
 #=============================================================================
+# Target rules for targets named primo
+
+# Build rule for target.
+primo: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 primo
+.PHONY : primo
+
+# fast build rule for target.
+primo/fast:
+	$(MAKE) -f bin/CMakeFiles/primo.dir/build.make bin/CMakeFiles/primo.dir/build
+.PHONY : primo/fast
+
+#=============================================================================
 # Target rules for targets named potenciacion
 
 # Build rule for target.
@@ -159,6 +172,7 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... GMP"
 	@echo "... LIBSODIUM"
+	@echo "... primo"
 	@echo "... potenciacion"
 .PHONY : help
 

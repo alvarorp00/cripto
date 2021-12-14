@@ -4,4 +4,5 @@
 /home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles/LIBSODIUM.dir
 /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin/CMakeFiles/rebuild_cache.dir
 /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin/CMakeFiles/edit_cache.dir
+/home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin/CMakeFiles/primo.dir
 /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin/CMakeFiles/potenciacion.dir

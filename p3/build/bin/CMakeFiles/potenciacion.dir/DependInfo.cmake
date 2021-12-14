@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_CHECK_C
   "/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/logger.c" "/home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin/CMakeFiles/potenciacion.dir/code/src/logger.c.o"
   "/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/params.c" "/home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin/CMakeFiles/potenciacion.dir/code/src/params.c.o"
   "/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.c" "/home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin/CMakeFiles/potenciacion.dir/code/src/power.c.o"
+  "/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/prime.c" "/home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin/CMakeFiles/potenciacion.dir/code/src/prime.c.o"
   "/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/util.c" "/home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin/CMakeFiles/potenciacion.dir/code/src/util.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")

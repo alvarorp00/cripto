@@ -119,11 +119,11 @@ size_t currentTimeInMiliseconds()
  
 static void runTest(FILE *o_file)
 {
-  #define TESTS 10000
+  // #define TESTS 10000
   
   #define BASE_STEP 32
   #define BASE_START 96
-  #define BASE_TOP 4000
+  #define BASE_TOP 10000
 
   #define MOD_BOT_BOUND 15
   #define MOD_TOP_BOUND 45
@@ -165,20 +165,20 @@ static void runTest(FILE *o_file)
   for(_bits = BASE_START; _bits < BASE_TOP; _bits += BASE_STEP)
   {
     mpz_set_ui(module, (unsigned long)(randombytes_uniform(MOD_BOT_BOUND) + (MOD_TOP_BOUND - MOD_BOT_BOUND))); // random module
-    mpz_set_ui(exponent, (unsigned long)(randombytes_uniform(UINT16_MAX) + UCHAR_MAX)); // random exponent
+    mpz_set_ui(exponent, (unsigned long)((randombytes_uniform(MOD_BOT_BOUND << 2) << 2) + (MOD_TOP_BOUND - MOD_BOT_BOUND)) << 2); // random exponent
 
     power_setup(data, mpz_get_str(NULL, 10, base), mpz_get_str(NULL, 10, exponent), mpz_get_str(NULL, 10, module));
     starting_t = currentTimeInMiliseconds();
     err = power_compute(data, sres);
     ending_t = currentTimeInMiliseconds();
-    self_elapsed_ms = starting_t - ending_t;
+    self_elapsed_ms = ending_t - starting_t;
 
     assert(err == 0); // assert is fine, do not take time because of time performance
 
     starting_t = currentTimeInMiliseconds();
     mpz_powm(gres, base, exponent, module);
     ending_t = currentTimeInMiliseconds();
-    gmp_elapsed_ms = starting_t - ending_t;
+    gmp_elapsed_ms = ending_t - starting_t;
 
     assert(mpz_cmp(sres, gres) == 0); // assert calcs are ok
 

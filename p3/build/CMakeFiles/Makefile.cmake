@@ -56,5 +56,6 @@ set(CMAKE_MAKEFILE_PRODUCTS
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/GMP.dir/DependInfo.cmake"
   "CMakeFiles/LIBSODIUM.dir/DependInfo.cmake"
+  "bin/CMakeFiles/primo.dir/DependInfo.cmake"
   "bin/CMakeFiles/potenciacion.dir/DependInfo.cmake"
   )

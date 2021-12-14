@@ -22,5 +22,13 @@ add_executable(potenciacion
   ${sources}
 )
 
+add_executable(primo
+  ${RSA_MAIN}/prime_main.c
+  ${sources}
+)
+
 target_link_libraries(potenciacion ${LIBLIBSODIUM})
 target_link_libraries(potenciacion ${LIBGMP})
+
+target_link_libraries(primo ${LIBLIBSODIUM})
+target_link_libraries(primo ${LIBGMP})
