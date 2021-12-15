@@ -1544,7 +1544,7 @@ configure:15629: $? = 0
 configure:15637: result: yes
 configure:15748: checking for arc4random
 configure:15748: gcc -o conftest -g -O2 -pthread -fvisibility=hidden -fPIC -fPIE -fno-strict-aliasing -fno-strict-overflow -fstack-protector -ftls-model=local-dynamic   -pie -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack conftest.c   >&5
-/usr/bin/ld: /tmp/ccHITGmM.o: in function `main':
+/usr/bin/ld: /tmp/ccv8hXij.o: in function `main':
 /home/alvarorp00/Documents/uam/c4/cripto/p3/external/libsodium/src/LIBSODIUM-build/conftest.c:91: undefined reference to `arc4random'
 collect2: error: ld returned 1 exit status
 configure:15748: $? = 1
@@ -1646,7 +1646,7 @@ configure: failed program was:
 configure:15748: result: no
 configure:15748: checking for arc4random_buf
 configure:15748: gcc -o conftest -g -O2 -pthread -fvisibility=hidden -fPIC -fPIE -fno-strict-aliasing -fno-strict-overflow -fstack-protector -ftls-model=local-dynamic   -pie -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack conftest.c   >&5
-/usr/bin/ld: /tmp/ccjNZIJ5.o: in function `main':
+/usr/bin/ld: /tmp/ccjtY1xJ.o: in function `main':
 /home/alvarorp00/Documents/uam/c4/cripto/p3/external/libsodium/src/LIBSODIUM-build/conftest.c:91: undefined reference to `arc4random_buf'
 collect2: error: ld returned 1 exit status
 configure:15748: $? = 1
@@ -1764,7 +1764,7 @@ configure:15760: $? = 0
 configure:15760: result: yes
 configure:15760: checking for memset_s
 configure:15760: gcc -o conftest -g -O2 -pthread -fvisibility=hidden -fPIC -fPIE -fno-strict-aliasing -fno-strict-overflow -fstack-protector -ftls-model=local-dynamic   -pie -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack conftest.c   >&5
-/usr/bin/ld: /tmp/cchRbKdj.o: in function `main':
+/usr/bin/ld: /tmp/ccTtbm2O.o: in function `main':
 /home/alvarorp00/Documents/uam/c4/cripto/p3/external/libsodium/src/LIBSODIUM-build/conftest.c:95: undefined reference to `memset_s'
 collect2: error: ld returned 1 exit status
 configure:15760: $? = 1
@@ -1874,7 +1874,7 @@ configure:15760: $? = 0
 configure:15760: result: yes
 configure:15760: checking for explicit_memset
 configure:15760: gcc -o conftest -g -O2 -pthread -fvisibility=hidden -fPIC -fPIE -fno-strict-aliasing -fno-strict-overflow -fstack-protector -ftls-model=local-dynamic   -pie -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack conftest.c   >&5
-/usr/bin/ld: /tmp/ccCLhSa3.o: in function `main':
+/usr/bin/ld: /tmp/ccmrJvRA.o: in function `main':
 /home/alvarorp00/Documents/uam/c4/cripto/p3/external/libsodium/src/LIBSODIUM-build/conftest.c:96: undefined reference to `explicit_memset'
 collect2: error: ld returned 1 exit status
 configure:15760: $? = 1

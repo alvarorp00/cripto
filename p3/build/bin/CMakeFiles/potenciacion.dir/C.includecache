@@ -16,6 +16,12 @@ stddef.h
 limits.h
 -
 
+../rsa/code/inc/power.h
+stdint.h
+-
+gmp.h
+../rsa/code/inc/gmp.h
+
 ../rsa/code/inc/util.h
 stdio.h
 -
@@ -26,9 +32,19 @@ stdint.h
 gmp.h
 ../rsa/code/inc/gmp.h
 
-/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/util.c
+/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.c
+stdio.h
+-
+stdlib.h
+-
+stdint.h
+-
 string.h
 -
+unistd.h
+-
+power.h
+/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.h
 util.h
 /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/util.h
 

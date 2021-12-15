@@ -25,7 +25,13 @@ typedef struct power_params {
   struct def_params def;
 } power_params_t;
 
+typedef struct prime_params {
+  char *bits;
+  char *sec;
+  struct def_params def;
+}prime_params_t;
 
 power_params_t* params_parse_power( int argc, char **argv );
+prime_params_t* params_parse_prime( int argc, char **argv );
 
 #endif

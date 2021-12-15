@@ -20,6 +20,9 @@ bin/CMakeFiles/potenciacion.dir/code/src/power.c.o: ../rsa/code/inc/power.h
 bin/CMakeFiles/potenciacion.dir/code/src/power.c.o: ../rsa/code/inc/util.h
 bin/CMakeFiles/potenciacion.dir/code/src/power.c.o: ../rsa/code/src/power.c
 
+bin/CMakeFiles/potenciacion.dir/code/src/prime.c.o: ../external/gmp/src/GMP-build/gmp.h
+bin/CMakeFiles/potenciacion.dir/code/src/prime.c.o: ../rsa/code/inc/power.h
+bin/CMakeFiles/potenciacion.dir/code/src/prime.c.o: ../rsa/code/inc/prime.h
 bin/CMakeFiles/potenciacion.dir/code/src/prime.c.o: ../rsa/code/src/prime.c
 
 bin/CMakeFiles/potenciacion.dir/code/src/util.c.o: ../external/gmp/src/GMP-build/gmp.h

@@ -3,7 +3,13 @@
     "stdio.h": "c",
     "logger.h": "c",
     "util.h": "c",
-    "power.h": "c"
+    "power.h": "c",
+    "prime.h": "c",
+    "primes.h": "c",
+    "stdint.h": "c",
+    "limits.h": "c",
+    "threadpool.h": "c",
+    "queue.h": "c"
   },
   "cmake.configureOnOpen": false
 }

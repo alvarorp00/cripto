@@ -60,80 +60,80 @@ include bin/CMakeFiles/potenciacion.dir/flags.make
 bin/CMakeFiles/potenciacion.dir/code/mains/power_main.c.o: bin/CMakeFiles/potenciacion.dir/flags.make
 bin/CMakeFiles/potenciacion.dir/code/mains/power_main.c.o: ../rsa/code/mains/power_main.c
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object bin/CMakeFiles/potenciacion.dir/code/mains/power_main.c.o"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/potenciacion.dir/code/mains/power_main.c.o   -c /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/mains/power_main.c
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/potenciacion.dir/code/mains/power_main.c.o   -c /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/mains/power_main.c
 
 bin/CMakeFiles/potenciacion.dir/code/mains/power_main.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/potenciacion.dir/code/mains/power_main.c.i"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/mains/power_main.c > CMakeFiles/potenciacion.dir/code/mains/power_main.c.i
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/mains/power_main.c > CMakeFiles/potenciacion.dir/code/mains/power_main.c.i
 
 bin/CMakeFiles/potenciacion.dir/code/mains/power_main.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/potenciacion.dir/code/mains/power_main.c.s"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/mains/power_main.c -o CMakeFiles/potenciacion.dir/code/mains/power_main.c.s
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/mains/power_main.c -o CMakeFiles/potenciacion.dir/code/mains/power_main.c.s
 
 bin/CMakeFiles/potenciacion.dir/code/src/logger.c.o: bin/CMakeFiles/potenciacion.dir/flags.make
 bin/CMakeFiles/potenciacion.dir/code/src/logger.c.o: ../rsa/code/src/logger.c
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object bin/CMakeFiles/potenciacion.dir/code/src/logger.c.o"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/potenciacion.dir/code/src/logger.c.o   -c /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/logger.c
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/potenciacion.dir/code/src/logger.c.o   -c /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/logger.c
 
 bin/CMakeFiles/potenciacion.dir/code/src/logger.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/potenciacion.dir/code/src/logger.c.i"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/logger.c > CMakeFiles/potenciacion.dir/code/src/logger.c.i
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/logger.c > CMakeFiles/potenciacion.dir/code/src/logger.c.i
 
 bin/CMakeFiles/potenciacion.dir/code/src/logger.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/potenciacion.dir/code/src/logger.c.s"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/logger.c -o CMakeFiles/potenciacion.dir/code/src/logger.c.s
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/logger.c -o CMakeFiles/potenciacion.dir/code/src/logger.c.s
 
 bin/CMakeFiles/potenciacion.dir/code/src/params.c.o: bin/CMakeFiles/potenciacion.dir/flags.make
 bin/CMakeFiles/potenciacion.dir/code/src/params.c.o: ../rsa/code/src/params.c
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object bin/CMakeFiles/potenciacion.dir/code/src/params.c.o"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/potenciacion.dir/code/src/params.c.o   -c /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/params.c
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/potenciacion.dir/code/src/params.c.o   -c /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/params.c
 
 bin/CMakeFiles/potenciacion.dir/code/src/params.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/potenciacion.dir/code/src/params.c.i"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/params.c > CMakeFiles/potenciacion.dir/code/src/params.c.i
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/params.c > CMakeFiles/potenciacion.dir/code/src/params.c.i
 
 bin/CMakeFiles/potenciacion.dir/code/src/params.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/potenciacion.dir/code/src/params.c.s"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/params.c -o CMakeFiles/potenciacion.dir/code/src/params.c.s
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/params.c -o CMakeFiles/potenciacion.dir/code/src/params.c.s
 
 bin/CMakeFiles/potenciacion.dir/code/src/power.c.o: bin/CMakeFiles/potenciacion.dir/flags.make
 bin/CMakeFiles/potenciacion.dir/code/src/power.c.o: ../rsa/code/src/power.c
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object bin/CMakeFiles/potenciacion.dir/code/src/power.c.o"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/potenciacion.dir/code/src/power.c.o   -c /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.c
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/potenciacion.dir/code/src/power.c.o   -c /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.c
 
 bin/CMakeFiles/potenciacion.dir/code/src/power.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/potenciacion.dir/code/src/power.c.i"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.c > CMakeFiles/potenciacion.dir/code/src/power.c.i
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.c > CMakeFiles/potenciacion.dir/code/src/power.c.i
 
 bin/CMakeFiles/potenciacion.dir/code/src/power.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/potenciacion.dir/code/src/power.c.s"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.c -o CMakeFiles/potenciacion.dir/code/src/power.c.s
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.c -o CMakeFiles/potenciacion.dir/code/src/power.c.s
 
 bin/CMakeFiles/potenciacion.dir/code/src/prime.c.o: bin/CMakeFiles/potenciacion.dir/flags.make
 bin/CMakeFiles/potenciacion.dir/code/src/prime.c.o: ../rsa/code/src/prime.c
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building C object bin/CMakeFiles/potenciacion.dir/code/src/prime.c.o"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/potenciacion.dir/code/src/prime.c.o   -c /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/prime.c
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/potenciacion.dir/code/src/prime.c.o   -c /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/prime.c
 
 bin/CMakeFiles/potenciacion.dir/code/src/prime.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/potenciacion.dir/code/src/prime.c.i"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/prime.c > CMakeFiles/potenciacion.dir/code/src/prime.c.i
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/prime.c > CMakeFiles/potenciacion.dir/code/src/prime.c.i
 
 bin/CMakeFiles/potenciacion.dir/code/src/prime.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/potenciacion.dir/code/src/prime.c.s"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/prime.c -o CMakeFiles/potenciacion.dir/code/src/prime.c.s
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/prime.c -o CMakeFiles/potenciacion.dir/code/src/prime.c.s
 
 bin/CMakeFiles/potenciacion.dir/code/src/util.c.o: bin/CMakeFiles/potenciacion.dir/flags.make
 bin/CMakeFiles/potenciacion.dir/code/src/util.c.o: ../rsa/code/src/util.c
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/alvarorp00/Documents/uam/c4/cripto/p3/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object bin/CMakeFiles/potenciacion.dir/code/src/util.c.o"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/potenciacion.dir/code/src/util.c.o   -c /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/util.c
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/potenciacion.dir/code/src/util.c.o   -c /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/util.c
 
 bin/CMakeFiles/potenciacion.dir/code/src/util.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/potenciacion.dir/code/src/util.c.i"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/util.c > CMakeFiles/potenciacion.dir/code/src/util.c.i
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/util.c > CMakeFiles/potenciacion.dir/code/src/util.c.i
 
 bin/CMakeFiles/potenciacion.dir/code/src/util.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/potenciacion.dir/code/src/util.c.s"
-	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/util.c -o CMakeFiles/potenciacion.dir/code/src/util.c.s
+	cd /home/alvarorp00/Documents/uam/c4/cripto/p3/build/bin && /usr/bin/gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/util.c -o CMakeFiles/potenciacion.dir/code/src/util.c.s
 
 # Object files for target potenciacion
 potenciacion_OBJECTS = \

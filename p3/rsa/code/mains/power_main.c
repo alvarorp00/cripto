@@ -51,8 +51,10 @@ int main(int argc, char **argv)
     assert(data != NULL);
 
     err    = power_setup(data, params->base, params->pow, params->modulus);
-    assert(err == POWER_OK);
+    assert(err == OP_OK);
     runExample(data, params, o_file);
+    err = power_free(data);
+    assert(err == OP_OK);
   }
 
   if (o_file && o_file != stdout)
@@ -73,7 +75,7 @@ static void runExample(power_t *data, power_params_t *params, FILE *o_file)
   mpz_init(result);
 
   err = power_compute(data, result);
-  assert(err == POWER_OK);
+  assert(err == OP_OK);
 
   gmp_fprintf(o_file, "Self function result: %Zd\n", result);
 

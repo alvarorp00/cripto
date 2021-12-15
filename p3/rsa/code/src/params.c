@@ -6,6 +6,7 @@
 #define LOG_COLORS
 
 static power_params_t g_power_params;
+static prime_params_t g_prime_params;
 
 #define STR_P( p ) \
   "" __LOG_YELLOW "-" p __LOG_RS ""
@@ -22,6 +23,13 @@ static struct argp_option power_options[] = {
   { "base",        'b',  "NUMBER",       0,             "base to be powered"},
   { "pow",         'p',  "NUMBER",       0,             "power value"},
   { "modulus",     'm',  "NUMBER",       0,             "value used as modulus"},
+  OPTIONS_END
+};
+
+static struct argp_option prime_options[] = {
+  DEFAULT_OPTIONS,
+  { "bits",        'b',  "NUMBER",       0,             "length of prime (in bits)"},
+  { "sec",         'p',  "RANGE[0-100]", 0,             "security"},
   OPTIONS_END
 };
 
@@ -80,10 +88,34 @@ error_t _power_parse_opt( int key, char *arg, struct argp_state *state ) {
 
   return 0;
 }
+
+error_t _prime_parse_opt( int key, char *arg, struct argp_state *state ) {
+  
+  prime_params_t *arguments = state->input;
+  
+  error_t ret = _def_parse_opt( key, arg, &arguments->def );
+  
+  if ( ret ) return ret;
+
+  switch (key)
+  {
+  case 'b':
+    arguments->bits = arg;
+    break;
+  case 'p':
+    arguments->sec = arg;
+  default:
+    break;
+  }
+
+  return 0;
+}
+
 static const char doc[] = "";
 static const char args_doc[] = "";
 
 static struct argp power_argp = { power_options, _power_parse_opt, args_doc, doc };
+static struct argp prime_argp = { prime_options, _prime_parse_opt, args_doc, doc };
 
 error_t _check_defaults( def_params_t *def ) {
   
@@ -122,4 +154,28 @@ power_params_t* params_parse_power( int argc, char **argv ) {
   }
 
   return ret ? NULL : &g_power_params;
+}
+
+prime_params_t* params_parse_prime( int argc, char **argv ) {
+  
+  INIT_DEFAULT_PARAMS_STRUCT( g_prime_params );
+
+  g_prime_params.bits    = NULL;
+  g_prime_params.sec     = NULL;
+  
+  error_t ret = argp_parse( &prime_argp, argc, argv, 0, 0, &g_prime_params );
+
+  ret += _check_defaults( &g_prime_params.def );
+
+  if ( !g_prime_params.def.doTest && g_prime_params.bits == NULL ) {
+    LOG_ERR("No bits given");
+    ret = ARGP_KEY_ERROR;
+  }
+
+  if ( !g_prime_params.def.doTest && g_prime_params.sec == NULL ) {
+    LOG_ERR("No security given");
+    ret = ARGP_KEY_ERROR;
+  }
+
+  return ret ? NULL : &g_prime_params;
 }

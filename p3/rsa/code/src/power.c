@@ -113,15 +113,28 @@ mpz_power_error_t power_setup(power_t *data, const char *b, const char *p, const
   mpz_set_str(POWER(data),  p, 10L);
   mpz_set_str(MOD(data),  m, 10L);
 
-  return POWER_OK;
+  return OP_OK;
+}
+
+mpz_power_error_t power_setup_mpz(power_t *data, mpz_t b, mpz_t p, mpz_t m)
+{
+  if (!data)
+    return NOT_INITIALIZED;
+
+  mpz_set(BASE(data), b);
+  mpz_set(POWER(data), p);
+  mpz_set(MOD(data), m);
+
+  return OP_OK;
 }
 
 mpz_power_error_t power_free(power_t *data)
 {
   if (!data) return NOT_INITIALIZED;
   mpz_clears(data->base, data->pow, data->modulus, NULL);
+  free(data);
 
-  return POWER_OK;
+  return OP_OK;
 }
 
 mpz_power_error_t power_compute(power_t *data, mpz_t result)
@@ -182,7 +195,7 @@ mpz_power_error_t power_compute(power_t *data, mpz_t result)
   _addition_chain_clean(&(chain));
 
   power_compute_ok:
-    return POWER_OK;
+    return OP_OK;
 }
 
 /* LOCAL STATIC METHODS */
@@ -267,7 +280,10 @@ static mpz_power_error_t _addition_chain(mpz_t exponent, addition_chain_t *chain
   if (binaryarray != NULL)
     free(binaryarray);
 
-  return POWER_OK;
+  if (strarray != NULL)
+    free(strarray);
+
+  return OP_OK;
 }
 
 static struct _chain_node *_new_chain_node (uint_fast64_t power, addition_chain_action_t action)

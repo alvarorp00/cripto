@@ -28,6 +28,17 @@
 #define eprintf(str, ...) \
           fprintf(stderr, ">> " str "\n", ##__VA_ARGS__)
 
+typedef enum _def_err_code
+{
+  OP_OK = 0,
+  NO_ARGUMENT_GIVEN,
+  ILLEGAL_VALUE,
+  ALLOC_EXCEPTION,
+  ALREADY_INITIALIZED,
+  NOT_INITIALIZED,
+  INIT_FAILURE
+} def_err_code;
+
 /**
  * Converts literal to string
  * @param x literal to convert
