@@ -27,7 +27,9 @@ typedef struct _prime_gen_t prime_gen_t;
 struct prime_number_guess
 {
   mpz_t  candidate;
-  bool   is_prime;
+  // bool   is_prime;
+  size_t tests_passed;
+  size_t tests_run;
   double prob_of_prime;
 };
 

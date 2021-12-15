@@ -30,6 +30,7 @@ static struct argp_option prime_options[] = {
   DEFAULT_OPTIONS,
   { "bits",        'b',  "NUMBER",       0,             "length of prime (in bits)"},
   { "sec",         'p',  "RANGE[0-100]", 0,             "security"},
+  { "test_req",    'm',   0,             0,             "set this flag if prime displayed must succeed all tests run"},
   OPTIONS_END
 };
 
@@ -104,6 +105,8 @@ error_t _prime_parse_opt( int key, char *arg, struct argp_state *state ) {
     break;
   case 'p':
     arguments->sec = arg;
+  case 'm':
+    arguments->min_test_suc = true;
   default:
     break;
   }
@@ -162,6 +165,7 @@ prime_params_t* params_parse_prime( int argc, char **argv ) {
 
   g_prime_params.bits    = NULL;
   g_prime_params.sec     = NULL;
+  g_prime_params.min_test_suc = false;
   
   error_t ret = argp_parse( &prime_argp, argc, argv, 0, 0, &g_prime_params );
 

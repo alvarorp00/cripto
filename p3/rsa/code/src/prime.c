@@ -31,7 +31,7 @@ struct _prime_gen_t
 /* ############################################################ */
 
 static void _nRandombits(mpz_t store_here, size_t bits_n);
-static bool _isPrime(mpz_t candidate, size_t required_rounds);
+static size_t _prime_test(mpz_t candidate, size_t required_rounds);
 static bool _miller_rabin_test(mpz_t d, mpz_t candidate);
 
 /* ############################################################ */
@@ -66,6 +66,7 @@ prime_gen_err_t prime_generator_generate(prime_gen_t *generator, struct prime_nu
   double err_lesser_than = 1; // max
   size_t bases_required;
 
+  size_t tests_passed;
   size_t i;
   
   if (!generator) return NOT_INITIALIZED;
@@ -85,19 +86,14 @@ prime_gen_err_t prime_generator_generate(prime_gen_t *generator, struct prime_nu
     LOG_INFO("Err level: %lf\n\t Bases required: %ld\n\n", err_lesser_than, bases_required);
   #endif
 
-  if (!_isPrime(candidate, bases_required))
-  {
-    mpz_clear(candidate);
-    guess->is_prime = false;
-    guess->prob_of_prime = 0.0f;
-  }
-  else
-  {
-    mpz_set(guess->candidate, candidate);
-    guess->is_prime = true;
-    guess->prob_of_prime = (1 - generator->err_final_level);
-    mpz_clear(candidate);
-  }
+  tests_passed = _prime_test(candidate, bases_required);
+  
+  mpz_set(guess->candidate, candidate);
+  guess->prob_of_prime = (1 - generator->err_final_level);
+  guess->tests_passed = tests_passed;
+  guess->tests_run    = bases_required;
+  
+  mpz_clear(candidate);
   return OP_OK;
 }
 
@@ -167,13 +163,15 @@ static void _nRandombits(mpz_t store_here, size_t bits_n)
     _nRandombits(store_here, bits_n); // must be bigger than 3 at least!!!
 }
 
-static bool _isPrime(mpz_t candidate, size_t required_rounds)
+static size_t _prime_test(mpz_t candidate, size_t required_rounds)
 {
   mpz_t _d, _x, _aux;
+  size_t tests_passed;
+  
   size_t i;
 
   bool _p_flag = false; // false -> not prime; true -> prime
-  
+
   mpz_inits(_d, _x, _aux, NULL);
 
   mpz_sub_ui(_d, candidate, 1L); // d := n - 1;
@@ -186,15 +184,14 @@ static bool _isPrime(mpz_t candidate, size_t required_rounds)
     mpz_div_2exp(_d, _d, 1); // d >>= 1;
   }; // found an r such n = 2^d * r + 1 for some r >= 1
 
+  tests_passed = 0; // initialize
   for (i=0; i<required_rounds; i++)
-    if (!_miller_rabin_test(_d, candidate))
-      break;
-
-  if (i==required_rounds) { _p_flag = true; } // all tests passed !
+    if (_miller_rabin_test(_d, candidate))
+      tests_passed++;
 
   mpz_clears(_d, _x, _aux, NULL);
 
-  return _p_flag;
+  return tests_passed;
 }
 
 static bool _miller_rabin_test(mpz_t d, mpz_t candidate)

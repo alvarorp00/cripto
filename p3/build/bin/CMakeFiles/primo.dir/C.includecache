@@ -69,16 +69,12 @@ prime.h
 /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/mains/prime.h
 params.h
 /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/mains/params.h
-
-/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/prime.c
-stdlib.h
+sys/time.h
 -
-math.h
+unistd.h
 -
-prime.h
-/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/prime.h
+limits.h
+-
 sodium.h
-/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/sodium.h
-logger.h
-/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/logger.h
+/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/mains/sodium.h
 
