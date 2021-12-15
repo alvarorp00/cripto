@@ -21,7 +21,7 @@ bin/CMakeFiles/primo.dir/code/src/power.c.o: ../rsa/code/inc/util.h
 bin/CMakeFiles/primo.dir/code/src/power.c.o: ../rsa/code/src/power.c
 
 bin/CMakeFiles/primo.dir/code/src/prime.c.o: ../external/gmp/src/GMP-build/gmp.h
-bin/CMakeFiles/primo.dir/code/src/prime.c.o: ../rsa/code/inc/power.h
+bin/CMakeFiles/primo.dir/code/src/prime.c.o: ../rsa/code/inc/logger.h
 bin/CMakeFiles/primo.dir/code/src/prime.c.o: ../rsa/code/inc/prime.h
 bin/CMakeFiles/primo.dir/code/src/prime.c.o: ../rsa/code/inc/util.h
 bin/CMakeFiles/primo.dir/code/src/prime.c.o: ../rsa/code/src/prime.c

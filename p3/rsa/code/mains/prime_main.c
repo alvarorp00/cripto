@@ -17,6 +17,8 @@
 
 int main(int argc, char **argv)
 {
+  #define TRIES 1000
+  
   LOG_INFO("Generacion de números primos: Miller-Rabin\n");
 
   prime_gen_err_t err;
@@ -27,7 +29,8 @@ int main(int argc, char **argv)
   size_t bits;
   double err_level;
 
-  mpz_t res;
+  struct prime_number_guess guess;
+  size_t i;
 
   generator = prime_generator_init();
   assert (generator != NULL);
@@ -37,15 +40,28 @@ int main(int argc, char **argv)
 
   bits = atol(params->bits);
   err_level  = atof(params->sec);
+  mpz_init(guess.candidate);
 
   err = prime_generator_configure(generator, bits, err_level, stdout);
   assert(err == OP_OK);
 
-  err = prime_generator_generate(generator, res);
-  assert(err == OP_OK);
+  for (i=0; i<TRIES; i++)
+  {
+    err = prime_generator_generate(generator, &guess);
+    assert(err == OP_OK);
+
+    if (guess.is_prime)
+    {
+      gmp_printf("Prime number [%ld] generated: %Zd\n", i, guess.candidate);
+      printf("\t Probability of being prime: %lf\n", guess.prob_of_prime);
+      break;
+    }
+  }
 
   err = prime_generator_clean(generator);
   assert(err == OP_OK);
+
+  mpz_clear(guess.candidate);
   
   return 0;
 }

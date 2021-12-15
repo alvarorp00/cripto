@@ -36,7 +36,8 @@ typedef enum _def_err_code
   ALLOC_EXCEPTION,
   ALREADY_INITIALIZED,
   NOT_INITIALIZED,
-  INIT_FAILURE
+  INIT_FAILURE,
+  CALC_FAILURE
 } def_err_code;
 
 /**
@@ -134,13 +135,11 @@ byte bitAt(byte from, byte pos);
 void setBitAt(byte *to, byte val, byte pos);
 
 /**
- * @brief calculates modulus
- * of a and b, either with
- * a > b or b > a
+ * @brief calculates a % b
  * 
- * @param a param
- * @param b param
- * @param res modulus 
+ * @param a dividenc
+ * @param b divisor
+ * @param res result
  */
 void computeModulus(mpz_t a, mpz_t b, mpz_t res);
 

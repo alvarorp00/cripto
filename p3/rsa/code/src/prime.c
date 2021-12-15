@@ -10,17 +10,17 @@
  */
 
 #include <stdlib.h>
-#include <stdbool.h>
 #include <math.h>
 
 #include "prime.h"
-#include "power.h"
 #include "sodium.h"
+#include "logger.h"
 
 struct _prime_gen_t
 {
   size_t bits; // up to 9223372036854775807L bits!
   double err_level; // error margin
+  double err_final_level; // error margin calculated
   FILE *o_file; // dumper of the program
 };
 
@@ -31,6 +31,8 @@ struct _prime_gen_t
 /* ############################################################ */
 
 static void _nRandombits(mpz_t store_here, size_t bits_n);
+static bool _isPrime(mpz_t candidate, size_t required_rounds);
+static bool _miller_rabin_test(mpz_t d, mpz_t candidate);
 
 /* ############################################################ */
 /* ############################################################ */
@@ -56,40 +58,46 @@ prime_gen_err_t prime_generator_configure(prime_gen_t *generator, size_t bits, d
   return OP_OK;
 }
 
-prime_gen_err_t prime_generator_generate(prime_gen_t *generator, mpz_t res)
+prime_gen_err_t prime_generator_generate(prime_gen_t *generator, struct prime_number_guess *guess)
 {
 
   mpz_t candidate;
-  size_t required_candidates;
 
   double err_lesser_than = 1; // max
-
-  power_t *power;
-  mpz_power_error_t pw_err;
+  size_t bases_required;
 
   size_t i;
   
   if (!generator) return NOT_INITIALIZED;
+  if (!guess)     return NO_ARGUMENT_GIVEN;
 
   mpz_init(candidate);
 
   // get a prime candidate
-  _nRandombits(candidate, generator->bits);
-
-  power = power_init();
-  if (!power) return INIT_FAILURE;
+  _nRandombits(candidate, generator->bits); // candidate := n (random odd number)
 
   for (i=0; err_lesser_than >= generator->err_level; i++)
     err_lesser_than = (1 / pow(4, i));
-  required_candidates = i;
+  bases_required = i;
+  generator->err_final_level = err_lesser_than;
 
-  // printf("Err level: %lf\n\t Bases required: %ld\n", err_lesser_than, required_candidates);
+  #ifdef __VERBOSE
+    LOG_INFO("Err level: %lf\n\t Bases required: %ld\n\n", err_lesser_than, bases_required);
+  #endif
 
-  // TODO
-
-  power_free(power);
-  mpz_clear(candidate);
-  
+  if (!_isPrime(candidate, bases_required))
+  {
+    mpz_clear(candidate);
+    guess->is_prime = false;
+    guess->prob_of_prime = 0.0f;
+  }
+  else
+  {
+    mpz_set(guess->candidate, candidate);
+    guess->is_prime = true;
+    guess->prob_of_prime = (1 - generator->err_final_level);
+    mpz_clear(candidate);
+  }
   return OP_OK;
 }
 
@@ -152,14 +160,87 @@ static void _nRandombits(mpz_t store_here, size_t bits_n)
     } // candidate generated
   }
 
-  if (mpz_even_p(store_here) == 0)
-    mpz_add_ui(store_here, store_here, 1L); // now we have an even number
+  if (mpz_odd_p(store_here) == 0)
+    mpz_add_ui(store_here, store_here, 1L); // now we have an odd number
 
-  if (mpz_cmp_ui(store_here, 2L) < 0)
-    _nRandombits(store_here, bits_n); // must be bigger than 2!!!
+  if (mpz_cmp_ui(store_here, 3L) < 0)
+    _nRandombits(store_here, bits_n); // must be bigger than 3 at least!!!
 }
 
-// static bool _isPrime()
-// {
+static bool _isPrime(mpz_t candidate, size_t required_rounds)
+{
+  mpz_t _d, _x, _aux;
+  size_t i;
 
-// }
+  bool _p_flag = false; // false -> not prime; true -> prime
+  
+  mpz_inits(_d, _x, _aux, NULL);
+
+  mpz_sub_ui(_d, candidate, 1L); // d := n - 1;
+
+  while (true)
+  {
+    mpz_mod_ui(_aux, _d, 2L);
+    if (mpz_sgn(_aux) != 0)
+      break;
+    mpz_div_2exp(_d, _d, 1); // d >>= 1;
+  }; // found an r such n = 2^d * r + 1 for some r >= 1
+
+  for (i=0; i<required_rounds; i++)
+    if (!_miller_rabin_test(_d, candidate))
+      break;
+
+  if (i==required_rounds) { _p_flag = true; } // all tests passed !
+
+  mpz_clears(_d, _x, _aux, NULL);
+
+  return _p_flag;
+}
+
+static bool _miller_rabin_test(mpz_t d, mpz_t candidate)
+{
+  mpz_t _d, _x, _random_bounded, _aux;
+  gmp_randstate_t state;
+
+  bool _p_flag = false;
+
+  mpz_inits(_d, _x, _random_bounded, _aux, NULL);
+  gmp_randinit_mt(state); // Mersenne Twister algorithm
+  
+  mpz_set(_d, d); // don't modify values
+
+  mpz_sub_ui(_aux, candidate, 4L); // _aux := n - 4
+  mpz_urandomm(_random_bounded, state, _aux); // _random_bounded := [0, n - 4]
+  mpz_add_ui(_random_bounded, _random_bounded, 2L); // _random_bounded := [2, n - 2]
+  mpz_sub_ui(_aux, candidate, 1L); // _aux := n - 1
+  mpz_powm_sec(_x, _random_bounded, _d, candidate);
+
+  if ( mpz_cmp_ui(_x, 1L) == 0 || mpz_cmp(_x, _aux) == 0 )
+  {
+    _p_flag = true;
+    goto _end_miller_rabin;
+  }
+
+  while(mpz_cmp(_d, _aux) != 0)
+  {
+    mpz_powm_ui(_x, _x, 2L, candidate); // x := (x*x) % n
+    mpz_mul_2exp(_d, _d, 1); // _d *= 2
+
+    if ( mpz_cmp_ui(_x, 1L) == 0)
+    {
+      _p_flag = false;
+      goto _end_miller_rabin;
+    }
+
+    if (mpz_cmp(_x, _aux) == 0)
+    {
+      _p_flag = true;
+      goto _end_miller_rabin;
+    }   
+  }
+
+  _end_miller_rabin:
+    gmp_randclear(state);
+    mpz_clears(_d, _x, _random_bounded, _aux, NULL);
+    return _p_flag;
+}

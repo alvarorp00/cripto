@@ -22,7 +22,7 @@ bin/CMakeFiles/primo.dir/code/src/power.c.o
  /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.c
 bin/CMakeFiles/primo.dir/code/src/prime.c.o
  ../external/gmp/src/GMP-build/gmp.h
- ../rsa/code/inc/power.h
+ ../rsa/code/inc/logger.h
  ../rsa/code/inc/prime.h
  ../rsa/code/inc/util.h
  /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/prime.c

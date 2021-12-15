@@ -16,13 +16,25 @@ stddef.h
 limits.h
 -
 
-../rsa/code/inc/power.h
-stdint.h
+../rsa/code/inc/logger.h
+stdlib.h
 -
-util.h
-../rsa/code/inc/util.h
-gmp.h
-../rsa/code/inc/gmp.h
+stdio.h
+-
+string.h
+-
+errno.h
+-
+
+../rsa/code/inc/params.h
+stdlib.h
+-
+stdbool.h
+-
+linux/limits.h
+-
+logger.h
+../rsa/code/inc/logger.h
 
 ../rsa/code/inc/prime.h
 stdio.h
@@ -31,6 +43,8 @@ stdint.h
 -
 limits.h
 -
+stdbool.h
+-
 util.h
 ../rsa/code/inc/util.h
 gmp.h
@@ -46,17 +60,25 @@ stdint.h
 gmp.h
 ../rsa/code/inc/gmp.h
 
+/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/mains/prime_main.c
+stdio.h
+-
+assert.h
+-
+prime.h
+/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/mains/prime.h
+params.h
+/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/mains/params.h
+
 /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/prime.c
 stdlib.h
--
-stdbool.h
 -
 math.h
 -
 prime.h
 /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/prime.h
-power.h
-/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/power.h
 sodium.h
 /home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/sodium.h
+logger.h
+/home/alvarorp00/Documents/uam/c4/cripto/p3/rsa/code/src/logger.h
 
