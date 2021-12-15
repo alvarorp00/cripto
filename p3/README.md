@@ -1,10 +1,87 @@
-## OpenSSL
+\setcounter{page}{1}
+
+\begin{titlepage}
+
+
+Álvaro Rodríguez Palacios\newline
+Javier Romera Llave
+
+\centering
+\vspace*{\fill}
+\huge\bf Criptografía | Pŕactica 3
+\vspace*{\fill}
+\end{titlepage}
+
+\newpage
+
+Página en blanco
+
+\newpage
+
+# Índice
+
+- [Índice](#índice)
+- [Compilación](#compilación)
+- [OpenSSL](#openssl)
+  - [Cifrados Simétricos](#cifrados-simétricos)
+  - [Cifrados Asimétricos](#cifrados-asimétricos)
+  - [Generación de claves privadas y públicas](#generación-de-claves-privadas-y-públicas)
+  - [Diferencias entre velocidades de cifrados simétricos y asimétricos](#diferencias-entre-velocidades-de-cifrados-simétricos-y-asimétricos)
+  - [Certificados X.509](#certificados-x509)
+- [RSA](#rsa)
+  - [Potenciación de grandes números](#potenciación-de-grandes-números)
+  - [Generación de números primos: Miller-Rabin](#generación-de-números-primos-miller-rabin)
+  - [Factorización del módulo del RSA mediante el conocimiento de $d$ (A. las Vegas)](#factorización-del-módulo-del-rsa-mediante-el-conocimiento-de-d-a-las-vegas)
+- [Referencias](#referencias)
+
+\newpage
+
+Página en blanco
+
+\newpage
+# Compilación
+
+> **NOTA**: es necesario tener instalado el programa `cmake`, si no lo tiene instalado, en sistemas *Debian* es tan sencillo como: `sudo apt install cmake`.
+
+Para construir los ejecutables vaya al directorio raíz de la práctica y ejecute el siguiente comando:
+
+``` bash
+cmake .
+```
+
+Esto creará el `Makefile` correspondiente para poder construir todo lo necesario. A continuación:
+
+> **NOTA**: esta acción tomará un poco de tiempo (dependiendo de la capacidad computacional de su máquina) ya que todas las librerías de las que dependen los ejecutables son construidas también en este mismo proceso.
+
+``` bash
+make all
+```
+
+Esto generará todos los ejecutables en el directorio `exe/` raíz de la práctica.
+
+<!-- \newpage
+# OpenSSL
+## Cifrados simétricos
+
+\newpage
+## Cifrados asimétricos
+
+\newpage
+## Generación de claves privadas y públicas
+
+\newpage
+## Diferencias entre velocidades de cifrados simétricos y asimétricos
+
+\newpage
+## Certificados `X.509` -->
+
+# OpenSSL
 
 **OpenSSL** es una robusta librería criptográfica de propósito general con orientación comercial pensada para una comunicación segura. La licencia que utiliza es _Apache license_, lo que permite utilizarla para propósitos tanto comerciales como no comerciales libremente.
 
 En esta parte de la práctica, vamos a ver diferentes aspectos y herramientas que nos permite utilizar.
 
-### Cifrados Simétricos
+## Cifrados Simétricos
 
 ```text
 $ openssl help
@@ -364,7 +441,7 @@ Lorem ip�C
 
 Vemos que el primer bloque tiene el mismo problema, pero a partir del segundo, debido al encadenamiento ya no. Además, esto es independiente del vector de inicialización, pues en la primera ronda se aplicará el mismo, siendo así el primer bloque descubierto siempre que la clave sea débil.
 
-### Cifrados Asimétricos
+## Cifrados Asimétricos
 
 Vemos qué tipos de cifrados asimétricos (de clave pública) tenemos disponibles:
 
@@ -531,7 +608,7 @@ $ diff -U 0 plaintexts/lorem_ipsum.txt decryptedtexts/lorem_ipsum.txt | wc -c
 
 Nota: Hemos acortado el tamaño del fichero para que ocupe $1024 bits$, puesto que rsa requiere que el fichero sea más pequeño que el tamaño de la clave.
 
-### Generación de claves privadas y públicas
+## Generación de claves privadas y públicas
 
 Primero vamos con **RSA**:
 
@@ -654,7 +731,7 @@ $ openssl cms -verify -in signed_lorem_ipsum.txt -out verified_lorem_ipsum.txt -
 Verification successful
 ```
 
-### Diferencias entre velocidades de cifrados simétricos y asimétricos
+## Diferencias entre velocidades de cifrados simétricos y asimétricos
 
  <!-- TODO -->
 
@@ -783,15 +860,15 @@ dsa 2048 bits 0.000336s 0.000313s   2973.3   3191.4
 
 Con estos datos, podemos observar en una gráfica una tabla comparando el número de veces que pueden ejecutarse sobre lo que se considera una ejecución (procesamiento de un _bytearray_ de $1000 bytes$):
 
-![aes_performance](img/aes_performance_speed.png)
+![aes_performance](openssl/img/aes_performance_speed.png)
 
-![ecdh_performance](img/ecdh_performance_speed.png)
+![ecdh_performance](openssl/img/ecdh_performance_speed.png)
 
-![des_performance](img/des_performance_speed.png)
+![des_performance](openssl/img/des_performance_speed.png)
 
-![rsa_performance](img/rsa_performance_speed.png)
+![rsa_performance](openssl/img/rsa_performance_speed.png)
 
-![dsa_performance](img/dsa_performance_speed.png)
+![dsa_performance](openssl/img/dsa_performance_speed.png)
 
 Respecto a los simétricos, vemos que su velocidad es prácticamente la misma, apenas hay diferencias notables (aunque uno sea más seguro que el otro, lo que haría a **AES** algo más eficiente en términos de seguridad).
 
@@ -799,7 +876,7 @@ Por otro lado, las curvas elípticas para el intercambio basado en esquema Diffi
 
 Finalmente, observar las diferencias entre **RSA** y **DSA**. **DSA** es más estable que **RSA** en las dos partes del proceso (firma y verificación), aunque bastante más lento que **RSA** en la parte de verificación (que, sin embargo, cae exponencialmente conforme incrementamos el tamaño de clave).
 
-### Certificados X.509
+## Certificados X.509
 
 Los problemas de la capa de transporte (nivel 4 según el estándar OSI) residen principalmente en la vulnerabilidad a ataques _man in the middle_, _spoofing_ o _replay attack_. De esta forma, puesto que encontramos entre los usos más comunes de los certificados X.509 algunos de los siguientes:
 
@@ -877,3 +954,297 @@ $ diff <(openssl x509 -noout -modulus -in certificate.pem | openssl sha512) <(op
 0
 ```
 
+\newpage
+
+# RSA
+## Potenciación de grandes números
+
+Debido al ámbito en el que nos movemos - exponenciación de grandes números sobre un módulo -, tendremos dos problemas a resolver. El primero, cómo calculamos la secuencia de exponentes (e.g. para calcular $2 ^ {10}$ haríamos $2^{1}; 2^{2}; 2^{4}; 2^{5}; 2^{10}$). Hemos estado considerando varios algoritmos, aunque al final nos hemos decantado por el expuesto en [The Art of Computer Programming - Volume 2][27], de Donald E. Knuth (Stanford University), sección 4.6.3 del libro.
+
+Aquí se expone la siguiente manera de calcular lo que vamos a denominar _addition chain_:
+
+1. Conseguir la representación binaria del exponente.
+2. Comenzar por el bit a '1' más significativo, y considerar este como un nulo para el cálculo.
+3. El punto de partida será la base a exponenciar.
+4. Para cada bit desde (MSB - 1) hasta LSB:
+   1. Por cada '0', la acción será: doblar exponente anterior.
+   2. Por cada '1', la acción será: doblar exponente anterior, sumar 1 al exponente calculado.
+
+Veámoslo con un ejemplo para N=15:
+
+1. 15 => 0xF => 1111b
+2. Toggle MSB: 0111b
+3. [Accion | _Addition Chain_]:
+   1. Doblar, Sumar Uno | $base^1$ -> $base^2$ -> $base^3$
+   2. Doblar, Sumar Uno | $base^1$ -> $base^2$ -> $base^3$ -> $base^6$ -> $base^7$
+   3. Doblar, Sumar Uno | $base^1$ -> $base^2$ -> $base^3$ -> $base^6$ -> $base^7$ -> $base^{14}$ -> $base^{15}$ 
+
+Sin embargo, vemos que no es el más eficiente, porque podría haberse hecho:
+
+  - $base^1$ -> $base^2$ -> $base^4$ -> $base^5$ -> $base^{10}$ -> $base^{15}$   
+
+Y habríamos hecho el mismo cálculo con una exponenciación menos. Sin embargo, es muy eficiente, y es poco complejo. Además, como vamos a ir calculando el módulo para cada exponente, veremos que, tal y como reflejan las gráficas, no tenemos una pérdida de tiempo respecto a GMP, salvo por temas relacionados con movimientos de memoria.
+
+Para el cálculo del módulo hemos utilizado la función `mpz_tdiv_r`:
+
+```c
+mpz_init_set(_d, b);
+
+mpz_tdiv_r(res, a, b);
+
+remn = mpz_size(res);
+if(remn < 0)
+  mpz_add(res, res, b); // bounded to R⁺
+
+mpz_clear(_d);
+```
+
+Lo que hacemos es quedarnos con el resto de la división entera. Puesto que gmp utiliza restas para el cálculo, el resto puede ser negativo. Como estamos en aritmética modular, simplemente sumamos el valor del módulo (que en este caso es B) y ya está. De hecho es muy parecido a lo que hace la función `mpz_mod`, sólo que esa función hace un mejor manejo de movimientos de memoria, por lo que consiguen unos tiempos inferiores aunque del orden de muy pocos milisegundos.
+
+Veamos la gráfica comparativa:
+
+![_cmp_self_mpz_power](rsa/img/time_exponentiation_differences_optimized.png)
+
+Observamos que en el eje de abscisas se encuentran los puntos dados por [base (bits); exponente; módulo]. Se muestra la diferencia de tiempo entre nuestro algoritmo y `mpz_powm`.
+
+\newpage
+## Generación de números primos: Miller-Rabin
+
+Hemos llevado a cabo la implementación del algoritmo Miller-Rabin. El programa se ejecuta de la siguiente forma:
+
+```c
+$ ./executables/primo --help
+[INFO] Generacion de números primos: Miller-Rabin
+Usage: primo [OPTION...] 
+
+  -b, --bits=NUMBER          length of prime (in bits)
+  -s, --test_req             set this flag if prime displayed must succeed all
+                             tests run
+  -o, --output=PATH          Output file. Required.
+  -p, --sec=ERROR (prob)     security
+  -t, --test                 Program is run with test mode
+  -v, --verbose[=NUMBER]     Enables verbose output, optionally the logging
+                             level can be supplied
+  -?, --help                 Give this help list
+      --usage                Give a short usage message
+```
+
+Por ejemplo, para hacer una ejecución:
+
+```c
+./executables/primo -b 16 -p 0.00001
+[INFO] Generacion de números primos: Miller-Rabin
+[INFO] PERFORMING [SEARCH ONE PRIME @ bits: 16 @ error margin: 0.00001]
+Prime number generated: 48557
+	 Probability of being prime: 0.999996
+	 Tests passed: [0] out of [10]
+```
+
+Sin embargo, vemos que este número no ha pasado ningún test. Podemos decirle con el parámetro `-s` que nos muestre el que haya pasado todos los test:
+
+```c
+./executables/primo -b 16 -p 0.00001 -s
+[INFO] Generacion de números primos: Miller-Rabin
+[INFO] PERFORMING [SEARCH ONE PRIME @ bits: 16 @ error margin: 0.00001]
+[INFO] SEARCHING UNTIL BEST HIT...
+Prime number generated: 56983
+	 Probability of being prime: 0.999996
+	 Tests passed: [10] out of [10]
+```
+
+Tras generar un test con saltos de 64 bits, comenzando en 96 bits, hasta 8192 bits, nos hemos encontrado con una serie de características.
+
+Primero, veamos una gráfica sobre el coste de generar un número primo de estos bits (eje de abscisas) en función de su probabilidad. Considerar que la probabilidad hace variaciones de precisión sobre el 5 decimal. Es decir, desde 0.75 hasta 0.99999 en saltos mínimos.
+
+![_time_prime_cost](rsa/img/time_prime_generation.png)
+
+Vemos que terminamos tardando en torno a dos segundos en generar el número primo.
+
+Hay otra serie de aspectos a comentar entre los datos obtenidos (consultar la hoja de cálculo disponible en el directorio 'rsa/calc/prime_calcs.ods'). Entre los más destacados, es que la proporción entre los números generados y los test que se pasan es bastante baja, por lo que conviene hacer un ajuste relativamente alto en cuanto al factor de error para que ejecutándose bastantes más test lleguemos a una situación donde podamos decir que es un _probably prime_.
+
+Es decir, cuánto más permisivos seamos con el factor de error, pese a haber encontrado un número primo, no podremos decir con suficiencia estadística que lo es. Así, para estos casos en los que sólo ajustamos al 5º decimal y en un número reducido de veces, la mayoría de estas nos resuelve como _no probable_, corrigiéndose si ajustamos el factor a un valor mucho más pequeño.
+
+También hemos observado una relación directa entre los pocos (y muchas veces ninguno) tests que se pasan satisfactoriamente respecto al valor devuelto por `mpz_prob_prime`, que devuelve 0 para estos casos.
+
+\newpage
+## Factorización del módulo del RSA mediante el conocimiento de $d$ (A. las Vegas)
+
+Para la factorización del módulo del RSA (aplicando el algoritmo de las Vegas) se ha construido el ejecutable `/exe/caRSA` que permite calcular los números $p$ y $q$ a partir de $d$ (número que forma parte de la clave privada para descifrar aquello que se cifró con la clave pública $e$).
+
+A continuación se muestra una pequeña guía de uso de dicho ejecutable:
+
+``` bash
+Usage: caRSA [OPTION...] 
+
+  -i, --input=PATH           Input file. Default stdin
+  -k, --key=PATH             RSA key file using PEM format
+  -o, --output=PATH          Output file. Default stdout
+  -v, --verbose[=NUMBER]     Enables verbose output, optionally the logging
+                             level can be supplied
+  -?, --help                 Give this help list
+      --usage                Give a short usage message
+  -V, --version              Print program version
+
+Mandatory or optional arguments to long options are also mandatory or optional
+for any corresponding short options.
+```
+
+Este programa necesita un fichero en formato `PEM` (que contiene la información tanto de la clave pública como de la clave privada).
+
+De dicho fichero se extraen (usando la libería de `libssl`) los parámetros necesarios para la aplicación del algoritmo de las Vegas, los cuales son:
+
+| Parámetro  | Descripción  |
+| ------------ | ------------ |
+| `e`  | Párametro utilizado por la parte pública  |
+| `n`  | Módulo que se corresponde con la multiplicación de $p$ y $q$  |
+| `d`  | Parámetro utilizado por la parte privada  |
+
+Tambíen se extraen los parámetros $p$ y $q$ pero se usan única y exclusivamente para comprobar el resultado del algoritmo.
+
+El algoritmo implementado se basa en el siguiente pseudocódigo:
+
+1. Se buscan $k$ y $m$ (siendo $m$ impar) tal que se cumpla $e \cdot d - 1 = 2^{k} \cdot m$
+2. Se genera un entero aleatorio $a$ tal que $1 < a < n-1$
+3. Si $\gcd (a,n) > 1$ se devuelve $p$ o $q$ $= \gcd (a,n)$ 
+4. $x = a^{m} \mod n$
+   1. $\text{if } x == 1$ el algoritmo ha fallado.
+   2. $\text{if } x == n-1$ el alogritmo ha fallado.
+
+5. $\text{for } i=1 \texttt{ to } k-1$
+   1. $y = x$
+   2. $x = x^2 \mod n$
+   3. $\text{if } x==1$ se devuelve $p$ o $q$ $= \gcd (y+1,n)$
+   4. $\text{if } x==n-1$ el algoritmo ha fallado
+   
+6. Se devuelve $p$ o $q$ $= \gcd (x+1,n)$ 
+
+Esto se resume en tres distintas salidas:  
+
+1. El resultado coincide con los $p$ y $q$ originales.  
+2. El resultado coincide con los $p$ y $q$ originales (invertidos).  
+3. El algortimo falla y no obtiene ninguna solución.  
+
+A continuación se muestran algunos ejemplos de uso:
+
+Generamos una clave *RSA* en formato *PEM*:
+``` bash
+openssl genrsa -out private.pem 4096
+```
+
+Se generará el fichero `private.pem`, el cual debemos pasar como argumento al programa que ejecuta el algoritmo anteriormente detallado:
+
+``` bash
+./exe/caRSA -k private.pem
+```
+
+Si el algoritmo se ejecuta y consigue llegar a una solución se mostrará algo como:
+``` bash
+[INFO] reading PEM file ... [ OK ] valid RSA PEM key
+[INFO] original p @ DFB404A6550FC731643037D507BF810846E32D18031E671F33FE6A93538796FBE999D983E4E53201 ...
+[INFO] computed p @ DFB404A6550FC731643037D507BF810846E32D18031E671F33FE6A93538796FBE999D983E4E53201 ...
+[INFO] original q @ D29D3F3AC2C77E970C31F559507EA68FEF5023CFF090B60569DF684ACD0D900E3EBAE17814E5468C ...
+[INFO] computed q @ D29D3F3AC2C77E970C31F559507EA68FEF5023CFF090B60569DF684ACD0D900E3EBAE17814E5468C ...
+[ OK ] p and q matches
+```
+O también:
+
+``` bash
+[INFO] reading PEM file ... [ OK ] valid RSA PEM key
+[INFO] original p @ DFB404A6550FC731643037D507BF810846E32D18031E671F33FE6A93538796FBE999D983E4E53201 ...
+[INFO] computed p @ D29D3F3AC2C77E970C31F559507EA68FEF5023CFF090B60569DF684ACD0D900E3EBAE17814E5468C ...
+[INFO] original q @ D29D3F3AC2C77E970C31F559507EA68FEF5023CFF090B60569DF684ACD0D900E3EBAE17814E5468C ...
+[INFO] computed q @ DFB404A6550FC731643037D507BF810846E32D18031E671F33FE6A93538796FBE999D983E4E53201 ...
+[ OK ] p and q matches (inverted)
+```
+
+En caso de que el algoritmo falle, se mostrará una salida como la siguiente:
+``` bash
+[INFO] reading PEM file ... [ OK ] valid RSA PEM key
+[ ER ] test FAILED
+```
+
+# Referencias
+
+\[1]: https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.197.pdf
+
+\[2]: http://www.math.snu.ac.kr/~jinhong/04Aria.pdf
+
+\[3]: https://en.wikipedia.org/wiki/Substitution%E2%80%93permutation_network
+
+\[4]: https://www.geeksforgeeks.org/blowfish-algorithm-with-examples/
+
+\[5]: https://www.schneier.com/academic/archives/1995/09/the_blowfish_encrypt.html
+
+\[6]: https://info.isl.ntt.co.jp/crypt/eng/camellia/dl/reference/sac_camellia.pdf
+
+\[7]: https://es.wikipedia.org/wiki/CAST-128
+
+\[8]: https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.182.6820&rep=rep1&type=pdf
+
+\[9]: https://www.ime.usp.br/~rt/cast256/CAST-256.pdf
+
+\[10]: https://csrc.nist.gov/csrc/media/publications/fips/46/3/archive/1999-10-25/documents/fips46-3.pdf
+
+\[11]: https://www.ipa.go.jp/security/rfc/RFC2268EN.html
+
+\[12]: https://datatracker.ietf.org/doc/html/rfc4269
+
+\[13]: http://www.gmbz.org.cn/upload/2018-04-04/1522788048733065051.pdf
+
+\[14]: https://www.openssl.org/docs/manmaster/man1/rsautl.html
+
+\[15]: https://linux.die.net/man/1/rsautl
+
+\[16]: https://linux.die.net/man/1/ec
+
+\[17]: http://safecurves.cr.yp.to/
+
+\[18]: https://security.stackexchange.com/questions/78621/which-elliptic-curve-should-i-use
+
+\[19]: https://www.geeksforgeeks.org/rsa-algorithm-cryptography/
+
+\[20]: https://www.teletrust.de/fileadmin/files/oid/oid_pkcs-3v1-4.pdf
+
+\[21]: https://www.simplilearn.com/tutorials/cryptography-tutorial/digital-signature-algorithm
+
+\[22]: https://avinetworks.com/glossary/elliptic-curve-cryptography
+
+\[23]: https://www.openssl.org/docs/man1.1.1/man1/openssl-speed.html
+
+\[24]: https://es.wikipedia.org/wiki/Elliptic-curve_Diffie-Hellman
+
+\[25]: https://es.wikipedia.org/wiki/Curve25519
+
+\[26]: https://www.openssl.org/docs/manmaster/man1/req.html
+
+\[27]: https://doc.lagout.org/science/0_Computer%20Science/2_Algorithms/The%20Art%20of%20Computer%20Programming%20%28vol.%202_%20Seminumerical%20Algorithms%29%20%283rd%20ed.%29%20%5BKnuth%201997-11-14%5D.pdf
+
+<!-- Links -->
+
+[1]: https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.197.pdf
+[2]: http://www.math.snu.ac.kr/~jinhong/04Aria.pdf
+[3]: https://en.wikipedia.org/wiki/Substitution%E2%80%93permutation_network
+[4]: https://www.geeksforgeeks.org/blowfish-algorithm-with-examples/
+[5]: https://www.schneier.com/academic/archives/1995/09/the_blowfish_encrypt.html
+[6]: https://info.isl.ntt.co.jp/crypt/eng/camellia/dl/reference/sac_camellia.pdf
+[7]: https://es.wikipedia.org/wiki/CAST-128
+[8]: https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.182.6820&rep=rep1&type=pdf
+[9]: https://www.ime.usp.br/~rt/cast256/CAST-256.pdf
+[10]: https://csrc.nist.gov/csrc/media/publications/fips/46/3/archive/1999-10-25/documents/fips46-3.pdf
+[11]: https://www.ipa.go.jp/security/rfc/RFC2268EN.html
+[12]: https://datatracker.ietf.org/doc/html/rfc4269
+[13]: http://www.gmbz.org.cn/upload/2018-04-04/1522788048733065051.pdf
+[14]: https://www.openssl.org/docs/manmaster/man1/rsautl.html
+[15]: https://linux.die.net/man/1/rsautl
+[16]: https://linux.die.net/man/1/ec
+[17]: http://safecurves.cr.yp.to/
+[18]: https://security.stackexchange.com/questions/78621/which-elliptic-curve-should-i-use
+[19]: https://www.geeksforgeeks.org/rsa-algorithm-cryptography/
+[20]: https://www.teletrust.de/fileadmin/files/oid/oid_pkcs-3v1-4.pdf
+[21]: https://www.simplilearn.com/tutorials/cryptography-tutorial/digital-signature-algorithm
+[22]: https://avinetworks.com/glossary/elliptic-curve-cryptography
+[23]: https://www.openssl.org/docs/man1.1.1/man1/openssl-speed.html
+[24]: https://es.wikipedia.org/wiki/Elliptic-curve_Diffie-Hellman
+[25]: https://es.wikipedia.org/wiki/Curve25519
+[26]: https://www.openssl.org/docs/manmaster/man1/req.html
+[27]: https://doc.lagout.org/science/0_Computer%20Science/2_Algorithms/The%20Art%20of%20Computer%20Programming%20%28vol.%202_%20Seminumerical%20Algorithms%29%20%283rd%20ed.%29%20%5BKnuth%201997-11-14%5D.pdf

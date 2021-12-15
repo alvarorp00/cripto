@@ -247,7 +247,7 @@ static mpz_power_error_t _addition_chain(mpz_t exponent, addition_chain_t *chain
         _ld_1_fnd = 1;
         continue; // we start now the process
       }
-      else if (_ld_1_fnd != 0) // leading 1 has been found, no we process chain
+      else if (_ld_1_fnd != 0) // leading 1 has been found, now we process chain
       {
         _prev_power = _nodes[chain->length - 1]->power;
         if (binaryarray[i] == 1)

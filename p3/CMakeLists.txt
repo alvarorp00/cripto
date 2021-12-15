@@ -9,8 +9,7 @@ include(ExternalProject)
 # project name
 
 project(p3 C)
-set(CMAKE_C_COMPILER "/usr/bin/gcc")
-set(CMAKE_CXX_COMPILER "/usr/bin/gcc")
+set(CMAKE_C_COMPILER "cc")
 
 add_definitions(-std=c11)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)

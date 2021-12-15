@@ -95,7 +95,7 @@ static void _runExample(prime_gen_t *generator, prime_params_t *params, FILE *o_
     #define MAX_TRIES 2048
     size_t i;
 
-    LOG_INFO("\t SEARCHING UNTIL BEST HIT...\n");
+    LOG_INFO("SEARCHING UNTIL BEST HIT...\n");
 
     guess.prob_of_prime = 0.0f;
     for (i=0; i<MAX_TRIES; i++)
@@ -144,7 +144,7 @@ static void _runExample(prime_gen_t *generator, prime_params_t *params, FILE *o_
 #include "sodium.h"
 
 #define PRINT_TEST_HEADER(f) \
-  fprintf(f, "PRIME_NUMBER\tBITS\tSELF(prob)\tGMP([0:no][1:probably][2:yes])\tSELF(ms)\tGMP(ms)\tDIFFERENCE(ms)\n");
+  fprintf(f, "PRIME_NUMBER\tBITS\tSELF(prob)\tGMP([0:no][1:probably][2:yes])\tSELF(ms)\tGMP(ms)\tDIFFERENCE(ms)\ttest passed\ttest run\n");
 
 size_t _currentTimeInMiliseconds()
 {
@@ -156,9 +156,9 @@ size_t _currentTimeInMiliseconds()
  
 static void _runTest(FILE *o_file)
 {
-  #define BITS_STEP 32
+  #define BITS_STEP 256
   #define BITS_START 96
-  #define BITS_TOP 16384 // very very big numbers tbh
+  #define BITS_TOP 8192 // very very big numbers tbh
 
   #define ERR_LEVEL_BIG 0.9
   #define ERR_LEVEL_1_DOWN 0.1
@@ -206,47 +206,48 @@ static void _runTest(FILE *o_file)
     mpz_prob_ans    = mpz_probab_prime_p(guess.candidate, guess.tests_run);\
     ending_t        = _currentTimeInMiliseconds();\
     gmp_elapsed_ms  = ending_t - starting_t;\
-    gmp_fprintf(o_file, "%Zd\t%ld\t%lf\t%d\t%ld\t%ld\t%ld\n",\
-      guess.candidate, _bits, guess.prob_of_prime, self_elapsed_ms, gmp_elapsed_ms, self_elapsed_ms - gmp_elapsed_ms);\
+    gmp_fprintf(o_file, "%Zd\t%ld\t%lf\t%d\t%ld\t%ld\t%ld\t%ld\t%ld\n",\
+      guess.candidate, _bits, guess.prob_of_prime, mpz_prob_ans, self_elapsed_ms, gmp_elapsed_ms, self_elapsed_ms - gmp_elapsed_ms, guess.tests_passed, guess.tests_run);\
 
+  PRINT_TEST_HEADER(o_file);
   for (_bits = BITS_START; _bits < BITS_TOP; _bits += BITS_STEP)
   {
-    PRINT_TEST_HEADER(o_file);
+    // PRINT_TEST_HEADER(o_file);
     for (_l1 = ERR_LEVEL_BIG; _l1 > 0; _l1 -= ERR_LEVEL_1_DOWN)
     {
       __LOOP_TEST_POP(_l1);
     }
 
     fprintf(o_file, "\n\n");
-    PRINT_TEST_HEADER(o_file);
+    // PRINT_TEST_HEADER(o_file);
     for (_l2 = ERR_LEVEL_1_DOWN; _l2 > 0; _l2 -= ERR_LEVEL_2_DOWN)
     {
         __LOOP_TEST_POP(_l2);
     }
 
     fprintf(o_file, "\n\n");
-    PRINT_TEST_HEADER(o_file);
+    // PRINT_TEST_HEADER(o_file);
     for (_l3 = ERR_LEVEL_2_DOWN; _l3 > 0; _l3 -= ERR_LEVEL_3_DOWN)
     {
       __LOOP_TEST_POP(_l3);
     }
 
     fprintf(o_file, "\n\n");
-    PRINT_TEST_HEADER(o_file);
+    // PRINT_TEST_HEADER(o_file);
     for (_l4 = ERR_LEVEL_3_DOWN; _l4 > 0; _l4 -= ERR_LEVEL_4_DOWN)
     {
       __LOOP_TEST_POP(_l4);
     }
 
     fprintf(o_file, "\n\n");
-    PRINT_TEST_HEADER(o_file);
+    // PRINT_TEST_HEADER(o_file);
     for (_l5 = ERR_LEVEL_4_DOWN; _l5 > 0; _l5 -= ERR_LEVEL_5_DOWN)
     {
       __LOOP_TEST_POP(_l5);
     }
 
     fprintf(o_file, "\n\n");
-    PRINT_TEST_HEADER(o_file);
+    // PRINT_TEST_HEADER(o_file);
     for (_l6 = ERR_LEVEL_5_DOWN; _l6 > 0; _l6 -= ERR_LEVEL_6_DOWN)
     {
       __LOOP_TEST_POP(_l6);
